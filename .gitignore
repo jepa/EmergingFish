@@ -37,3 +37,11 @@ vignettes/*.pdf
 
 # R Environment Variables
 .Renviron
+
+# Temporal data files
+./Temporal_Data
+
+# Rendered documents do not need to be sync
+./Scripts/*.pdf 
+./Scripts/*.docx 
+

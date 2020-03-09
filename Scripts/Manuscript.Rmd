@@ -1,0 +1,20 @@
+---
+title: "Matching the Time of Emergence of Transboundary Fish Stocks to Lead Time for Policy Response Under Climate Change"
+subtitle: "[MANUSCRIPT DRAFT DO NOT SHARE WITHOUT PERMISSION]"
+author: "Authors: Juliano Palacios-Abrantes*^1^, Thomas Frölicher^2^, U. Rashid Sumaila^1^,  Vicky Lam^1^, David VanderZwaag^3^, and William W.L. Cheung^1^"
+date: "Affiliations: ^1^Institute for the Oceans and Fisheries, University of British Columbia, Vancouver, Canada. ^2^Climate and Environmental Physics, Physics Institute, University of Bern. ^3^Schulich School of Law, Dalhousie University"
+output: pdf_document
+---
+
+* corresponding author: j.palacios@oceans.ubc.ca
+
+# Abstract
+
+
+# Introduction
+
+# Methods
+
+# Results
+
+# Discussion

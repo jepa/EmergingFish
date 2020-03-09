@@ -1,0 +1,424 @@
+---
+title: Matching the Time of Emergence of Transboundary Fish Stocks to Lead Time for
+  Policy Response Under Climate Change
+author: "Juliano Palacios Abrantes"
+date: "09/03/2020"
+output:
+  word_document: default
+  html_document: default
+subtitle: Initital analysis
+editor_options: 
+  chunk_output_type: console
+---
+
+
+```{r Ch3_setup, eval = T, echo=F, warning=F,message=F, results='hide'}
+
+#### READ ME !!! ####
+# Run this chunk before knit so you make sure you have all pkgs installed in R
+
+ipak <- function(pkg){
+  new.pkg <- pkg[!(pkg %in% installed.packages()[, "Package"])]
+  if (length(new.pkg)) 
+    install.packages(new.pkg, dependencies = TRUE,repos = "http://cran.us.r-project.org")
+  sapply(pkg, require, character.only = TRUE)
+}
+
+
+#### Library ####
+packages <- c(
+  "tidyverse",
+  "here", # for dbem_import `here()`
+  "data.table", #dbem_import `fread()`
+  "readxl", # for reading excell files
+  "janitor", # for clearing names
+  "geosphere", # estimate distances between points `distm()`
+  "ggrepel",
+  "zoo"
+)
+
+ipak(packages)
+
+
+# Set paths depending on machine Beast (jepa88), "carmelia" or Hall1000
+if(Sys.info()[7] == "jepa88"){
+  data_path <- "Z:/DATA/DBEM/"
+}
+if(Sys.info()[7] == "carmelia"){
+  data_path <- paste(here(),"/Temporal_Data/",sep = "")
+}
+if(Sys.info()[7] == "hall1000"){
+  data_path <- "/Volumes/DATA/DBEM/"
+}
+
+
+```
+
+
+# Methods
+
+### Fun `GetSppDist`
+
+This function reads the DBEM data for each year and ensamble (ESM model) from 102 20 111
+
+
+```{r GetSppDist, eval = T, echo = T}
+
+#### The function
+dbem_import <- function(taxon_key,
+                        iyr,
+                        fyr,
+                        ensamble_list,
+                        data_type,
+                        Path = NA){
+  
+  # Creat a sequence of the years to import  
+  yr <- seq(iyr,
+            fyr,
+            by=1) #<- change this setting if you have bi/tri/etc annual data
+  
+  #### Set the Path####
+  #First, set the path of the files under a loop for each year
+  
+  for(c in 1:length(ensamble_list)){
+    
+    D_Path <- paste(Path,"/mpa0F1ENS",ensamble_list[c],"/", #<- drobo path for 8.5
+                    taxon_key,"/",taxon_key,data_type,yr,".txt",
+                    sep="")
+    
+    total <- NULL
+    
+    #### Importing data ####
+    #Now we import the data using data.table::fread and the path generated above
+    
+    for (i in 1:length(yr)){ #<-The years you want to have 
+      
+      possibleError <-  tryCatch({ # <- This will solve for situations where the species is not found in the DBEM
+        # Imports dataset 
+        cur <- fread(D_Path[i],
+                     na.strings = "NA",
+                     col.names = c("index",
+                                   yr[i]) #<- Calls colunmns by year
+        )
+        
+      },
+      error=function(e){ # Part of the "no species in DBEM
+        e
+      }
+      )
+      if(!inherits(possibleError, "error")){
+        
+        # possibleError_I <-  tryCatch({
+        #Puts them together in one nice dataset 
+        if(i == 1){
+          total<- copy(cur) # <- copies the previouse data.table
+        }else{ 
+          setkey(total, # <- sets the data.table as "reference" ?setkey
+                 index); setkey(cur,
+                                index); 
+          total <- merge(total, #<- Merges all the data in one single file.
+                         cur,
+                         all = TRUE) # <- This allows for the NA's
+          
+        } #Close datatable loop 
+        
+      }
+      
+    } #First loop END (Path Creation)
+    
+    # Tidy version
+    total <- total %>%
+      gather(year,value,-index) %>%
+      mutate(taxon_key = taxon_key,
+             ensamble=ensamble_list[c])
+    
+    world_data <- world_grid %>%
+      full_join(total,
+                by = "index")
+    # Messages
+    if(inherits(possibleError, "error")){
+      
+      print(paste("Oops! --> No information for",taxon_key,yr[i], sep = " ")) # <- Display error message
+      
+    }else{
+      
+      print(paste("Analysis done for",taxon_key, "ensamble" ,ensamble_list[c]))
+    }
+    
+    
+    if(c == 1){
+      partial_ensamble <- world_data
+    }else{
+      spp_ensamble <- bind_rows(partial_ensamble,world_data)
+    }
+    
+  }
+  return(spp_ensamble)
+  
+} #Function end
+
+
+# Test function (works in Carmelia!)
+
+# dbem_import(
+#   taxon_key <- 600004,
+#   iyr <- 1951,
+#   fyr <- 1952,
+#   data_type <- "Abd",
+#   ensamble_list = c(102,103),
+#   Path <- paste(data_path,"DBEM/",sep="")
+# )
+
+# unique(x$ensamble)
+# head(x)
+
+# Test multiple ensambles and spp
+
+# ensamble_list <- c(102,103)
+# taxon_key_list <- c(600004,600005)
+
+# x <- bind_rows(
+#   lapply(
+#     # taxon_key_list,
+#     ensamble_list,
+#     FUN= dbem_import,
+#     taxon_key = 600004,
+#     # ensamble = 102,
+#     iyr = 1951,
+#     fyr = 1952,
+#     data_type = "Abd",
+#     Path = paste(data_path,"DBEM/",sep="")
+#   )
+# )
+
+# OK!
+
+```
+
+### Fun `EstRangeIndex`
+
+```{r load_data_per_ensamble, eval = T, echo = T}
+
+#### Data needed (send to Control pannel latter)
+
+# All ensambles
+ensamble_list <- c(102,103)
+
+# for dbem_impo_ensamble So we don't miss INDEX in different ensambles
+world_grid <- tibble(index = seq(1,259200,1))
+taxon_key <- 600005 #601477
+
+
+# SAU relations between INDEX and Country's EEZs
+EEZIDs_List <- read_excel(paste(data_path,"Spatial/V_Lam/Updated_EEZList_17June2016.xlsx",sep="")) %>% 
+  clean_names()
+EEZ_CellID <- read_excel(paste(data_path,"Spatial/V_Lam/EEZ_CellID.xlsx",sep="")) %>% 
+  clean_names()
+colnames(EEZ_CellID) <- c("eezid","index")
+
+Lon_Lat_DBEM <- read.csv("~/GitHub/TransEmergence/Temporal_Data/Spatial/Lon_Lat_DBEM.txt", header=FALSE)
+colnames(Lon_Lat_DBEM) <- c("index","lon","lat")
+
+index_code <- EEZIDs_List %>% 
+  left_join(EEZ_CellID) %>% 
+  rename(eez_name = name) %>% 
+  left_join(Lon_Lat_DBEM,
+            by = "index")
+
+
+
+EstRangeIndex <- function(taxon_key,iyr,fyr,ensamble_list){
+  
+  spp_data <- dbem_import(
+    taxon_key = taxon_key,
+    iyr <- 1951,
+    fyr <- 2100,
+    data_type <- "Abd",
+    ensamble_list = ensamble_list,
+    Path <- paste(data_path,"DBEM/",sep="")
+  ) %>% 
+    # Remove places where species is not destributed and set to cero differences between ensambles
+    filter(!is.na(value)) %>% 
+    spread(ensamble,value) %>% 
+    gather(ensamble,value, -1:-3) %>% 
+    mutate(value = ifelse(is.na(value),0,value)) %>% 
+  # Include eez information
+    left_join(index_code,
+              by = "index") %>% 
+    filter(!is.na(eezid))
+  
+  # Estimate mean eez centroid
+  # centroid_data_eez <-  spp_data %>% 
+  #   ungroup() %>% 
+  #   group_by(taxon_key,ensamble,year,eezid,eez_name) %>% 
+  #   top_n(1,value) %>% 
+  #   group_by(year,taxon_key,ensamble,eezid,eez_name) %>% 
+  #   summarise_at(vars(lon,lat),mean) %>%  # solves for multiple top 1
+  #   rename(eez_centroid_lon = lon,
+  #          eez_centroid_lat = lat) %>% 
+  #   filter(!is.na(eezid))
+  
+  
+  centroid_data_eez <-  spp_data %>% 
+    ungroup() %>% 
+    group_by(taxon_key,eezid,eez_name) %>%
+    summarise_at(vars(lon,lat),mean) %>%  # solves for multiple top 1
+    rename(eez_centroid_lon = lon,
+           eez_centroid_lat = lat)
+  
+  # Visualization of  eez centroids
+  # ggplot(spp_data) +
+  #   geom_tile(
+  #     aes(
+  #     x = lon,
+  #     y = lat,
+  #     fill= eez_name
+  #     )
+  #   ) +
+  #   geom_point(data = centroid_data_eez,
+  #              aes(
+  #                x = eez_centroid_lon,
+  #                y = eez_centroid_lat,
+  #                size = 1
+  #              )
+  #   )
+  
+  
+# Estimate species distribution centroid
+  centroid_spp <-  spp_data %>% 
+    ungroup() %>% 
+    group_by(taxon_key,ensamble,year) %>% 
+    top_n(1,value) %>% 
+    group_by(taxon_key,ensamble,year) %>% 
+    summarise_at(vars(lon,lat),mean) %>%  # solves for multiple top 1
+    rename(spp_centroid_lon = lon,
+           spp_centroid_lat = lat)
+  
+  ggplot(centroid_spp) +
+    geom_point(
+      aes(
+        x = spp_centroid_lon,
+        y = spp_centroid_lat,
+        size = as.numeric(year)#,
+        # shape = eez_name
+      )
+    ) +
+    geom_point(data = centroid_data_eez,
+               aes(
+                 x = eez_centroid_lon,
+                 y = eez_centroid_lat,
+                 color = eez_name
+               )
+    ) +
+    facet_wrap(~ensamble)
+  
+
+# Estimate Transboundary Index
+  trans_index_data <- centroid_data_eez %>% 
+    left_join(centroid_spp,
+              by = c("taxon_key") # removed year
+              ) %>% 
+    ungroup() %>% 
+    # select(year,eez_name,ensamble,spp_centroid_lon,spp_centroid_lat,eez_centroid_lon, eez_centroid_lat) %>%
+    rowwise() %>%
+    mutate(d_eez = distm(c(eez_centroid_lon, eez_centroid_lat),c(spp_centroid_lon, spp_centroid_lat), fun = distHaversine))
+    
+trans_index_sd_data <- trans_index_data %>% 
+  ungroup() %>% 
+  filter(year <2000) %>% 
+  group_by(eez_name,ensamble) %>% 
+  summarise(
+    s_sd = sd(d_eez)
+  )
+
+final_trans_index_data <- trans_index_data %>% 
+  left_join(trans_index_sd_data,
+            by = c("eez_name","ensamble")
+            ) %>% 
+  mutate(da_dsd = d_eez/s_sd) %>% 
+  filter(eez_name != "Colombia (Pacific)") %>% 
+  select(year,eez_name,ensamble,da_dsd) %>% 
+  spread(eez_name,da_dsd) %>% 
+  mutate(Trans_Index = `Mexico (Atlantic)`-`USA (Gulf of Mexico)`/2) %>% 
+  ungroup() %>% 
+  group_by(ensamble) %>% # Running mean as Kleisner & Pauly 2012
+  mutate(RMean = rollmean(x = Trans_Index,
+                            5,
+                            align = "right",
+                            fill = Trans_Index)
+    )
+
+
+ggplot(final_trans_index_data) +
+  geom_line(
+    aes(
+      x = as.numeric(year),
+      y = RMean,
+      color = ensamble
+    )
+  ) +
+  geom_line(data = final_trans_index_data,
+    aes(
+      x = as.numeric(year),
+      y = Trans_Index,
+      color = ensamble
+    ),
+    linetype = "dashed",
+    alpha = 0.5
+  ) +
+  facet_wrap(~ensamble,
+             ncol= 1)
+
+  
+  
+  # %>% 
+  #   filter(ensamble == 102) %>% 
+  #   select(year,ensamble,eez_name,d_eez) %>% 
+  #   spread(eez_name,d_eez) %>% 
+  #   mutate()
+  
+  
+
+  
+  
+  
+  Year_MCP <-  spp_data %>% 
+    # Aggregate MCP per EEZ
+    group_by(taxon_key,eezid,eez_name,ensamble,year) %>% 
+    summarise(eez_mcp = sum(value,na.rm=T)) %>% 
+    # Ensamble mean
+    group_by(taxon_key,eezid,eez_name,year) %>% 
+    summarise(ensamble_mean = mean(eez_mcp,na.rm=T),
+              ensamble_sd = sd(eez_mcp,na.rm=T)
+              )
+  
+  # Test 
+  # ggplot(spp_data) +
+  #   geom_line(
+  #     aes(
+  #       x = as.numeric(year),
+  #       y = ensamble_mean
+  #     )
+  #   ) +
+  #   geom_point(
+  #     aes(
+  #       x = as.numeric(year),
+  #       y = ensamble_mean+ensamble_sd
+  #     )
+  #   ) +
+  #   geom_point(
+  #     aes(
+  #       x = as.numeric(year),
+  #       y = ensamble_mean-ensamble_sd
+  #     )
+  #   ) +
+  #   facet_wrap(~eez_name)
+  
+  
+  
+    
+  } # close function
+
+```
+
+
