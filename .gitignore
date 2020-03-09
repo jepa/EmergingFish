@@ -39,7 +39,7 @@ vignettes/*.pdf
 .Renviron
 
 # Temporal data files
-./Temporal_Data
+/Temporal_Data
 
 # Rendered documents do not need to be sync
 ./Scripts/*.pdf 
