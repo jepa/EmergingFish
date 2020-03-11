@@ -151,8 +151,8 @@ dbem_import <- function(taxon_key,
     }else{
       spp_ensamble <- bind_rows(partial_ensamble,world_data)
     }
-    
   }
+  
   return(spp_ensamble)
   
 } #Function end
@@ -194,6 +194,376 @@ dbem_import <- function(taxon_key,
 # OK!
 
 ```
+
+## Proportion approach
+
+
+### Fun `EstPropChange`
+
+```{r EstPropChange}
+
+EstPropChange <- function(Spp,iyr,fyr,data_type,ensamble_list,Path,Neighbours){
+  
+  # Get model data from spps
+  SppDist <- dbem_import(
+    taxon_key = Spp,
+    iyr <- iyr,
+    fyr <- fyr,
+    data_type <- "Abd",
+    ensamble_list = ensamble_list,
+    Path <- paste(data_path,"DBEM/",sep="")
+  )
+  
+  # Result 1. Number of Countries that share the species
+  
+  #____________ Selecting only the transboundary nature of the species _________ #
+  Trans_Spp <- SppDist %>%
+    left_join(Neighbours,
+              by= "index") %>% 
+    filter(!is.na(value)) %>% 
+    semi_join(Transboundary_spp, # filter only transboundary cases
+              by = c("taxon_key","eez_name","eez_neighbour")
+    )
+  
+  #____________ ESTIMATING DISTRIBUTION INDEX (TRESHOLD 3)_________ #
+  # The number of species' cells present within each country's EEZ
+  
+  #Step 1.  Get EEZ id and Neighbour
+  Neighbours_List <- Neighbours %>% 
+    group_by(eez_name,eez_neighbour) %>% 
+    summarise(n=n()) %>% 
+    ungroup() %>% 
+    select(-n)
+  
+  # Step 2. Determines the amount of grids present in each country
+  Spp_Grid <- Trans_Spp %>% 
+    group_by(taxon_key,
+             eez_name,
+             year,
+             ensamble) %>% 
+    summarise(n_spp_eez = length(unique(index))) %>% 
+    left_join(Neighbours_List,
+              by = "eez_name") %>% 
+    filter(eez_name %in% Trans_Spp$eez_name, #Filter out unwanted Neighbours (those who don't have grids within but get included because they are Neighbours)
+           eez_neighbour %in% Trans_Spp$eez_name)
+  
+  
+  # Step 3. Sum total grids per Neighbours
+  
+  # Split dataframes to merge latter
+  Territory_T <- Spp_Grid %>% 
+    ungroup() %>% 
+    select(
+      taxon_key,
+      Name=eez_name,
+      n_spp_eez,
+      year,
+      ensamble
+    )
+  
+  Neighbour_T <- Spp_Grid %>% 
+    ungroup() %>% 
+    select(
+      taxon_key,
+      n_spp_eez,
+      Name=eez_neighbour,
+      eez_name,
+      year,
+      ensamble
+    )
+  
+  
+  per_change_d <- full_join(Territory_T,
+                            Neighbour_T, 
+                            by = c("Name","taxon_key","year","ensamble")
+  ) %>%
+    rowwise() %>%
+    mutate(Spp_Total = sum(n_spp_eez.x,n_spp_eez.y,na.rm=T)) %>% # Total gridcelles per Neighbours
+    distinct() %>% # Removes false duplicates from `full_join()`
+    rename(eez_name = Name,
+           eez_neighbour =eez_name,
+           n_spp_Country = n_spp_eez.x,
+           n_spp_Neighbour = n_spp_eez.y) %>% 
+    mutate(area_index = n_spp_Country/Spp_Total) %>% 
+    select(taxon_key,year,ensamble,eez_name,eez_neighbour,area_index) %>% 
+    mutate(
+      time_step = ifelse(year < 2000,"historical",
+                         ifelse(year >= 2045 & year <= 2064, "mid",
+                                ifelse(year >= 2080, "n_end","NA")
+                         )
+      )
+    ) %>%
+    filter(time_step != "NA") %>% 
+    # Time mean and sd
+    ungroup() %>% 
+    group_by(taxon_key,ensamble,eez_name,eez_neighbour,time_step) %>% 
+    summarise_at(vars("area_index"),
+                 c(temporal_mean=mean,
+                   temporal_sd=sd)
+    ) %>% 
+    # Ensamble mean and sd
+    group_by(taxon_key,eez_name,eez_neighbour,time_step) %>% 
+    summarise_at(vars("temporal_mean"),
+                 c(ensamble_mean=mean,
+                   ensamble_sd=sd)
+    ) %>% 
+    mutate(ensamble_mean = ifelse(is.na(ensamble_mean),0,ensamble_mean)) %>% 
+    select(-ensamble_sd) %>% 
+    spread(time_step,ensamble_mean) %>% 
+    mutate_at(vars(mid,n_end),
+              funs(ifelse(historical == 0 & . == 0, 0, # If for no change than 0
+                          ifelse(historical == 0 & . > 0, 100, # If changes from 0 to anything then 100
+                                 ((.-historical)/historical)*100 # Estimate percentage
+                                 # ((.-historical)/((.historical)/2))*100 # Estimate percentage
+                          )
+              )
+              )
+    )
+  
+  
+  #### Statistical test ###
+  
+  stat_change_d <- full_join(Territory_T,
+                             Neighbour_T, 
+                             by = c("Name","taxon_key","year","ensamble")
+  ) %>%
+    rowwise() %>%
+    mutate(Spp_Total = sum(n_spp_eez.x,n_spp_eez.y,na.rm=T)) %>% # Total gridcelles per Neighbours
+    distinct() %>% # Removes false duplicates from `full_join()`
+    rename(eez_name = Name,
+           eez_neighbour =eez_name,
+           n_spp_Country = n_spp_eez.x,
+           n_spp_Neighbour = n_spp_eez.y) %>% 
+    mutate(area_index = n_spp_Country/Spp_Total) %>% 
+    select(taxon_key,year,ensamble,eez_name,eez_neighbour,area_index) %>% 
+    mutate(
+      time_step = ifelse(year < 2000,"historical",
+                         ifelse(year >= 2045 & year <= 2064, "mid",
+                                ifelse(year >= 2080, "n_end","NA")
+                         )
+      )
+    ) 
+  
+  return(per_change_d)
+  
+}
+
+```
+
+### Fun `EstTransIndex`
+
+
+```{r funEstTransIndex, eval= T ,echo = T,warning = F,message = F}
+
+# Function to determine whether or not a species is transboundary
+
+# Varibales needed
+# Spp: Species to be analized, data with presence/absence per gridcell
+# Index_EEZ: Reference list of all INDEX that fall within EEZs
+# EEZ_Size: Number of grid-cells that each EEZ has
+# Neighbours: Reference list of neighbouring countries
+
+# Needs getSppDist
+
+#### For testing 
+Spp <- 600004  # Anchovie Equator, Chile and Peru
+# Spp <- 600107 # Tuna Many RFMOs
+# Spp <- 600004 # Argument 1 must have names (RFMO)
+# Spp <- 600464 # Discrete species 
+# Spp <- 600051 # One of Pierrs massive (wrong) discrete spp
+# x <- c(600464, # Discreat spp in one nation
+# 600059, # nowhere to be found spp
+# 601352, # Discrete spp in two nations
+# 600004) # transboundary spp
+# Model <- "All"
+# Coord <- CoorG
+# 
+# # For EEZ
+# Neighbours <- Neighbours_Data
+# Index_Code <- Index_Code
+
+# __________________________________ #
+
+# The function
+EstTransIndex <- function(Spp,iyr,fyr,data_type,ensamble_list,Path,Neighbours){
+  
+  # Get model data from spps
+  SppDist <- dbem_import(
+    taxon_key = Spp,
+    iyr <- iyr,
+    fyr <- fyr,
+    data_type <- "Abd",
+    ensamble_list = ensamble_list,
+    Path <- paste(data_path,"DBEM/",sep="")
+  )
+  
+  # Result 1. Number of Countries that share the species
+  
+  #____________ Selecting only the transboundary nature of the species _________ #
+  Trans_Spp <- SppDist %>%
+    left_join(Neighbours,
+              by= "index") %>% 
+    filter(!is.na(value)) %>% 
+    semi_join(Transboundary_spp, # filter only transboundary cases
+              by = c("taxon_key","eez_name","eez_neighbour")
+    )
+
+  #____________ ESTIMATING DISTRIBUTION INDEX (TRESHOLD 3)_________ #
+  # The number of species' cells present within each country's EEZ
+  
+  #Step 1.  Get EEZ id and Neighbour
+  Neighbours_List <- Neighbours %>% 
+    group_by(eez_name,eez_neighbour) %>% 
+    summarise(n=n()) %>% 
+    ungroup() %>% 
+    select(-n)
+  
+  # Step 2. Determines the amount of grids present in each country
+  Spp_Grid <- Trans_Spp %>% 
+    group_by(taxon_key,
+             eez_name,
+             year,
+             ensamble) %>% 
+    summarise(n_spp_eez = length(unique(index))) %>% 
+    left_join(Neighbours_List,
+              by = "eez_name") %>% 
+    filter(eez_name %in% Trans_Spp$eez_name, #Filter out unwanted Neighbours (those who don't have grids within but get included because they are Neighbours)
+           eez_neighbour %in% Trans_Spp$eez_name)
+  
+  
+  # Step 3. Sum total grids per Neighbours
+  
+      # Split dataframes to merge latter
+    Territory_T <- Spp_Grid %>% 
+      ungroup() %>% 
+      select(
+        taxon_key,
+        Name=eez_name,
+        n_spp_eez,
+        year,
+        ensamble
+      )
+    
+    Neighbour_T <- Spp_Grid %>% 
+      ungroup() %>% 
+      select(
+        taxon_key,
+        n_spp_eez,
+        Name=eez_neighbour,
+        eez_name,
+        year,
+        ensamble
+      )
+    
+    # Merge dataframes to get totals per Neighbourds
+    area_index_d <- full_join(Territory_T,
+                              Neighbour_T, 
+                              by = c("Name","taxon_key","year","ensamble")
+    ) %>%
+      rowwise() %>%
+      mutate(Spp_Total = sum(n_spp_eez.x,n_spp_eez.y,na.rm=T)) %>% # Total gridcelles per Neighbours
+      distinct() %>% # Removes false duplicates from `full_join()`
+      rename(eez_name = Name,
+             eez_neighbour =eez_name,
+             n_spp_Country = n_spp_eez.x,
+             n_spp_Neighbour = n_spp_eez.y) %>% 
+      mutate(area_index = n_spp_Country/Spp_Total) %>% 
+      select(taxon_key,year,ensamble,eez_name,eez_neighbour,area_index) %>% 
+      mutate(
+        time_step = ifelse(year < 2000,"historical",
+                           ifelse(year >= 2045 & year <= 2064, "mid",
+                                  ifelse(year >= 2080, "n_end","NA")
+                           )
+        )
+      ) %>%
+      # Ensamble mean and sd
+      ungroup() %>% 
+      group_by(taxon_key,year,eez_name,eez_neighbour,time_step) %>% 
+      summarise_at(vars("area_index"),
+                   c(ensamble_mean=mean,
+                     ensamble_sd=sd)
+                   ) %>% 
+      group_by(taxon_key,eez_name,eez_neighbour,time_step) %>% #Running mean
+      mutate(RMean = rollmean(x = ensamble_mean,
+                            5,
+                            align = "right",
+                            fill = ensamble_mean)
+    )
+    
+    
+    
+  
+    # Determine if changes
+    natural_variation_d <- area_index_d %>% 
+      ungroup() %>% #remove rowise
+      filter(time_step == "historical") %>% 
+      # Temporal mean
+      group_by(taxon_key,eez_name,eez_neighbour) %>% 
+      summarise_at(vars("ensamble_mean"),
+                   c(hist_mean_index=mean,
+                     hist_sd_index=sd)
+      )
+
+
+    ### Variation treshold
+    variation_d <- area_index_d %>% 
+      ungroup() %>% #remove rowise
+      # Temporal mean
+      group_by(taxon_key,time_step,eez_name,eez_neighbour) %>% 
+      summarise_at(vars("RMean"),
+                   c(mean_index=mean,
+                     sd_index=sd)
+      ) %>% 
+      gather("variable","value",mean_index,sd_index) %>% 
+      spread(time_step,value) %>% 
+      mutate(larger_variation = ifelse(future > historical,"yes","no"))
+      
+    
+    # William's index methodology
+    trans_index_data <- area_index_d %>% 
+      left_join(natural_variation_d,
+                by = c("taxon_key","eez_name","eez_neighbour")) %>% 
+      mutate(d_sd = ensamble_mean/sd_index) %>% 
+      gather("variable","value",ensamble_mean:d_sd) %>% 
+      ungroup() %>% 
+      select(-time_step,-eez_neighbour) %>% 
+      rowid_to_column() %>% 
+      # spread(time_step,value) %>% 
+      spread(eez_name,value) %>% 
+      group_by(taxon_key,year,variable) %>% 
+      summarise_at(vars("Chile","Ecuador","Peru"),
+                   mean,na.rm=T)
+
+    
+    ggplot(area_index_d) +
+      geom_ribbon(data=area_index_d,
+                  aes(
+                    x = as.numeric(year),
+                    ymin=RMean-ensamble_sd,
+                    ymax=RMean+ensamble_sd
+                  ),
+                  fill = "red",
+                  alpha = 0.5
+                  )+
+      geom_line(
+        aes(
+          x = as.numeric(year),
+          y = RMean
+        )
+      )  +
+      facet_wrap(~eez_name + eez_neighbour,
+                 scales = "free")
+    
+  
+} # closes function
+
+# __________________________________
+# Test function
+# __________________________________
+
+```
+
+
 
 ### Fun `EstRangeIndex`
 
@@ -421,4 +791,46 @@ ggplot(final_trans_index_data) +
 
 ```
 
+## Control Panel
 
+```{r control_panel}
+
+Spp_list <- c(600004,600005)
+iyr <- 1951
+fyr <- 2099
+data_type <- "Catch"
+ensamble_list = c(102,103)
+Path <- paste(data_path,"DBEM/",sep="")
+world_grid <- tibble(index = seq(1,259200,1))
+Neighbours <- read_excel("Temporal_Data/Spatial/EEZ_Neighbour_List.xlsx") %>% 
+  clean_names()
+Transboundary_spp <- read.csv("~/GitHub/TransEmergence/Temporal_Data/Species/Transboundary_spp.csv") %>% clean_names() 
+  
+
+
+
+```
+
+## Main Routine
+
+```{r main_routine, eval = T, echo = F}
+
+####_______________________ ####
+# Estimating proportion change
+####_______________________ ####
+
+suppressWarnings(
+  r_proportion_change <- bind_rows(
+    lapply(
+      Spp_list, #c(600004,600005),
+      EstPropChange,
+      iyr <- iyr,
+      fyr <- fyr,
+      data_type <- "Abd",
+      ensamble_list = ensamble_list,
+      Path <- paste(data_path,"DBEM/",sep=""),
+      Neighbours = Neighbours
+    )
+  )
+)
+```
