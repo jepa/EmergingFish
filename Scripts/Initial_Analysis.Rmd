@@ -200,7 +200,7 @@ dbem_import <- function(taxon_key,
 
 ### Fun `EstPropChange`
 
-```{r EstPropChange}
+```{r EstPropChange, eval = T, echo = F}
 
 EstPropChange <- function(Spp,iyr,fyr,data_type,ensamble_list,Path,Neighbours){
   
@@ -353,7 +353,7 @@ EstPropChange <- function(Spp,iyr,fyr,data_type,ensamble_list,Path,Neighbours){
 ### Fun `EstTransIndex`
 
 
-```{r funEstTransIndex, eval= T ,echo = T,warning = F,message = F}
+```{r funEstTransIndex, eval= F ,echo = T,warning = F,message = F}
 
 # Function to determine whether or not a species is transboundary
 
@@ -564,10 +564,9 @@ EstTransIndex <- function(Spp,iyr,fyr,data_type,ensamble_list,Path,Neighbours){
 ```
 
 
-
 ### Fun `EstRangeIndex`
 
-```{r load_data_per_ensamble, eval = T, echo = T}
+```{r load_data_per_ensamble, eval = F, echo = T}
 
 #### Data needed (send to Control pannel latter)
 
@@ -795,16 +794,17 @@ ggplot(final_trans_index_data) +
 
 ```{r control_panel}
 
-Spp_list <- c(600004,600005)
+Spp_list <- read.csv(paste(data_path,"Species/Species_list.csv",sep="")) %>% clean_names()
 iyr <- 1951
 fyr <- 2099
 data_type <- "Catch"
-ensamble_list = c(102,103)
+ensamble_list = seq(102,111,1)
 Path <- paste(data_path,"DBEM/",sep="")
 world_grid <- tibble(index = seq(1,259200,1))
-Neighbours <- read_excel("Temporal_Data/Spatial/EEZ_Neighbour_List.xlsx") %>% 
+Neighbours <- read_excel(paste(data_path,"Spatial/EEZ_Neighbour_List.xlsx",sep="")) %>% 
   clean_names()
-Transboundary_spp <- read.csv("~/GitHub/TransEmergence/Temporal_Data/Species/Transboundary_spp.csv") %>% clean_names() 
+
+Transboundary_spp <- read.csv(paste(data_path,"Species/Transboundary_spp.csv",sep="")) %>% clean_names()
   
 
 
