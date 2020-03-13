@@ -48,7 +48,7 @@ if(Sys.info()[7] == "carmelia"){
   data_path <- paste(here(),"/Temporal_Data/",sep = "")
 }
 if(Sys.info()[7] == "hall1000"){
-  data_path <- "/Volumes/DATA/DBEM/"
+  data_path <- "/Volumes/DATA/JULIANO_NEYMAR/TransEmergence/Data/"
 }
 
 
@@ -67,7 +67,7 @@ This function reads the DBEM data for each year and ensamble (ESM model) from 10
 #### The function
 dbem_import <- function(taxon_key,
                         iyr,
-                        fyr,
+                        fyr, 
                         ensamble_list,
                         data_type,
                         Path = NA){
@@ -82,7 +82,7 @@ dbem_import <- function(taxon_key,
   
   for(c in 1:length(ensamble_list)){
     
-    D_Path <- paste(Path,"/mpa0F1ENS",ensamble_list[c],"/", #<- drobo path for 8.5
+    D_Path <- paste(Path,"mpa0F1ENS",ensamble_list[c],"/", #<- drobo path for 8.5
                     taxon_key,"/",taxon_key,data_type,yr,".txt",
                     sep="")
     
@@ -160,13 +160,13 @@ dbem_import <- function(taxon_key,
 
 # Test function (works in Carmelia!)
 
-# dbem_import(
+dbem_import(
 #   taxon_key <- 600004,
 #   iyr <- 1951,
 #   fyr <- 1952,
 #   data_type <- "Abd",
 #   ensamble_list = c(102,103),
-#   Path <- paste(data_path,"DBEM/",sep="")
+#   Path <- DBEM_path
 # )
 
 # unique(x$ensamble)
@@ -209,9 +209,9 @@ EstPropChange <- function(Spp,iyr,fyr,data_type,ensamble_list,Path,Neighbours){
     taxon_key = Spp,
     iyr <- iyr,
     fyr <- fyr,
-    data_type <- "Abd",
+    data_type <- data_type,
     ensamble_list = ensamble_list,
-    Path <- paste(data_path,"DBEM/",sep="")
+    Path <- Path
   )
   
   # Result 1. Number of Countries that share the species
@@ -794,18 +794,19 @@ ggplot(final_trans_index_data) +
 
 ```{r control_panel}
 
-Spp_list <- read.csv(paste(data_path,"Species/Species_list.csv",sep="")) %>% clean_names()
+
 iyr <- 1951
-fyr <- 2099
+fyr <- 1953
 data_type <- "Catch"
-ensamble_list = seq(102,111,1)
-Path <- paste(data_path,"DBEM/",sep="")
+ensamble_list = seq(102,103,1)
+DBEM_path <- "/Volumes/DATA/DATA/DBEM/"
 world_grid <- tibble(index = seq(1,259200,1))
 Neighbours <- read_excel(paste(data_path,"Spatial/EEZ_Neighbour_List.xlsx",sep="")) %>% 
   clean_names()
 
 Transboundary_spp <- read.csv(paste(data_path,"Species/Transboundary_spp.csv",sep="")) %>% clean_names()
   
+Spp_list <- unique(Transboundary_spp$taxon_key)
 
 
 
@@ -822,15 +823,16 @@ Transboundary_spp <- read.csv(paste(data_path,"Species/Transboundary_spp.csv",se
 suppressWarnings(
   r_proportion_change <- bind_rows(
     lapply(
-      Spp_list, #c(600004,600005),
+      Spp_list[1:2], #c(600004,600005),
       EstPropChange,
       iyr <- iyr,
       fyr <- fyr,
-      data_type <- "Abd",
+      data_type <- "Catch",
       ensamble_list = ensamble_list,
-      Path <- paste(data_path,"DBEM/",sep=""),
+      Path =DBEM_path,
       Neighbours = Neighbours
     )
   )
 )
+
 ```
