@@ -160,7 +160,7 @@ dbem_import <- function(taxon_key,
 
 # Test function (works in Carmelia!)
 
-dbem_import(
+# dbem_import(
 #   taxon_key <- 600004,
 #   iyr <- 1951,
 #   fyr <- 1952,
@@ -796,9 +796,9 @@ ggplot(final_trans_index_data) +
 
 
 iyr <- 1951
-fyr <- 1953
+fyr <- 2099
 data_type <- "Catch"
-ensamble_list = seq(102,103,1)
+ensamble_list <- seq(102,111,1)
 DBEM_path <- "/Volumes/DATA/DATA/DBEM/"
 world_grid <- tibble(index = seq(1,259200,1))
 Neighbours <- read_excel(paste(data_path,"Spatial/EEZ_Neighbour_List.xlsx",sep="")) %>% 
@@ -806,7 +806,7 @@ Neighbours <- read_excel(paste(data_path,"Spatial/EEZ_Neighbour_List.xlsx",sep="
 
 Transboundary_spp <- read.csv(paste(data_path,"Species/Transboundary_spp.csv",sep="")) %>% clean_names()
   
-Spp_list <- unique(Transboundary_spp$taxon_key)
+Spp_list <- unique(Transboundary_spp$taxon_key)[3:4]
 
 
 
@@ -820,10 +820,10 @@ Spp_list <- unique(Transboundary_spp$taxon_key)
 # Estimating proportion change
 ####_______________________ ####
 
-suppressWarnings(
+# suppressWarnings(
   r_proportion_change <- bind_rows(
     lapply(
-      Spp_list[1:2], #c(600004,600005),
+      Spp_list, #c(600004,600005),
       EstPropChange,
       iyr <- iyr,
       fyr <- fyr,
@@ -833,6 +833,9 @@ suppressWarnings(
       Neighbours = Neighbours
     )
   )
-)
+# )
+
+write_csv(r_proportion_change,
+          "r_proportion_change.csv")
 
 ```
