@@ -86,7 +86,7 @@ dbem_import <- function(taxon_key,
                     taxon_key,"/",taxon_key,data_type,yr,".txt",
                     sep="")
     
-    total <- NULL
+     # total <- NULL
     
     #### Importing data ####
     #Now we import the data using data.table::fread and the path generated above
@@ -160,16 +160,17 @@ dbem_import <- function(taxon_key,
 
 # Test function (works in Carmelia!)
 
-# dbem_import(
-#   taxon_key <- 600004,
-#   iyr <- 1951,
-#   fyr <- 1952,
-#   data_type <- "Abd",
-#   ensamble_list = c(102,103),
-#   Path <- DBEM_path
-# )
+x <- dbem_import(
+  taxon_key <- 600004,
+  iyr <- 1951,
+  fyr <- 1952,
+  data_type <- "Catch",
+  # ensamble_list = c(102,103),
+  ensamble_list =ensamble_list,
+  Path <- DBEM_path
+)
 
-# unique(x$ensamble)
+unique(x$ensamble)
 # head(x)
 
 # Test multiple ensambles and spp
@@ -366,7 +367,7 @@ EstPropChange <- function(Spp,iyr,fyr,data_type,ensamble_list,Path,Neighbours){
 # Needs getSppDist
 
 #### For testing 
-Spp <- 600004  # Anchovie Equator, Chile and Peru
+# Spp <- 600004  # Anchovie Equator, Chile and Peru
 # Spp <- 600107 # Tuna Many RFMOs
 # Spp <- 600004 # Argument 1 must have names (RFMO)
 # Spp <- 600464 # Discrete species 
@@ -806,7 +807,7 @@ Neighbours <- read_excel(paste(data_path,"Spatial/EEZ_Neighbour_List.xlsx",sep="
 
 Transboundary_spp <- read.csv(paste(data_path,"Species/Transboundary_spp.csv",sep="")) %>% clean_names()
   
-Spp_list <- unique(Transboundary_spp$taxon_key)[3:4]
+Spp_list <- unique(Transboundary_spp$taxon_key)[4:5]
 
 
 
@@ -816,10 +817,12 @@ Spp_list <- unique(Transboundary_spp$taxon_key)[3:4]
 
 ```{r main_routine, eval = T, echo = F}
 
+# Problema con 600006
+
 ####_______________________ ####
 # Estimating proportion change
 ####_______________________ ####
-
+r_proportion_change <- NULL
 # suppressWarnings(
   r_proportion_change <- bind_rows(
     lapply(
