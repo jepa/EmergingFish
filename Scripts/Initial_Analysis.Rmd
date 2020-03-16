@@ -46,9 +46,11 @@ if(Sys.info()[7] == "jepa88"){
 }
 if(Sys.info()[7] == "carmelia"){
   data_path <- paste(here(),"/Temporal_Data/",sep = "")
+  DBEM_path <- paste(data_path,"DBEM/",sep="")
 }
 if(Sys.info()[7] == "hall1000"){
   data_path <- "/Volumes/DATA/JULIANO_NEYMAR/TransEmergence/Data/"
+  DBEM_path <- "/Volumes/DATA/DATA/DBEM/"
 }
 
 
@@ -86,7 +88,7 @@ dbem_import <- function(taxon_key,
                     taxon_key,"/",taxon_key,data_type,yr,".txt",
                     sep="")
     
-     # total <- NULL
+    # total <- NULL
     
     #### Importing data ####
     #Now we import the data using data.table::fread and the path generated above
@@ -111,14 +113,16 @@ dbem_import <- function(taxon_key,
         # possibleError_I <-  tryCatch({
         #Puts them together in one nice dataset 
         if(i == 1){
-          total<- copy(cur) # <- copies the previouse data.table
+          total<- copy(cur)  # <- copies the previouse data.table
+            
         }else{ 
           setkey(total, # <- sets the data.table as "reference" ?setkey
                  index); setkey(cur,
                                 index); 
           total <- merge(total, #<- Merges all the data in one single file.
                          cur,
-                         all = TRUE) # <- This allows for the NA's
+                         all = TRUE)  # <- This allows for the NA's
+            
           
         } #Close datatable loop 
         
@@ -134,23 +138,25 @@ dbem_import <- function(taxon_key,
     
     world_data <- world_grid %>%
       full_join(total,
-                by = "index")
-    # Messages
-    if(inherits(possibleError, "error")){
-      
-      print(paste("Oops! --> No information for",taxon_key,yr[i], sep = " ")) # <- Display error message
-      
-    }else{
-      
-      print(paste("Analysis done for",taxon_key, "ensamble" ,ensamble_list[c]))
-    }
-    
+                by = "index") 
     
     if(c == 1){
       partial_ensamble <- world_data
+      
     }else{
-      spp_ensamble <- bind_rows(partial_ensamble,world_data)
+      spp_ensamble <- bind_rows(spp_ensamble,world_data)
+
     }
+  
+  # Messages
+  if(inherits(possibleError, "error")){
+    
+    print(paste("Oops! --> No information for",taxon_key,yr[i], sep = " ")) # <- Display error message
+    
+  }else{
+    print(paste("Analysis done for",taxon_key, "ensamble" ,ensamble_list[c]))
+  }
+    
   }
   
   return(spp_ensamble)
@@ -165,8 +171,8 @@ x <- dbem_import(
   iyr <- 1951,
   fyr <- 1952,
   data_type <- "Catch",
-  # ensamble_list = c(102,103),
-  ensamble_list =ensamble_list,
+  ensamble_list = c(102,103,104),
+  # ensamble_list =ensamble_list,
   Path <- DBEM_path
 )
 
@@ -800,7 +806,6 @@ iyr <- 1951
 fyr <- 2099
 data_type <- "Catch"
 ensamble_list <- seq(102,111,1)
-DBEM_path <- "/Volumes/DATA/DATA/DBEM/"
 world_grid <- tibble(index = seq(1,259200,1))
 Neighbours <- read_excel(paste(data_path,"Spatial/EEZ_Neighbour_List.xlsx",sep="")) %>% 
   clean_names()
