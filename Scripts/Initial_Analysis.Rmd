@@ -53,7 +53,7 @@ if(Sys.info()[7] == "carmelia"){
 if(Sys.info()[7] == "hall1000"){
   data_path <- "/Volumes/DATA/JULIANO_NEYMAR/TransEmergence/Data/"
   DBEM_path <- "/Volumes/DATA/DATA/DBEM/"
-  result_path <- paste(here(),"/Results/",sep="")
+  result_path <- "/Volumes/DATA/JULIANO_NEYMAR/TransEmergence/Results/"
 }
 
 
