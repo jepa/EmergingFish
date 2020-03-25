@@ -47,10 +47,12 @@ if(Sys.info()[7] == "jepa88"){
 if(Sys.info()[7] == "carmelia"){
   data_path <- paste(here(),"/Temporal_Data/",sep = "")
   DBEM_path <- paste(data_path,"DBEM/",sep="")
+  result_path <- paste(here(),"/Temporal_Data/Results/",sep="")
 }
 if(Sys.info()[7] == "hall1000"){
   data_path <- "/Volumes/DATA/JULIANO_NEYMAR/TransEmergence/Data/"
   DBEM_path <- "/Volumes/DATA/DATA/DBEM/"
+  result_path <- paste(here(),"/Results/",sep="")
 }
 
 
@@ -66,171 +68,121 @@ This function reads the DBEM data for each year and ensamble (ESM model) from 10
 
 ```{r GetSppDist, eval = T, echo = T}
 
-#### The function
-dbem_import <- function(taxon_key,
-                        iyr,
-                        fyr, 
-                        ensamble_list,
-                        data_type,
-                        Path = NA){
+dbem_import <- function(taxon_key, #Except taxon_key 
+                        year, #Expects sequence of years 
+                        ensamble, #Expects a number of the ensamble
+                        data_type, #Expects either "Abd" or "Catch"
+                        path = "NA"){
   
-  # Creat a sequence of the years to import  
-  yr <- seq(iyr,
-            fyr,
-            by=1) #<- change this setting if you have bi/tri/etc annual data
-  
-  #### Set the Path####
-  #First, set the path of the files under a loop for each year
-  
-  for(c in 1:length(ensamble_list)){
-    
-    D_Path <- paste(Path,"mpa0F1ENS",ensamble_list[c],"/", #<- drobo path for 8.5
-                    taxon_key,"/",taxon_key,data_type,yr,".txt",
-                    sep="")
-    
-    # total <- NULL
-    
-    #### Importing data ####
-    #Now we import the data using data.table::fread and the path generated above
-    
-    for (i in 1:length(yr)){ #<-The years you want to have 
-      
-      possibleError <-  tryCatch({ # <- This will solve for situations where the species is not found in the DBEM
-        # Imports dataset 
-        cur <- fread(D_Path[i],
-                     na.strings = "NA",
-                     col.names = c("index",
-                                   yr[i]) #<- Calls colunmns by year
-        )
-        
-      },
-      error=function(e){ # Part of the "no species in DBEM
-        e
-      }
-      )
-      if(!inherits(possibleError, "error")){
-        
-        # possibleError_I <-  tryCatch({
-        #Puts them together in one nice dataset 
-        if(i == 1){
-          total<- copy(cur)  # <- copies the previouse data.table
-            
-        }else{ 
-          setkey(total, # <- sets the data.table as "reference" ?setkey
-                 index); setkey(cur,
-                                index); 
-          total <- merge(total, #<- Merges all the data in one single file.
-                         cur,
-                         all = TRUE)  # <- This allows for the NA's
-            
-          
-        } #Close datatable loop 
-        
-      }
-      
-    } #First loop END (Path Creation)
-    
-    # Tidy version
-    total <- total %>%
-      gather(year,value,-index) %>%
-      mutate(taxon_key = taxon_key,
-             ensamble=ensamble_list[c])
-    
-    world_data <- world_grid %>%
-      full_join(total,
-                by = "index") 
-    
-    if(c == 1){
-      partial_ensamble <- world_data
-      
-    }else{
-      spp_ensamble <- bind_rows(spp_ensamble,world_data)
 
+  years <- year_df %>% pull(year)
+  
+  D_Path <- paste(path,"mpa0F1ENS",ensamble,"/",taxon_key,"/",taxon_key,data_type,years,".txt",sep="")
+
+  
+  #### Importing data ####
+  cur <- lapply(D_Path, FUN=fread, na.strings="NA")
+  
+  if(length(cur)>0){
+    cur <- cur[sapply(cur, function(d) nrow(d) >= 1)] 
+    colnames <- c("index", "value")
+    cur <- lapply(cur, setNames, colnames)
+    df <- bind_rows(cur, .id = "column_label")
+    if(nrow(df)>0){
+      frame_key <- tibble(column_label = seq(1,length(unlist(years)),1), 
+                          "year"=years) %>% 
+        mutate(column_label=as.character(column_label))
+      df <- left_join(df, frame_key, by="column_label") %>% select(-column_label)
+      df <- df %>% mutate(data_type=data_type,
+                          taxon_key = taxon_key,
+                          ensamble = ensamble
+      )
     }
-  
-  # Messages
-  if(inherits(possibleError, "error")){
-    
-    print(paste("Oops! --> No information for",taxon_key,yr[i], sep = " ")) # <- Display error message
-    
-  }else{
-    print(paste("Analysis done for",taxon_key, "ensamble" ,ensamble_list[c]))
+  } else {
+    df <- tibble()
   }
-    
-  }
-  
-  return(spp_ensamble)
-  
+    return(df)
 } #Function end
 
 
-# Test function (works in Carmelia!)
-
-x <- dbem_import(
-  taxon_key <- 600004,
-  iyr <- 1951,
-  fyr <- 1952,
-  data_type <- "Catch",
-  ensamble_list = c(102,103,104),
-  # ensamble_list =ensamble_list,
-  Path <- DBEM_path
-)
-
-unique(x$ensamble)
-# head(x)
-
-# Test multiple ensambles and spp
-
-# ensamble_list <- c(102,103)
-# taxon_key_list <- c(600004,600005)
-
-# x <- bind_rows(
-#   lapply(
-#     # taxon_key_list,
-#     ensamble_list,
-#     FUN= dbem_import,
-#     taxon_key = 600004,
-#     # ensamble = 102,
-#     iyr = 1951,
-#     fyr = 1952,
-#     data_type = "Abd",
-#     Path = paste(data_path,"DBEM/",sep="")
-#   )
+# x <- dbem_import(
+#   taxon_key <- 600004,
+#   Year <- year_df,
+#   data_type <- "Catch",
+#   ensamble = 102,
+#   # ensamble_list =ensamble,
+#   path <- DBEM_path
 # )
 
-# OK!
+
+# attach(x)
+# head(x)
+# unique(year)
+# unique(ensamble_list)
+# detach(x)
 
 ```
 
-## Proportion approach
 
+## Proportion approach
 
 ### Fun `EstPropChange`
 
 ```{r EstPropChange, eval = T, echo = F}
 
-EstPropChange <- function(Spp,iyr,fyr,data_type,ensamble_list,Path,Neighbours){
+EstPropChange <- function(taxon_key,
+                          year,
+                          data_type,
+                          ensamble_list, # expects a list of ensambles to averrage by
+                          path,
+                          neighbours){
   
-  # Get model data from spps
-  SppDist <- dbem_import(
-    taxon_key = Spp,
-    iyr <- iyr,
-    fyr <- fyr,
-    data_type <- data_type,
-    ensamble_list = ensamble_list,
-    Path <- Path
+  
+  # Loads species data for all ensambles
+  spp_dist <- bind_rows(
+    lapply(
+      ensamble_list,
+      dbem_import,
+      taxon_key = taxon_key,
+      year = year,
+      data_type = data_type,
+      path = path
+    )
   )
+  
+  
+  # head(spp_dist)
   
   # Result 1. Number of Countries that share the species
   
+  suppressWarnings(
+    trans_EEZ <- Transboundary_spp %>% 
+      filter(taxon_key %in% spp_dist$taxon_key) %>% 
+      left_join(Neighbours,
+                by = c("eez_name","eez_neighbour")
+      )
+  )
+  
+  
+  # List of indexes per EEZ
+  index_id <- trans_EEZ %>% 
+    group_by(eez_name,index) %>% 
+    summarise(n=n()) %>% 
+    select(-n)
+  
+  
+  # --------------- #
+  # Warning messages:
+  # 1: Column `eez_name` joining factor and character vector, coercing into character vector 
+  # 2: Column `eez_neighbour` joining factor and character vector, coercing into character vector 
+  # --------------- #
+  
+  
   #____________ Selecting only the transboundary nature of the species _________ #
-  Trans_Spp <- SppDist %>%
-    left_join(Neighbours,
-              by= "index") %>% 
-    filter(!is.na(value)) %>% 
-    semi_join(Transboundary_spp, # filter only transboundary cases
-              by = c("taxon_key","eez_name","eez_neighbour")
-    )
+  trans_spp <- spp_dist %>%
+    filter(index %in% trans_EEZ$index) %>% 
+    left_join(index_id,
+              by = "index")
   
   #____________ ESTIMATING DISTRIBUTION INDEX (TRESHOLD 3)_________ #
   # The number of species' cells present within each country's EEZ
@@ -240,25 +192,25 @@ EstPropChange <- function(Spp,iyr,fyr,data_type,ensamble_list,Path,Neighbours){
     group_by(eez_name,eez_neighbour) %>% 
     summarise(n=n()) %>% 
     ungroup() %>% 
-    select(-n)
+    select(-n) %>% 
+    semi_join(trans_EEZ,
+              by = c("eez_name","eez_neighbour")
+    )
   
   # Step 2. Determines the amount of grids present in each country
-  Spp_Grid <- Trans_Spp %>% 
+  spp_grid <- trans_spp %>% 
     group_by(taxon_key,
              eez_name,
              year,
              ensamble) %>% 
     summarise(n_spp_eez = length(unique(index))) %>% 
     left_join(Neighbours_List,
-              by = "eez_name") %>% 
-    filter(eez_name %in% Trans_Spp$eez_name, #Filter out unwanted Neighbours (those who don't have grids within but get included because they are Neighbours)
-           eez_neighbour %in% Trans_Spp$eez_name)
-  
+              by = "eez_name")
   
   # Step 3. Sum total grids per Neighbours
   
   # Split dataframes to merge latter
-  Territory_T <- Spp_Grid %>% 
+  Territory_T <- spp_grid %>% 
     ungroup() %>% 
     select(
       taxon_key,
@@ -268,7 +220,7 @@ EstPropChange <- function(Spp,iyr,fyr,data_type,ensamble_list,Path,Neighbours){
       ensamble
     )
   
-  Neighbour_T <- Spp_Grid %>% 
+  Neighbour_T <- spp_grid %>% 
     ungroup() %>% 
     select(
       taxon_key,
@@ -278,7 +230,6 @@ EstPropChange <- function(Spp,iyr,fyr,data_type,ensamble_list,Path,Neighbours){
       year,
       ensamble
     )
-  
   
   per_change_d <- full_join(Territory_T,
                             Neighbour_T, 
@@ -292,7 +243,7 @@ EstPropChange <- function(Spp,iyr,fyr,data_type,ensamble_list,Path,Neighbours){
            n_spp_Country = n_spp_eez.x,
            n_spp_Neighbour = n_spp_eez.y) %>% 
     mutate(area_index = n_spp_Country/Spp_Total) %>% 
-    select(taxon_key,year,ensamble,eez_name,eez_neighbour,area_index) %>% 
+    # select(taxon_key,year,ensamble_list,eez_name,eez_neighbour,area_index) %>% 
     mutate(
       time_step = ifelse(year < 2000,"historical",
                          ifelse(year >= 2045 & year <= 2064, "mid",
@@ -309,56 +260,41 @@ EstPropChange <- function(Spp,iyr,fyr,data_type,ensamble_list,Path,Neighbours){
                    temporal_sd=sd)
     ) %>% 
     # Ensamble mean and sd
-    group_by(taxon_key,eez_name,eez_neighbour,time_step) %>% 
+    group_by(taxon_key,eez_name,eez_neighbour,time_step) %>%
     summarise_at(vars("temporal_mean"),
                  c(ensamble_mean=mean,
-                   ensamble_sd=sd)
-    ) %>% 
-    mutate(ensamble_mean = ifelse(is.na(ensamble_mean),0,ensamble_mean)) %>% 
-    select(-ensamble_sd) %>% 
-    spread(time_step,ensamble_mean) %>% 
-    mutate_at(vars(mid,n_end),
-              funs(ifelse(historical == 0 & . == 0, 0, # If for no change than 0
-                          ifelse(historical == 0 & . > 0, 100, # If changes from 0 to anything then 100
-                                 ((.-historical)/historical)*100 # Estimate percentage
-                                 # ((.-historical)/((.historical)/2))*100 # Estimate percentage
-                          )
-              )
-              )
+                   ensamble_sd=sd),
+                 na.rm=T
     )
   
+  # --------------- #
+  # End function
+  # --------------- #
   
-  #### Statistical test ###
+  if(nrow(per_change_d) > 0){
   
-  stat_change_d <- full_join(Territory_T,
-                             Neighbour_T, 
-                             by = c("Name","taxon_key","year","ensamble")
-  ) %>%
-    rowwise() %>%
-    mutate(Spp_Total = sum(n_spp_eez.x,n_spp_eez.y,na.rm=T)) %>% # Total gridcelles per Neighbours
-    distinct() %>% # Removes false duplicates from `full_join()`
-    rename(eez_name = Name,
-           eez_neighbour =eez_name,
-           n_spp_Country = n_spp_eez.x,
-           n_spp_Neighbour = n_spp_eez.y) %>% 
-    mutate(area_index = n_spp_Country/Spp_Total) %>% 
-    select(taxon_key,year,ensamble,eez_name,eez_neighbour,area_index) %>% 
-    mutate(
-      time_step = ifelse(year < 2000,"historical",
-                         ifelse(year >= 2045 & year <= 2064, "mid",
-                                ifelse(year >= 2080, "n_end","NA")
-                         )
-      )
-    ) 
+  # Save Result
+  name <- paste("proportion_",taxon_key,".csv",sep="")
+  path_name <- paste(result_path,"Proportion/",name, sep="")
   
-  return(per_change_d)
+  write_csv(per_change_d,
+            path_name)
   
+  return(print(paste("analysis done",taxon_key)))
+  
+  }else{
+    print(paste("no result for",taxon_key))
+  }
+  
+  # Or return a df
+  # return(per_change_d)
 }
 
 ```
 
-### Fun `EstTransIndex`
 
+
+### Fun `EstTransIndex`
 
 ```{r funEstTransIndex, eval= F ,echo = T,warning = F,message = F}
 
@@ -801,49 +737,39 @@ ggplot(final_trans_index_data) +
 
 ```{r control_panel}
 
+# Data needed for estimating Proportion change
 
-iyr <- 1951
-fyr <- 2099
+year_df <- tibble(year =  c(seq(1995,2014,1), seq(2041,2060,1), seq(2080,2099,1)),
+                  time_period = c(rep("Today", 20), rep("Mid Century", 20), rep("End of Century", 20))
+                  )
+
 data_type <- "Catch"
-ensamble_list <- seq(102,111,1)
+ensamble_list <- seq(102,103,1)
 world_grid <- tibble(index = seq(1,259200,1))
 Neighbours <- read_excel(paste(data_path,"Spatial/EEZ_Neighbour_List.xlsx",sep="")) %>% 
   clean_names()
 
 Transboundary_spp <- read.csv(paste(data_path,"Species/Transboundary_spp.csv",sep="")) %>% clean_names()
   
-Spp_list <- unique(Transboundary_spp$taxon_key)[4:5]
-
-
+spp_list <- unique(Transboundary_spp$taxon_key)[1:3]
 
 ```
 
-## Main Routine
+## Proportion Routine
 
-```{r main_routine, eval = T, echo = F}
-
-# Problema con 600006
-
+```{r Proportion_routine, eval = T, echo = F}
 ####_______________________ ####
 # Estimating proportion change
 ####_______________________ ####
-r_proportion_change <- NULL
-# suppressWarnings(
-  r_proportion_change <- bind_rows(
-    lapply(
-      Spp_list, #c(600004,600005),
-      EstPropChange,
-      iyr <- iyr,
-      fyr <- fyr,
-      data_type <- "Catch",
-      ensamble_list = ensamble_list,
-      Path =DBEM_path,
-      Neighbours = Neighbours
-    )
-  )
-# )
 
-write_csv(r_proportion_change,
-          "r_proportion_change.csv")
+lapply(
+  spp_list, #c(600004,600005),
+  EstPropChange,
+  year <- year_df,
+  data_type <- "Catch",
+  ensamble_list = ensamble_list,
+  path = DBEM_path,
+  neighbours = Neighbours
+)
 
 ```
