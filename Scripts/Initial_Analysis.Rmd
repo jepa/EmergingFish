@@ -742,20 +742,21 @@ year_df <- tibble(year =  c(seq(1995,2014,1), seq(2041,2060,1), seq(2080,2099,1)
                   )
 
 data_type <- "Catch"
-ensamble_list <- seq(102,103,1)
+ensamble_list <- seq(102,111,1)
 world_grid <- tibble(index = seq(1,259200,1))
 Neighbours <- read_excel(paste(data_path,"Spatial/EEZ_Neighbour_List.xlsx",sep="")) %>% 
   clean_names()
 
 Transboundary_spp <- read.csv(paste(data_path,"Species/Transboundary_spp.csv",sep="")) %>% clean_names()
   
-spp_list <- unique(Transboundary_spp$taxon_key)[1:3]
+spp_list <- unique(Transboundary_spp$taxon_key)
 
 ```
 
 ## Proportion Routine
 
 ```{r Proportion_routine, eval = T, echo = F}
+
 ####_______________________ ####
 # Estimating proportion change
 ####_______________________ ####
@@ -763,11 +764,11 @@ spp_list <- unique(Transboundary_spp$taxon_key)[1:3]
 t_start <- Sys.time()
 
 mclapply(
-  spp_list, #c(600004,600005),
+  spp_list[1],
   EstPropChange,
   year <- year_df,
   data_type <- "Catch",
-  ensamble_list = ensamble_list,
+  ensamble_list = ensamble_list[1],
   path = DBEM_path,
   neighbours = Neighbours
 )
