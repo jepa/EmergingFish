@@ -34,7 +34,8 @@ packages <- c(
   "janitor", # for clearing names
   "geosphere", # estimate distances between points `distm()`
   "ggrepel",
-  "zoo"
+  "zoo",
+  "parallel" # for mclapply
 )
 
 ipak(packages)
@@ -761,7 +762,7 @@ spp_list <- unique(Transboundary_spp$taxon_key)[1:3]
 
 t_start <- Sys.time()
 
-lapply(
+mclapply(
   spp_list, #c(600004,600005),
   EstPropChange,
   year <- year_df,
