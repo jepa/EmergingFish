@@ -824,8 +824,9 @@ EEZProp <- function(taxon_list){
  eez_summary <- spp %>% 
    group_by(eez_name,time_step) %>% 
    summarise(
-      min_spp = min(mean_spp),
-     max_spp = max(mean_spp),
+     n_spp = n(),
+     min_spp = min(mean_spp,na.rm=T),
+     max_spp = max(mean_spp,na.rm=T),
      sd_spp = sd(mean_spp,na.rm=T), # for some weird reason it wont work if the order is fliped
      mean_spp = mean(mean_spp,na.rm=T)
    ) %>% 
@@ -850,7 +851,7 @@ PropChange <- function(taxon_list){
  eez <- EEZProp(taxon_list)
  
  proportion_change <- eez %>% 
-   gather("variable","value",min_spp:sd_spp) %>% 
+   gather("variable","value",n_spp:sd_spp) %>% 
    spread(time_step,value) %>% 
    mutate_at(vars(
      "per_mid" = mid,
@@ -877,10 +878,39 @@ taxon_list <- gsub(".*_","",taxon_list)
 taxon_list <- gsub("\\..*","",taxon_list)
 
 
-Restuls <- PropChange(taxon_list[1:2])
+results <- PropChange(taxon_list)
 
-write.csv(Results,
-          "Clean_Results.csv")
+# write_csv(Results,
+#           "Clean_Results.csv")
+
+
+clean_results <- fread(paste(result_path,"Clean_Results.csv",sep=""))
+View(clean_results)
+
+```
+
+
+## Figure 1. Change Map
+
+
+```{r figure_one, eval = T, echo =F}
+
+
+# Load SAU shapefile name and paths
+
+# The path
+path_world <- paste(data_path,"Spatial_Data/SAU_Shapefile/",sep="")
+
+# The File
+fnam_world <- "SAUEEZ_July2015.shp"
+
+# Load it!
+World_sf <- st_read(dsn = path_world,
+                    layer =file_path_sans_ext(fnam_world)) %>% 
+  rename(eez_name = Name)
+
+# View(unique(World_sf$eez_name))
+
 
 
 ```
