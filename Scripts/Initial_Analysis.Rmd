@@ -885,5 +885,8 @@ taxon_list <- gsub("\\..*","",species_list)
 
 Restuls <- PropChange(taxon_list)
 
+write.csv(Results,
+          "Clean_Results.csv")
+
 
 ```
