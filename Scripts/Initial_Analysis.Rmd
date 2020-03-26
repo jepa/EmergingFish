@@ -835,12 +835,6 @@ EEZProp <- function(taxon_list){
 
 }
 
-
-taxon_list <- c(600015,600017)
-taxons <- c(600004,600004,600015,600017)
-x <- NULL
-x <- PropChange(taxons)
-
 ```
 
 
@@ -864,7 +858,7 @@ PropChange <- function(taxon_list){
             funs(round((((.-historical)/.))*100,2))
    )
  
- return(eez_summary)
+ return(proportion_change)
 
 }
 
@@ -880,10 +874,10 @@ taxon_list <- list.files(paste(result_path,"/Proportion/",sep=""))
 
 # clean names for function
 taxon_list <- gsub(".*_","",taxon_list) 
-taxon_list <- gsub("\\..*","",species_list)
+taxon_list <- gsub("\\..*","",taxon_list)
 
 
-Restuls <- PropChange(taxon_list)
+Restuls <- PropChange(taxon_list[1:2])
 
 write.csv(Results,
           "Clean_Results.csv")
