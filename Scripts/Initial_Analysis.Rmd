@@ -764,15 +764,126 @@ spp_list <- unique(Transboundary_spp$taxon_key)
 t_start <- Sys.time()
 
 mclapply(
-  spp_list[1],
+  spp_list,
   EstPropChange,
   year <- year_df,
   data_type <- "Catch",
-  ensamble_list = ensamble_list[1],
+  ensamble_list = ensamble_list,
   path = DBEM_path,
   neighbours = Neighbours
 )
 
 t_end <- Sys.time()-t_start;t_end
+
+# Hall 1000 ran it in 5.33 hours
+
+```
+
+
+# Results
+
+## Functions and Data needed
+
+### Fun `SummaryProp`
+
+This function estimates the total change in MCP proportion of each species for each EEZ. It looses the connection with neighbours as you only know for x species houw much is the proportion changing.
+
+```{r fun_SummaryProp, eval = T, echo =F}
+
+
+  SummaryProp <- function(taxon_key){
+    
+    # Reads taxon data
+    proportion_data <- fread(paste(result_path,"Proportion/","proportion_",taxon_key,".csv", sep=""))
+    
+    # summarizes by country
+    country_summary <- proportion_data %>% 
+      group_by(taxon_key,eez_name,time_step) %>% 
+      summarise(
+        mean_spp = mean(ensamble_mean,na.rm=T) # average spp change from all countries sharing
+      )
+    
+    return(country_summary)
+  }
+
+```
+
+
+### Fun `EEZProp`
+
+The next step is to summarize all species per eez
+
+```{r fun_EEZProp, eval = T, echo = F}
+
+EEZProp <- function(taxon_list){
+
+ spp <- bind_rows(
+   lapply(taxon_list,SummaryProp)
+   )
+ 
+ eez_summary <- spp %>% 
+   group_by(eez_name,time_step) %>% 
+   summarise(
+      min_spp = min(mean_spp),
+     max_spp = max(mean_spp),
+     sd_spp = sd(mean_spp,na.rm=T), # for some weird reason it wont work if the order is fliped
+     mean_spp = mean(mean_spp,na.rm=T)
+   ) %>% 
+   select(eez_name:max_spp,mean_spp,sd_spp)
+ 
+ return(eez_summary)
+
+}
+
+
+taxon_list <- c(600015,600017)
+taxons <- c(600004,600004,600015,600017)
+x <- NULL
+x <- PropChange(taxons)
+
+```
+
+
+### Fun `PropChange`
+
+Finally, we estimate the average proportion change of all species within each eez
+
+
+```{r fun_PropChange, eval = T, echo =F}
+
+PropChange <- function(taxon_list){
+
+ eez <- EEZProp(taxon_list)
+ 
+ proportion_change <- eez %>% 
+   gather("variable","value",min_spp:sd_spp) %>% 
+   spread(time_step,value) %>% 
+   mutate_at(vars(
+     "per_mid" = mid,
+     "per_end" = n_end),
+            funs(round((((.-historical)/.))*100,2))
+   )
+ 
+ return(eez_summary)
+
+}
+
+```
+
+
+## Run Results Analysis
+
+```{r fun_PropChange, eval = T, echo =F}
+
+# Get taxon list
+taxon_list <- list.files(paste(result_path,"/Proportion/",sep=""))
+
+# clean names for function
+taxon_list <- gsub(".*_","",taxon_list) 
+taxon_list <- gsub("\\..*","",species_list)
+
+
+Restuls <- PropChange(taxon_list)
+
 
 ```
