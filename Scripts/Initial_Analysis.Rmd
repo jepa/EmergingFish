@@ -35,7 +35,12 @@ packages <- c(
   "geosphere", # estimate distances between points `distm()`
   "ggrepel",
   "zoo",
-  "parallel" # for mclapply
+  "parallel", # for mclapply,
+  "sf", # for mapping
+  "st", # for mapping
+  "rgdal", #Spatial analysis
+  "tools", #Spatial analysis 
+  "zeallot" # for Juanito's map
 )
 
 ipak(packages)
@@ -56,6 +61,28 @@ if(Sys.info()[7] == "hall1000"){
   result_path <- "/Volumes/DATA/JULIANO_NEYMAR/TransEmergence/Results/"
 }
 
+
+
+ggtheme_map <- function(base_size = 9, Region = "NA") {
+  
+  theme(text             = element_text(#family = "Helvetica",
+    color = "gray30", size = base_size),
+    plot.title       = element_text(size = rel(1.25), hjust = 0, face = "bold"),
+    panel.background = element_blank(),
+    panel.border     = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_line(color = "transparent"),
+    strip.background =element_rect(fill = "transparent"),
+    strip.text.x = element_text(size = 18, colour = "black",face= "bold.italic", angle = 0),
+    axis.line        = element_blank(), # element_line(colour = "grey30", size = .5))
+    axis.ticks       = element_blank(),
+    axis.text        = element_blank(),
+    axis.title       = element_blank(),
+    legend.key       = element_rect(colour = NA, fill = NA, size = 4),
+    legend.position = "bottom",
+    legend.key.width =unit(5,"line")
+  )
+}
 
 ```
 
@@ -782,46 +809,75 @@ t_end <- Sys.time()-t_start;t_end
 
 # Results
 
-## Functions and Data needed
+## Percentage Change
 
-### Fun `SummaryProp`
+This results only shows the average percentage change in proportion of all speecies within an EEZ without relationship with neighbours
+
+### Functions and Data needed
+
+#### Fun `SummaryProp`
 
 This function estimates the total change in MCP proportion of each species for each EEZ. It looses the connection with neighbours as you only know for x species houw much is the proportion changing.
 
 ```{r fun_SummaryProp, eval = T, echo =F}
 
 
-  SummaryProp <- function(taxon_key){
+SummaryProp <- function(taxon_key,links="NA"){
+  
+  # Reads taxon data
+  proportion_data <- fread(paste(result_path,"Proportion/","proportion_",taxon_key,".csv", sep=""))
+  
+  if(links == "y"){
+    # summarizes by country
+    country_summary <- proportion_data %>% 
+      group_by(taxon_key,eez_name,eez_neighbour,time_step) %>% 
+      summarise(
+        mean_spp = mean(ensamble_mean,na.rm=T) # average spp change from all countries sharing
+      )  
     
-    # Reads taxon data
-    proportion_data <- fread(paste(result_path,"Proportion/","proportion_",taxon_key,".csv", sep=""))
-    
+  }else{
     # summarizes by country
     country_summary <- proportion_data %>% 
       group_by(taxon_key,eez_name,time_step) %>% 
       summarise(
         mean_spp = mean(ensamble_mean,na.rm=T) # average spp change from all countries sharing
       )
-    
-    return(country_summary)
-  }
+    }
+  
+  return(country_summary)
+}
 
 ```
 
 
-### Fun `EEZProp`
+#### Fun `EEZProp`
 
 The next step is to summarize all species per eez
 
 ```{r fun_EEZProp, eval = T, echo = F}
 
-EEZProp <- function(taxon_list){
+EEZProp <- function(taxon_list,links="NA"){
 
  spp <- bind_rows(
-   lapply(taxon_list,SummaryProp)
+   lapply(taxon_list,SummaryProp,links)
    )
  
- eez_summary <- spp %>% 
+ if(links == "y"){
+   
+   eez_summary <- spp %>% 
+     group_by(eez_name,eez_neighbour,time_step) %>% 
+     summarise(
+       n_spp = n(),
+       min_spp = min(mean_spp,na.rm=T),
+       max_spp = max(mean_spp,na.rm=T),
+       sd_spp = sd(mean_spp,na.rm=T), # for some weird reason it wont work if the order is fliped
+       mean_spp = mean(mean_spp,na.rm=T)
+     ) %>% 
+     select(eez_name:max_spp,mean_spp,sd_spp)
+   
+ }else{
+ 
+   eez_summary <- spp %>% 
    group_by(eez_name,time_step) %>% 
    summarise(
      n_spp = n(),
@@ -832,6 +888,9 @@ EEZProp <- function(taxon_list){
    ) %>% 
    select(eez_name:max_spp,mean_spp,sd_spp)
  
+ 
+ }
+ 
  return(eez_summary)
 
 }
@@ -839,16 +898,16 @@ EEZProp <- function(taxon_list){
 ```
 
 
-### Fun `PropChange`
+#### Fun `PropChange`
 
 Finally, we estimate the average proportion change of all species within each eez
 
 
 ```{r fun_PropChange, eval = T, echo =F}
 
-PropChange <- function(taxon_list){
+PropChange <- function(taxon_list,links="NA"){
 
- eez <- EEZProp(taxon_list)
+ eez <- EEZProp(taxon_list,links)
  
  proportion_change <- eez %>% 
    gather("variable","value",n_spp:sd_spp) %>% 
@@ -866,7 +925,7 @@ PropChange <- function(taxon_list){
 ```
 
 
-## Run Results Analysis
+### Run Results Analysis
 
 ```{r fun_PropChange, eval = T, echo =F}
 
@@ -877,40 +936,186 @@ taxon_list <- list.files(paste(result_path,"/Proportion/",sep=""))
 taxon_list <- gsub(".*_","",taxon_list) 
 taxon_list <- gsub("\\..*","",taxon_list)
 
+# Run results
+results <- PropChange(taxon_list, links="y") %>% 
+  mutate(per_mid =ifelse(per_mid >= 25, 25,
+                           ifelse(per_mid <= -25,-25,per_mid)
+                           )
+         )
 
-results <- PropChange(taxon_list)
+# View(results)
 
-# write_csv(Results,
-#           "Clean_Results.csv")
-
-
-clean_results <- fread(paste(result_path,"Clean_Results.csv",sep=""))
-View(clean_results)
-
-```
-
-
-## Figure 1. Change Map
-
-
-```{r figure_one, eval = T, echo =F}
-
+### Load Data
 
 # Load SAU shapefile name and paths
 
 # The path
-path_world <- paste(data_path,"Spatial_Data/SAU_Shapefile/",sep="")
+path_world <- paste(data_path,"Spatial/SAU_Shapefile/",sep="")
 
 # The File
 fnam_world <- "SAUEEZ_July2015.shp"
 
 # Load it!
-World_sf <- st_read(dsn = path_world,
+World_eez_sf <- st_read(dsn = path_world,
                     layer =file_path_sans_ext(fnam_world)) %>% 
-  rename(eez_name = Name)
+  rename(eez_name = Name) %>% 
+  st_transform(crs = 4326) %>% # 4326
+  st_simplify(preserveTopology = TRUE, dTolerance = 0.1)
 
-# View(unique(World_sf$eez_name))
+# Call world map from natural earth
+world_map <- rnaturalearth::ne_countries(scale = 'small', returnclass = c("sf"))
 
 
+```
+
+
+### Fig.Percentage Change Map
+
+
+```{r fig_map_per, eval = F, echo =F}
+
+World_sf %>% 
+  left_join(results,
+            by = "eez_name") %>% 
+  filter(variable %in% c("mean_spp")#,
+         # eez_name %in% c("Peru","Chile","Ecuador","Argentina")
+         ) %>% 
+  ggplot() +
+  geom_sf(
+    aes(
+      fill = per_mid
+    )
+  ) + 
+  geom_sf(data=country10_sf) +
+  scale_fill_gradient2("Average Change in\nStock-Share Ratio (%)\nBy Mid Century") +
+  ggtheme_map() +
+  ggsave("figure_one.png",
+         width = 10,
+         height = 6,
+         units = "in"
+  )
+
+```
+
+
+### Fig. Netowrk
+
+```{r fig_map_Juan, eval = F, echo =F}
+
+# Figure made thanks to Juanito!
+# http://jsmayorga.com/post/mapping-the-global-network-of-transnational-fisheries/
+
+# Get the center poligon of each EEZ for map source/target
+coords <- as.data.frame(st_centroid(World_eez_sf)) %>% 
+  ungroup() %>% 
+  select(eez_name,geometry) %>% 
+  separate(col = geometry, into = c("longitude", "latitude"), sep = "\\,")
+
+# Remove "c()"
+coords$longitude <- gsub("\\(","",coords$longitude)
+coords$longitude <- gsub("c","",coords$longitude)
+coords$latitude <- gsub(")","",coords$latitude)
+
+coords <- coords %>% 
+  mutate_at(vars(longitude,latitude),as.numeric)
+
+# Prepare data from results
+Data <- results %>% 
+  # get coords for sources
+  left_join(coords,
+            by = "eez_name") %>%
+  rename(source = eez_name,
+         start_lon = longitude,
+         start_lat = latitude,
+         eez_name=eez_neighbour) %>% 
+  # get coords for targets
+  left_join(coords,
+            by = "eez_name") %>% 
+  rename(target = eez_name,
+         end_lon = longitude,
+         end_lat = latitude) %>% 
+  ungroup() %>% 
+  # Plot miscs
+  mutate(
+    per_mid = ifelse(is.na(per_mid),0,per_mid)
+  ) %>% 
+  drop_na() %>% 
+  filter(per_mid > 0,
+         variable == "mean_spp"#,
+         # source %in% c("Brazil","Argentina","Chile","Peru","Uruguay")
+  )
+
+# Convert to data to spatial
+network_data_sf <- Data %>%
+  select(start_lon, start_lat, end_lon, end_lat) %>% 
+  purrr::transpose() %>% 
+  purrr::map(~ matrix(flatten_dbl(.), nrow = 2, byrow = TRUE)) %>% 
+  purrr::map(st_linestring) %>%
+  st_sfc(crs = 4326) %>%
+  st_sf(geometry = .)%>%
+  bind_cols(Data) %>%
+  select(everything(), geometry) %>% 
+  # Set circles ('cus the world is not flat!)
+  st_segmentize(units::set_units(100, km)) %>% 
+  mutate(geometry = (geometry + c(180,90)) %% c(360) - c(180,90)) %>% 
+  st_wrap_dateline(options = c("WRAPDATELINE=YES",  "DATELINEOFFSET=180"), quiet = TRUE) %>% 
+  sf::st_sf(crs = 4326)
+
+#  unpack the coordinates of each feature 
+coord_data <- as.data.frame( st_coordinates(st_cast(network_data_sf,"MULTILINESTRING")$geometry))
+
+c(network_data_sf$line_id, network_data_sf$coords) %<-% (
+  coord_data %>% 
+    rename(subline_id = L1) %>%   
+    nest(-L2)
+)
+
+# Create data path for line connections
+paths <- network_data_sf %>% 
+  sf::st_set_geometry(NULL) %>% 
+  unnest() %>% 
+  mutate_at(vars(X,Y), round,2)
+
+# Plot it!
+
+x <- ggplot() +
+  geom_sf(data = world_map, size = 0.1, fill = "gray90", col = "gray90") +
+  geom_sf(data = World_eez_sf, size = 0.1, fill = "white", col = "gray70") +
+  # geom_point(data = Data,
+  #            aes(start_lon,
+  #                start_lat,
+  #                col = per_mid),
+  #            size = 0.1,
+  #            col = "black",
+  #            # shape = 21,
+  #            stroke = 1.5) +
+  geom_path(data = paths,
+            aes(X, Y,
+                group = interaction(line_id,subline_id),
+                col = per_mid
+            ),
+            size = 0.3,
+            arrow = arrow(length = unit(0.009, "npc")),
+            show.legend = NA) +
+  # geom_sf_text(data =World_eez_sf, aes(label =eez_name),
+  #              size = 2) +
+  # geom_text_repel(data = paths,
+  #                  aes(
+  #                    x = X,
+  #                    y = Y,
+  #                    label =source),
+  #                  force = 1
+  # )+
+  ggtheme_map() +
+  scale_colour_gradientn("Gain of Stock-Share Ratio (%)",
+                         colours = wesanderson::wes_palette("Zissou1", 100, type = "continuous"),
+                         limits = c(0,25),
+                         breaks = seq(0,25,5)
+  )+ 
+  ggsave("figure_connections.png",
+       width = 10,
+       height = 6,
+       units = "in"
+)
 
 ```
