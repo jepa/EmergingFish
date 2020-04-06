@@ -45,3 +45,6 @@ vignettes/*.pdf
 ./Scripts/*.pdf 
 ./Scripts/*.docx 
 
+# Ignore Documents folder
+Documents 
+
