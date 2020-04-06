@@ -94,7 +94,7 @@ ggtheme_map <- function(base_size = 9, Region = "NA") {
 This function reads the DBEM data for each year and ensamble (ESM model) from 102 20 111
 
 
-```{r GetSppDist, eval = T, echo = T}
+```{r GetSppDist, eval = F, echo = T}
 
 dbem_import <- function(taxon_key, #Except taxon_key 
                         year, #Expects sequence of years 
@@ -151,11 +151,11 @@ dbem_import <- function(taxon_key, #Except taxon_key
 
 ```
 
-## Proportion approach
+## Changes in Proportion
 
 ### Fun `EstPropChange`
 
-```{r EstPropChange, eval = T, echo = F}
+```{r EstPropChange, eval = F, echo = F}
 
 EstPropChange <- function(taxon_key,
                           year,
@@ -760,7 +760,7 @@ ggplot(final_trans_index_data) +
 
 ## Control Panel
 
-```{r control_panel}
+```{r control_panel, eval = F}
 
 # Data needed for estimating Proportion change
 
@@ -771,8 +771,6 @@ year_df <- tibble(year =  c(seq(1995,2014,1), seq(2041,2060,1), seq(2080,2099,1)
 data_type <- "Catch"
 ensamble_list <- seq(102,111,1)
 world_grid <- tibble(index = seq(1,259200,1))
-Neighbours <- read_excel(paste(data_path,"Spatial/EEZ_Neighbour_List.xlsx",sep="")) %>% 
-  clean_names()
 
 Transboundary_spp <- read.csv(paste(data_path,"Species/Transboundary_spp.csv",sep="")) %>% clean_names()
   
@@ -782,7 +780,7 @@ spp_list <- unique(Transboundary_spp$taxon_key)
 
 ## Proportion Routine
 
-```{r Proportion_routine, eval = T, echo = F}
+```{r Proportion_routine, eval = F, echo = F}
 
 ####_______________________ ####
 # Estimating proportion change
@@ -821,7 +819,6 @@ This function estimates the total change in MCP proportion of each species for e
 
 ```{r fun_SummaryProp, eval = T, echo =F}
 
-
 SummaryProp <- function(taxon_key,links="NA"){
   
   # Reads taxon data
@@ -833,7 +830,7 @@ SummaryProp <- function(taxon_key,links="NA"){
       group_by(taxon_key,eez_name,eez_neighbour,time_step) %>% 
       summarise(
         mean_spp = mean(ensamble_mean,na.rm=T) # average spp change from all countries sharing
-      )  
+      )
     
   }else{
     # summarizes by country
@@ -968,9 +965,7 @@ world_map <- rnaturalearth::ne_countries(scale = 'small', returnclass = c("sf"))
 
 ```
 
-
 ### Fig.Percentage Change Map
-
 
 ```{r fig_map_per, eval = F, echo =F}
 
@@ -1009,7 +1004,21 @@ World_sf %>%
 coords <- as.data.frame(st_centroid(World_eez_sf)) %>% 
   ungroup() %>% 
   select(eez_name,geometry) %>% 
-  separate(col = geometry, into = c("longitude", "latitude"), sep = "\\,")
+  separate(col = geometry, into = c("longitude", "latitude"), sep = "\\,") %>% 
+  # Manually fix issues
+  mutate(
+    longitude = ifelse(
+      eez_name == "Fiji", 178.065033,
+      ifelse(eez_name == "Tuvalu",177.6493,
+             ifelse( eez_name == "New Zealand",174.8860,
+                     ifelse( eez_name == "USA (Alaska, Subarctic)",-145.8860,
+                             ifelse( eez_name == "Brazil",-36.937,longitude
+                             )
+                     )
+             )
+      )
+    )
+  )
 
 # Remove "c()"
 coords$longitude <- gsub("\\(","",coords$longitude)
@@ -1081,14 +1090,14 @@ paths <- network_data_sf %>%
 x <- ggplot() +
   geom_sf(data = world_map, size = 0.1, fill = "gray90", col = "gray90") +
   geom_sf(data = World_eez_sf, size = 0.1, fill = "white", col = "gray70") +
-  # geom_point(data = Data,
-  #            aes(start_lon,
-  #                start_lat,
-  #                col = per_mid),
-  #            size = 0.1,
-  #            col = "black",
-  #            # shape = 21,
-  #            stroke = 1.5) +
+  geom_point(data = Data,
+             aes(start_lon,
+                 start_lat,
+                 col = per_mid),
+             size = 0.05,
+             col = "black",
+             shape = 20,
+             stroke = 1.5) +
   geom_path(data = paths,
             aes(X, Y,
                 group = interaction(line_id,subline_id),
@@ -1113,9 +1122,172 @@ x <- ggplot() +
                          breaks = seq(0,25,5)
   )+ 
   ggsave("figure_connections.png",
-       width = 10,
-       height = 6,
-       units = "in"
+         width = 10,
+         height = 6,
+         units = "in"
+  )
+
+```
+
+
+
+## Troubleshooting
+
+### Weird connections from Australia
+
+```{r fig_map_Juan, eval = F, echo =F}
+
+##_----------------------- #
+# Checking on China and Indonesia
+# Probably due to dispute territories
+
+Neighbours <- read_excel(paste(data_path,"Spatial/EEZ_Neighbour_List.xlsx",sep="")) %>% 
+  clean_names()
+
+# 
+# Neighbours %>% 
+#   filter(eez_name == "China") %>% 
+#   pull(eez_neighbour) %>% 
+#   unique()
+
+##_----------------------- #
+
+
+# Get the center poligon of each EEZ for map source/target
+coords <- as.data.frame(st_centroid(World_eez_sf)) %>% 
+  ungroup() %>% 
+  select(eez_name,geometry) %>% 
+  separate(col = geometry, into = c("longitude", "latitude"), sep = "\\,") %>% 
+  # Manually fix issues
+  mutate(
+    longitude = ifelse(
+      eez_name == "Fiji", 178.065033,
+      ifelse(eez_name == "Tuvalu",177.6493,
+             ifelse( eez_name == "New Zealand",174.8860,
+                     ifelse( eez_name == "USA (Alaska, Subarctic)",-145.8860,longitude
+                     )
+             )
+      )
+    )
+  )
+
+# Remove "c()"
+coords$longitude <- gsub("\\(","",coords$longitude)
+coords$longitude <- gsub("c","",coords$longitude)
+coords$latitude <- gsub(")","",coords$latitude)
+
+coords <- coords %>% 
+  mutate_at(vars(longitude,latitude),as.numeric)
+
+# Prepare data from results
+Test_Data <- results %>% 
+  # get coords for sources
+  left_join(coords,
+            by = "eez_name") %>%
+  rename(source = eez_name,
+         start_lon = longitude,
+         start_lat = latitude,
+         eez_name=eez_neighbour) %>% 
+  # get coords for targets
+  left_join(coords,
+            by = "eez_name") %>% 
+  rename(target = eez_name,
+         end_lon = longitude,
+         end_lat = latitude) %>% 
+  ungroup() %>% 
+  # Plot miscs
+  mutate(
+    per_mid = ifelse(is.na(per_mid),0,per_mid)
+  ) %>% 
+  drop_na() %>% 
+  filter(
+    # per_mid >= 20,
+    variable == "mean_spp",
+  )
+
+
+# Convert to data to spatial
+network_data_sf <- Test_Data %>%
+  select(start_lon, start_lat, end_lon, end_lat) %>% 
+  purrr::transpose() %>% 
+  purrr::map(~ matrix(flatten_dbl(.), nrow = 2, byrow = TRUE)) %>% 
+  purrr::map(st_linestring) %>%
+  st_sfc(crs = 4326) %>%
+  st_sf(geometry = .)%>%
+  bind_cols(Test_Data) %>%
+  select(everything(), geometry) %>% 
+  # Set circles ('cus the world is not flat!)
+  st_segmentize(units::set_units(100, km)) %>% 
+  mutate(geometry = (geometry + c(180,90)) %% c(360) - c(180,90)) %>% 
+  st_wrap_dateline(options = c("WRAPDATELINE=YES",  "DATELINEOFFSET=180"), quiet = TRUE) %>% 
+  sf::st_sf(crs = 4326)
+
+#  unpack the coordinates of each feature 
+coord_data <- as.data.frame( st_coordinates(st_cast(network_data_sf,"MULTILINESTRING")$geometry))
+
+c(network_data_sf$line_id, network_data_sf$coords) %<-% (
+  coord_data %>% 
+    rename(subline_id = L1) %>%   
+    nest(-L2)
 )
+
+# Create data path for line connections
+paths <- network_data_sf %>% 
+  sf::st_set_geometry(NULL) %>% 
+  unnest() %>% 
+  mutate_at(vars(X,Y), round,2)
+
+# Plot it!
+
+country <- c("Fiji","Solomon Isl.","Tuvalu")
+
+ggplot() +
+  geom_sf(
+    # data = subset(world_map,name %in% country),
+    data = world_map,
+    size = 0.1, fill = "gray90", col = "gray90") +
+  geom_sf(
+    # data = subset(World_eez_sf, eez_name %in% country),
+    data = World_eez_sf,
+    size = 0.1, fill = "white", col = "gray70") +
+  geom_point(data = Test_Data,
+             # data = subset(Test_Data, source %in% country & target %in% source),
+             aes(start_lon,
+                 start_lat,
+                 col = per_mid),
+             size = 0.1,
+             col = "black",
+             # shape = 21,
+             stroke = 1.5) +
+  geom_path(data = paths,
+            # data = subset(paths, source %in% country),
+            aes(X, Y,
+                group = interaction(line_id,subline_id),
+                col = per_mid
+            ),
+            size = 0.3,
+            arrow = arrow(length = unit(0.009, "npc")),
+            show.legend = NA) +
+  # geom_sf_text(data = subset(World_eez_sf, eez_name %in% country),
+  #              aes(label =eez_name),
+  #              size = 2) +
+  # geom_text(data = subset(Test_Data, source %in% country),
+  #              aes(start_lon,
+  #                start_lat,
+  #                label = paste(source,"to",target)
+  #              ),
+  #              size = 2) +
+  # geom_text_repel(data = Test_Data,
+  #   aes(start_lon,
+# start_lat,
+# label = paste(source,"to",target)
+# )
+# )+
+ggtheme_map() +
+  scale_colour_gradientn("Gain of Stock-Share Ratio (%)",
+                         colours = wesanderson::wes_palette("Zissou1", 100, type = "continuous"),
+                         limits = c(0,25),
+                         breaks = seq(0,25,5)
+  )
 
 ```
