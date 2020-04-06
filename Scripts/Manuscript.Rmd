@@ -10,10 +10,73 @@ output: pdf_document
 
 # Abstract
 
+The delineation of Economic Exclusive Zones (EEZs) under the United Nations Convention on the Law of the Seas (UNCLOS) in the early 80s, established political boundaries across the distribution of many fish species, creating shared species between nations. Thus, transboundary fish stocks are defined as those populations that cross the EEZ of two or more neighboring nations. Despite not implicit, UNCLOS incentivizes nations to cooperate in the management of transboundary fisheries. Today, most management plans emplaced are based on historical distribution of catches. Climate change represents a challenge for the joint management of fish stocks. For instance, climate-driven changes in species distributions have led to conflict between nations due to changes in the proportion of captures, quota allocation, and fishery newcomers. Recent events suggests that even changes in species that contribute a relatively small proportion of the overall catch can lead to important international conflict. This is the case of the conflict between the EU, Norway, Iceland, and the Faroe Islands over Atlantic mackerel (*Scomber scombrus*) which represents 8% of the catch of involved nations. Thus, in this chapter I explore the climate-driven changes in stock-share-proportion (e.g. the proportion of the stock that each EEZ has) of the previously identified (Chapter One) transboundary species. Moreover, I determine the *time of emergence* of each fish stock, defined as the year in which the stock-share-proportion will change from its historical average. Preliminary results suggest that many neighboring EEZs will see changes in stock-share ratio between 1 and 10% with some exceeding 25%. The results of this chapter can inform fisheries management as it not only identifies at the EEZ level stocks that will be likely to create international conflict, but also estimates the time of emergence that can be used to prioritize management plans in the face of a changing world. 
 
 # Introduction
 
+### Link paper un terms of SDGs
+
+- UnitedNations2018 Blanchard:2017hl Singh:2017ds
+
+### Collaborative management of share stocks
+
+- Theat points
+- Concept of treaty estabillity
+- Oremus:2020id
+
+
 # Methods
+
+## Projecting species distributions under cliamte change
+
+We projected the distribution of marine species using a dynamic bioclimatic envelope model (hearafter called DBEM). The DBEM algorythm includes species physiology, habitat suitabillity, depth and latitudinal ranges, and spatial population dynamics as well as preferences to sea temperature, salinity, oxygen content, sea ice extent (for polar species) and bathymetry. For pelagic species, the model uses environmental variables at the surface (e.g. sea surface temperature) whereas demersal species distribution are driven by ocean-bottom variables (e.g. bottom temperature). This way, the model estimates species abundance and maximum catch potential (a proxy of maximum sustainable yield) over a $0.5^{\circ}$ x $0.5^{\circ}$ grid of the world (See [-@Cheung:2010dt; -@Cheung:2016jd] for model details).
+
+We coupled the DBEM with the Geophysical Fluid Dynamics Laboratory Earth system model (GFDL-ESM2M) to project species distribution from 1951 to 2100 under cliamte change [@Dunne:2012bo; @Dunne:2013db]. We run the DBEM simulating biomass and MCP from 1950 to 2100 under a “worst-case” climate change scenario accroding to the Representative Concentration Pathway 8.5 (RCP 8.5) used by the Intergovernmental Panel on Climate Change (IPCC) [@IPCC:2014bz; Riahi:2011dk]. According to the GFDL-ESM2M, under the RCP 8.5 scenario atmospheric temperature will increase by $3.2^{\circ}C$ by 2081-2100, relative to preindustrial. We run the DBEM under ten different GFDL-ESM2M ensamble members [@Roggers:2015jq]. While all ensamble members follow the same RCP, they all constitute different initial Earth conditions. As a consequence, for each GFDL-ESM2M-ensamble the Earth system is infinitesimally perturbed resulting in an unique atmosphere and ocean state at each point in time. Thus, each ensamble has a different state of internal variability representing a plausible future under RCP 8.5 [@Roggers:2015jq]. 
+
+## Data analysis
+
+The Food and Agricultural Organization (FAO) of the UN define transboundary species as those that freely swim within the EEZ of neighbouring nations [@REFFAO]. Accordingly, we included in this analysis 633 marine exploited transboundary species representing 80% of the catch taken from the world's EEZs [@Palacios-Abrantes:xxxx]. We consider each species as a single stock unit within an EEZ due to lack of more detailed information [@Teh:2015gd; @Palacios-Abrantes:xxxx]. We defined the boundaries of the world EEZs (e.g., Mexico Pacific EEZ and Mexico Atlantic EEZ) using the Sea Around Us shapefile (updated 1 July 2015, available from http://www.seaaroundus.org). 
+
+### Changes in Stocks Share Ratio
+
+In game theory, a “threat point” is known as the minimum payoff that a player is willing to receive in order to cooperate with other players [@Sumaila:E&S]. We estimate each stock's stock share ratio (e.g. a players threat point) defined as the minimum proportion of the catch that each country will acept if they were to cooperate in the management of transboundary stocks [@Palacios-Abrantes:E&S]. For each stock and time step (1951-2100) we first aggregate the number of $0.5^{\circ}$ x $0.5^{\circ}$ grid cells where the species was present within neighbouring EEZs, and then calculated the proportion that each EEZ had [@Palacios-Abrantes:xxxx]. We then average the results in three time periods in order tho reduce climate variabillity within the projections. The first time period ($t_h$) comprises (1951 - 2005) and is assumed as the historic distribution of each species, thus representing each neighbouring nation's threat point. This time frame matches the historic climate data that the GFDL uses to project climate change [@Dunne:2012bo; @Dunne:2013db], and has previouslly been used as a reference point in fisheries studies [@REF]. We then selected two future periods; early $21^st$ century as the average of 2021 to 2040 ($t_e$), and mid $21^st$ century as the average of 2041 to 2060 ($t_m$). We choose these time periods to match the challenges of achieving fisheries-related UN-SDGs [@UnitedNations2018] such as SDG 14.4 (end overfishing) and  SDG 1.2 (poverty reduction), aimed to be achieved by 2020 and 2030, respectively [@Singh:2017ds]. We then estimate the percentage change in stock share ratio of each future time period relative to the historic value. The analysis was repplicated for each of the ten ensamble members and ensamble variation captured by averaging results among ensamble members (mean $\pm$ standar deviation). 
+
+### Time of Emergence Index
+
+An important question is estimating the time in which stock share ratio is going to change from a historical variablillty in order for policy to cope with the change. 
+
+For that we developed an index of transboundary range shift (*I*), fisheries and climate change based on a species distribution centroid:
+
+$$I =(\frac{D_{A,y}}{sd(D_{A,h})} - \frac{D_{B,y}}{sd(D_{B,h)}})^2$$
+
+where $D_A$ and $D_B$ represent the distribution centroid of a species in EEZs A and B, respectiveley for each time step from 2000 to 2100 (*t*) and *sd* is the standar deviation of the historical (1951 - 2000) centroid distribution for $D_A$ and $D_B$.
+
+In cases where the species is distributed in more than 2 neighbouring EEZs (e.g. *xxx*), the index is as follows:
+
+$$I =(\frac{D_{A,y}}{sd(D_{A,h})} - \frac{D_{B,y}}{sd(D_{B,h})}) |  \\  +(\frac{D_{A,y}}{sd(D_{A,h})} - \frac{D_{C,y}}{sd(D_{B,h})}) | \\  +(\frac{D_{A,y}}{sd(D_{A,h})} - \frac{D_{Cy}}{sd(D_{B,h})})/N$$
+
+
+This way, for two neighbouring EEZs sharing a stock, if the centroid shifts towards EEZ A (*DA* decreases) but away from EEZ A B (*DB* increases), EEZ A may catch a bigger share over B and the risk of dispute increases. Consequently, if the centroid shifts are within historical variability, risk of dispute between EEZ A and B is lower, finally, if the centroid shifts are beyond historical variability, the risk of dispute is higher. Thus, risk is positively related to the frequency of centroid shifts beyond historical variability (Fig. 1). 
+
+![Fig 1. Theorical representation of transboundary Index. (A) Case with two neighbouring EEZs. (B) Case with three neigbouring EEZs. Grey dotted boxes represent each EEZ boundaries, t1 and t2 represent time periods one and two, respectiveley, and green and red lines represent an increase and decrease in D, respectiveley](~/GitHub/TransEmergence/Figures/Fig1.png)
+
+
+
+
+
+
+### Statistical analysis
+
+
+All analyses were run using the statistical software *R version 3.5.2 (2018-12-20; Eggshell Igloo)* with the packages *data.table* [@Packagedatatable:2019uh], *janitor* [@PackagejanitorSim:2018ur], *wesanderson* [@Packagewesanderson:2018vn], *rfishbase* [@PackagerfishbaseR:2019th], *R.matlab* [@PackageRmatlabRe:2018un], *sf* [@PackagesfSimpleF:2018vp], *sp* [@PackagespClasses:2019tn], *tidiverse* [@PackagetidyverseE:2017vq], *tidytext* [@PackagetidytextTe:2019vk], and *zoo* [@PackagezooSInfr:2019tm]. All code is available at https://github.com/jepa/TransEmergence
+
+
+
+
+
+Things to consider:
+
+- Disputed territories (e.g. China)
 
 # Results
 
