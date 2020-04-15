@@ -701,7 +701,7 @@ EEZ_CellID <- read_excel(paste(data_path,"Spatial/V_Lam/EEZ_CellID.xlsx",sep="")
   clean_names()
 colnames(EEZ_CellID) <- c("eezid","index")
 
-Lon_Lat_DBEM <- read.csv("~/GitHub/TransEmergence/Temporal_Data/Spatial/Lon_Lat_DBEM.txt", header=FALSE)
+Lon_Lat_DBEM <- read.csv(paste(data_path,"Spatial/Lon_Lat_DBEM.txt",sep=""), header=FALSE)
 colnames(Lon_Lat_DBEM) <- c("index","lon","lat")
 
 index_code <- EEZIDs_List %>% 
@@ -719,7 +719,7 @@ ensamble_list <- seq(102,103,1)
 world_grid <- tibble(index = seq(1,259200,1))
 path = DBEM_path
 
-eez_centroid <- read.csv("~/GitHub/TransEmergence/Temporal_Data/Spatial/eez_centroids.csv", header=TRUE)
+eez_centroid <- read.csv(paste(data_path,"Spatial/eez_centroids.csv", sep = ""), header=TRUE)
 
 Neighbours <- read.csv(paste(data_path,"Spatial/Neighbours_eez_id.csv",sep="")) %>% clean_names()
 
