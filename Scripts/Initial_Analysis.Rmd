@@ -478,10 +478,10 @@ TransIndex <- function(Spp,year, data_type = "Catch",ensamble_list,path,Neighbou
     
     Ids <- unique(Neighbours_combo$neighbour_id)
     
-    for(i in 1:length(Ids)){
-      
+  corefx <- function(Ids){  
+    
       EEZ_ids <- Neighbours_combo %>% 
-        filter(neighbour_id == Ids[i])
+        filter(neighbour_id == Ids)
       
       Sub_Trans_Spp <- Trans_Spp %>% 
         filter(eez_name %in% EEZ_ids$eez_name)
@@ -621,20 +621,25 @@ TransIndex <- function(Spp,year, data_type = "Catch",ensamble_list,path,Neighbou
         select(taxon_key,eez_name,eez_neighbour,emerging_yr)
       
       
-      if(i == 1){
-        f_df <- Final_Result
-      }else{
-        f_df <- bind_rows(f_df,Final_Result)
+      # if(i == 1){
+      #   f_df <- Final_Result
+      # }else{
+      #   f_df <- bind_rows(f_df,Final_Result)
+      # }
+    return(Final_Result)
       }
-    }
     
-    return(f_df)
+  
+  x <- bind_rows(
+    mclapply(Ids,corefx)
+  )
+    # return(f_df)
     
   }else{
     
     print("no share data")
     
-    f_df <- tibble(
+    x <- tibble(
       taxon_key = Spp,
       eez_name = NA,
       emerging_yr = NA
@@ -642,21 +647,20 @@ TransIndex <- function(Spp,year, data_type = "Catch",ensamble_list,path,Neighbou
     
   }
   
-  return(f_df)
-  
+  return(x)
+
 }
 
  
 #  #One spp works 
 # suppressMessages(
-# x <-  TransIndex(Spp = 600245,
+# TransIndex(Spp = 600006,
 #              year,
 #              data_type = "Catch",
 #              ensamble_list,
 #              path,
 #              Neighbours = Neighbours,
 #              eez_centroid)
-# )
 # Multiple spp
 
 # spp_list <- c(600004,
@@ -735,8 +739,8 @@ Transboundary_spp <- read.csv(paste(data_path,"Species/Transboundary_spp.csv",se
 
 spp_list <- c(600004,
               600005,
-              600245,
-              600006
+              600245#,
+              # 600006
               )
 
 t_start <- Sys.time()
@@ -744,7 +748,7 @@ t_start <- Sys.time()
 suppressMessages(
   suppressWarnings(
     Test <- bind_rows(
-      lapply(spp_list,
+      mclapply(spp_list,
              TransIndex,
              year,
              data_type = "Catch",
@@ -760,6 +764,10 @@ suppressMessages(
 
 t_end <- Sys.time()-t_start;t_end
 
+# Version 1 (embeded loop) <- 3.01
+# Version 2 (embeded lapply) <- 2.71
+# Version 3 (embeded mclapply) <- 1.597311 mins
+# Version 4 (embeded mclapply) + mclapply in spp <- 1.597311 mins
 
 
 ```
