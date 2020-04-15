@@ -445,7 +445,21 @@ TransIndex <- function(Spp,year, data_type = "Catch",ensamble_list,path,Neighbou
     )
   )
   
-  print(Spp)
+  #### Control for Spp id so I can fix problems
+  
+if(file.exists("~/Desktop/spp_df.csv") == FALSE){
+  spp_df <- tibble() %>% 
+    write_csv(.,
+            "~/Desktop/spp_df.csv")
+}
+
+  suppressMessages(
+    spp_df <- read_csv("~/Desktop/spp_df.csv")
+  )
+  spp_df <- tibble(Spp) %>% 
+    bind_rows(spp_df) %>% 
+    write_csv(.,
+              "~/Desktop/spp_df.csv")
   
   
   #____________ Selecting only the transboundary nature of the species _________ #
@@ -726,6 +740,8 @@ Neighbours <- read.csv(paste(data_path,"Spatial/Neighbours_eez_id.csv",sep="")) 
 Transboundary_spp <- read.csv(paste(data_path,"Species/Transboundary_spp.csv",sep="")) %>% 
   clean_names()
 
+spp_list <- unique(Transboundary_spp$taxon_key)
+
 ```
 
 
@@ -739,8 +755,8 @@ Transboundary_spp <- read.csv(paste(data_path,"Species/Transboundary_spp.csv",se
 
 spp_list <- c(600004,
               600005,
-              600245#,
-              # 600006
+              600245,
+              600006
               )
 
 t_start <- Sys.time()
