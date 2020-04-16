@@ -423,40 +423,39 @@ t_end <- Sys.time()-t_start;t_end
 
 ## Estimating emerging year
 
-#### Fun `TransIndex` 
+#### Fun `GetCentroids` 
 
-```{r TransIndex, eval = F, echo = T}
+```{r GetCentroids, eval = F, echo = T}
 
-TransIndex <- function(Spp,year, data_type = "Catch",ensamble_list,path,Neighbours,eez_centroid){
+GetCentroids <- function(taxon_key,year, data_type = "Catch", ensamble, path, Neighbours, eez_centroid){
   
   # ----------------- #
   # Get Species Centrodis
   #  ---------------- #
   
   # Get model data from spps
-  Spp_Dist <- bind_rows(
-    lapply(
-      ensamble_list,
-      dbem_import,
-      taxon_key = Spp,
-      year = year,
-      data_type = data_type,
-      path = path
-    )
+  Spp_Dist <- dbem_import(
+    taxon_key = taxon_key,
+    year = year,
+    data_type = "Catch",
+    ensamble = ensamble,
+    path = path
   )
+  
   
   #### Control for Spp id so I can fix problems
   
-if(file.exists("~/Desktop/spp_df.csv") == FALSE){
-  spp_df <- tibble() %>% 
-    write_csv(.,
-            "~/Desktop/spp_df.csv")
-}
-
+  if(file.exists("~/Desktop/spp_df.csv") == FALSE){
+    spp_df <- tibble() %>% 
+      write_csv(.,
+                "~/Desktop/spp_df.csv")
+  }
+  
   suppressMessages(
     spp_df <- read_csv("~/Desktop/spp_df.csv")
   )
-  spp_df <- tibble(Spp) %>% 
+  spp_df <- tibble(taxon_key,
+                   ensamble) %>% 
     bind_rows(spp_df) %>% 
     write_csv(.,
               "~/Desktop/spp_df.csv")
@@ -475,25 +474,22 @@ if(file.exists("~/Desktop/spp_df.csv") == FALSE){
   nr <- nrow(Trans_Spp)
   if(nr > 0){
     
-
+    
     # Filter eez by those transboundary
-  unique_eez <- unique(Trans_Spp$eez_name)
-  
-  Neighbours_combo <- Neighbours %>% 
-    filter(eez_name %in% unique_eez,
-           eez_neighbour %in% unique_eez)
+    unique_eez <- unique(Trans_Spp$eez_name)
+    
+    Neighbours_combo <- Neighbours %>% 
+      filter(eez_name %in% unique_eez,
+             eez_neighbour %in% unique_eez)
     
     
     # Get the centroid of each country
     EEZ_centroid <- eez_centroid %>% 
       filter(eez_name %in% Trans_Spp$eez_name) %>% 
-      mutate(taxon_key = Spp)
+      mutate(taxon_key = taxon_key)
     
-    
-    Ids <- unique(Neighbours_combo$neighbour_id)
-    
-  corefx <- function(Ids){  
-    
+    CentroidsFx <- function(Ids){  
+      
       EEZ_ids <- Neighbours_combo %>% 
         filter(neighbour_id == Ids)
       
@@ -526,180 +522,244 @@ if(file.exists("~/Desktop/spp_df.csv") == FALSE){
         ) %>% 
         select(taxon_key,eez_name,neighbour_id,ensamble,year,distance)
       
-      # Historical mean and sd of distance
-      historical <- Distance_Data %>%
-        filter(year <= 2000) %>%
-        ungroup() %>%
-        group_by(taxon_key,ensamble,eez_name,neighbour_id) %>%
-        summarise_at(vars("distance"),
-                     c(hd_temp_mean=mean,
-                       hd_temp_sd=sd)
-        )
+      return(Distance_Data)
       
-      
-      # Future results
-      future <- Distance_Data %>% 
-        filter(year > 2000)
-      
-      # Transboundary Index
-      Trans_index <- Distance_Data %>% 
-        left_join(historical,
-                  by = c("taxon_key","eez_name","ensamble","neighbour_id")
-        ) %>%
-        # Re arrenging table for mutate
-        gather("variable","value",distance:hd_temp_sd) %>%
-        ungroup()
-      
-      
-      Partial <- Trans_index %>% 
-        mutate(
-          names = ifelse(eez_name ==Sub_EEZ_centroid$eez_name[1],paste("Country_A",variable,sep="_"),paste("Country_B",variable,sep="_"))
-        ) %>%
-        select(-eez_name,-variable) %>%
-        spread(names,value) %>% 
-        # mutate index
-        mutate(
-          trans_index = (Country_A_distance/Country_A_hd_temp_sd - Country_B_distance/Country_B_hd_temp_sd)^2
-        ) %>% 
-        group_by(taxon_key,ensamble,neighbour_id) %>% 
-        mutate(RMean = rollmean(x = trans_index, 
-                                10, 
-                                align = "right", 
-                                fill = trans_index)
-        ) %>% 
-        filter(year > 1960) %>% 
-        select(taxon_key,neighbour_id,year,ensamble,trans_index,RMean)
-      
-      # Average of 10 years mean of ensamble members results
-      mean_sd_index <- Partial %>% 
-        group_by(taxon_key,year,neighbour_id) %>% 
-        summarise_at(vars("RMean"),
-                     c(trend=mean,
-                       ensamble_sd=sd)
-        )
-      
-      # Estimate noice from ensamble members
-      historic_sd <- mean_sd_index %>% 
-        filter(year < 2000) %>% 
-        group_by(taxon_key) %>% 
-        summarise_at(vars("trend"),
-                     c(hist_mean=mean,
-                       noise=sd)
-        )
-      
-      
-      # Plot the result, bruh
-      # ggplot() +
-      #   geom_line(data = mean_sd_index,
-      #             aes(
-      #               x = year,
-      #               y = trend
-      #             )
-      #   ) +
-      #   geom_ribbon(data = mean_sd_index,
-      #               aes(x=year,
-      #                   ymin=historic_sd$hist_mean-historic_sd$noise,
-      #                   ymax=historic_sd$hist_mean+historic_sd$noise),
-      #               alpha = 0.5,
-      #               fill = "grey50"
-      #   ) +
-      #   geom_line(data = mean_sd_index,
-      #             aes(
-      #               x = year,
-      #               y = historic_sd$hist_mean
-      #             ),
-      #             colour = "grey50"
-      #   ) +
-      #   geom_point(data = subset(mean_sd_index, trend > (historic_sd$hist_mean+historic_sd$noise) | trend < (historic_sd$hist_mean-historic_sd$noise)),
-      #              aes(
-      #                x = year,
-      #                y = trend,
-      #                colour = "red",
-      #              ),
-      #              shape = 1,
-      #              size = 3
-      #   ) +
-      #   geom_vline(xintercept = 2000,colour="blue",alpha = 0.5) +
-      #   theme_classic()
-      
-      # #     
-      Final_Result <- mean_sd_index %>%
-        filter(year > 2000,
-               trend > (historic_sd$hist_mean+historic_sd$noise) |
-                 trend < (historic_sd$hist_mean-historic_sd$noise)
-        ) %>%
-        group_by(taxon_key,neighbour_id) %>%
-        summarise(emerging_yr= min(year)) %>%
-        left_join(EEZ_ids) %>%
-        ungroup() %>%
-        select(taxon_key,eez_name,eez_neighbour,emerging_yr)
-      
-      
-      # if(i == 1){
-      #   f_df <- Final_Result
-      # }else{
-      #   f_df <- bind_rows(f_df,Final_Result)
-      # }
-    return(Final_Result)
-      }
+    }
     
-  
-  x <- bind_rows(
-    mclapply(Ids,corefx)
-  )
-    # return(f_df)
+    Ids <- unique(Neighbours_combo$neighbour_id)
+    
+    Centroids_Data <- bind_rows(
+      lapply(Ids,CentroidsFx)
+    )
     
   }else{
     
-    print("no share data")
-    
-    x <- tibble(
-      taxon_key = Spp,
-      eez_name = NA,
-      emerging_yr = NA
-    )
+    Centroids_Data <- tibble()
     
   }
   
-  return(x)
-
+  
+  return(Centroids_Data)
+  
 }
 
- 
-#  #One spp works 
-# suppressMessages(
-# TransIndex(Spp = 600006,
-#              year,
-#              data_type = "Catch",
-#              ensamble_list,
-#              path,
-#              Neighbours = Neighbours,
-#              eez_centroid)
-# Multiple spp
+```
 
-# spp_list <- c(600004,
-#               600005,
-#               600245,
-#               600006
-#               )
-# 
-# suppressMessages(
-#   suppressWarnings(
-#     Test <- bind_rows(
-#       lapply(spp_list,
-#              TransIndex,
-#              year,
-#              data_type = "Catch",
-#              ensamble_list,
-#              path,
-#              Neighbours,
-#              eez_centroid
-#       )
-#     )
-#   )
+#### Fun `TransIndex`
+
+```{r TransIndex, eval = F, echo = T}
+
+TransIndex <- function(Centroids,Ids){
+  
+  Centroids_id <- Centroids %>% 
+    filter(neighbour_id %in% Ids)
+  
+  EEZ_ids <- Neighbours %>% 
+    filter(neighbour_id %in% Ids)
+  
+  # Historical mean and sd of distance
+  historical <- Centroids_id %>%
+    filter(year <= 2000) %>% 
+    ungroup() %>%
+    group_by(taxon_key,ensamble,eez_name,neighbour_id) %>%
+    summarise_at(vars("distance"),
+                 c(hd_temp_mean=mean,
+                   hd_temp_sd=sd)
+    )
+  
+  # Future results
+  future <- Centroids_id %>% 
+    filter(year > 2000)
+  
+  # Transboundary Index
+  Trans_index <- Centroids_id %>% 
+    left_join(historical,
+              by = c("taxon_key","eez_name","ensamble","neighbour_id")
+    ) %>%
+    # Re arrenging table for mutate
+    gather("variable","value",distance:hd_temp_sd) %>%
+    ungroup()
+  
+  Unique_EEZs <- unique(Trans_index$eez_name)
+  
+  
+  Partial <- Trans_index %>% 
+    mutate(
+      names = ifelse(eez_name ==Unique_EEZs[1],paste("Country_A",variable,sep="_"),paste("Country_B",variable,sep="_"))
+    ) %>%
+    select(-eez_name,-variable) %>%
+    spread(names,value) %>% 
+    # mutate index
+    mutate(
+      trans_index = (Country_A_distance/Country_A_hd_temp_sd - Country_B_distance/Country_B_hd_temp_sd)^2
+    ) %>% 
+    group_by(taxon_key,ensamble,neighbour_id) %>% 
+    mutate(RMean = rollmean(x = trans_index, 
+                            10, 
+                            align = "right", 
+                            fill = trans_index)
+    ) %>% 
+    filter(year > 1960) %>% 
+    select(taxon_key,neighbour_id,year,ensamble,trans_index,RMean)
+  
+  # Average of 10 years mean of ensamble members results
+  mean_sd_index <- Partial %>% 
+    group_by(taxon_key,year,neighbour_id) %>% 
+    summarise_at(vars("RMean"),
+                 c(trend=mean,
+                   ensamble_sd=sd)
+    )
+  
+  # Estimate noice from ensamble members
+  historic_sd <- mean_sd_index %>% 
+    filter(year < 2000) %>% 
+    group_by(taxon_key) %>% 
+    summarise_at(vars("trend"),
+                 c(hist_mean=mean,
+                   noise=sd)
+    )
+  
+  
+  # Plot the result, bruh
+  # ggplot() +
+  #   geom_line(data = mean_sd_index,
+  #             aes(
+  #               x = year,
+  #               y = trend
+  #             )
+  #   ) +
+  #   geom_ribbon(data = mean_sd_index,
+  #               aes(x=year,
+  #                   ymin=historic_sd$hist_mean-historic_sd$noise,
+  #                   ymax=historic_sd$hist_mean+historic_sd$noise),
+  #               alpha = 0.5,
+  #               fill = "grey50"
+  #   ) +
+  #   geom_line(data = mean_sd_index,
+  #             aes(
+  #               x = year,
+  #               y = historic_sd$hist_mean
+  #             ),
+  #             colour = "grey50"
+  #   ) +
+  #   geom_point(data = subset(mean_sd_index, trend > (historic_sd$hist_mean+historic_sd$noise) | trend < (historic_sd$hist_mean-historic_sd$noise)),
+  #              aes(
+  #                x = year,
+  #                y = trend,
+  #                colour = "red",
+  #              ),
+  #              shape = 1,
+  #              size = 3
+  #   ) +
+  #   geom_vline(xintercept = 2000,colour="blue",alpha = 0.5) +
+  #   theme_classic()
+  
+  # #     
+  Final_Result <- mean_sd_index %>%
+    filter(year > 2000,
+           trend > (historic_sd$hist_mean+historic_sd$noise) |
+             trend < (historic_sd$hist_mean-historic_sd$noise)
+    ) %>%
+    group_by(taxon_key,neighbour_id) %>%
+    summarise(emerging_yr= min(year)) %>%
+    left_join(EEZ_ids) %>%
+    ungroup() %>%
+    select(taxon_key,eez_name,eez_neighbour,emerging_yr)
+  
+  return(Final_Result)
+}
+
+
+
+# test <- bind_rows(
+#   lapply(ensamble_list,
+#          GetCentroids,
+#          taxon_key = 600245,
+#          year = year,
+#          data_type = "Catch",
+#          path = path,
+#          Neighbours = Neighbours,
+#          eez_centroid = eez_centroid)
 # )
+# 
+# 
+#   TransIndex(test,819)
+#   
+#   bind_rows(
+#   lapply(Ids,
+#          TransIndex,
+#          Centroid = test)
+#   )
 
+```
 
+#### Fun `GetTransIndex`
+
+```{r GetTransIndex, eval = F, echo = T}
+  
+GetTransIndex <- function(taxon_key,
+                            year,
+                            data_type = "Catch",
+                            path,
+                            ensamble_list,
+                            Neighbours,
+                            eez_centroid){
+    
+    # First step
+    # Call Get centroids fucntion for centroids data per ensamble
+    Step_one <- bind_rows(
+      lapply(ensamble_list,
+             GetCentroids,
+             taxon_key = taxon_key,
+             year = year,
+             data_type = "Catch",
+             path = path,
+             Neighbours = Neighbours,
+             eez_centroid = eez_centroid)
+    )
+    
+    Ids <- unique(Step_one$neighbour_id)
+    
+    # Second Step
+    # Get the transboudary index based on all centroids
+    Step_two <- bind_rows(
+      lapply(Ids,
+             TransIndex,
+             Centroid = Step_one)
+    )
+    
+    
+    return(Step_two)
+  }
+  
+  
+  
+  # GetTransIndex(
+  #   taxon_key = 600004,
+  #   ensamble_list = ensamble_list,
+  #   year = year,
+  #   data_type = "Catch",
+  #   path = path,
+  #   Neighbours = Neighbours,
+  #   eez_centroid = eez_centroid
+  # )
+  # 
+  # 
+  # spp_list <- c(600004, 600245)
+  # 
+  #  test <- bind_rows(
+  #   lapply(spp_list,
+  #          GetTransIndex,
+  #          year = year,
+  #          data_type = "Catch",
+  #          path = path,
+  #          Neighbours = Neighbours,
+  #          eez_centroid = eez_centroid,
+  #          ensamble_list = ensamble_list
+  #   )
+  # )
+  # 
+    
 ```
 
 #### Emerging Control Panel
@@ -729,7 +789,9 @@ year_df <- tibble(year =  c(seq(1951,2000,1), seq(2001,2099,1)),
                   )
 
 data_type <- "catch"
-ensamble_list <- seq(102,103,1)
+# ensamble_list <- seq(102,103,1)
+ensamble_list <- seq(102,111,1)
+
 world_grid <- tibble(index = seq(1,259200,1))
 path = DBEM_path
 
@@ -740,12 +802,12 @@ Neighbours <- read.csv(paste(data_path,"Spatial/Neighbours_eez_id.csv",sep="")) 
 Transboundary_spp <- read.csv(paste(data_path,"Species/Transboundary_spp.csv",sep="")) %>% 
   clean_names()
 
-spp_list <- unique(Transboundary_spp$taxon_key)
+spp_list <- unique(Transboundary_spp$taxon_key)[1:2]
 
 ```
 
-
 #### Emerging Routine
+
 ```{r Emerging_routine, eval = F, echo = F}
 
 ####_______________________ ####
@@ -753,25 +815,19 @@ spp_list <- unique(Transboundary_spp$taxon_key)
 ####_______________________ ####
 
 
-spp_list <- c(600004,
-              600005,
-              600245,
-              600006
-              )
-
 t_start <- Sys.time()
 
 suppressMessages(
   suppressWarnings(
     Test <- bind_rows(
       mclapply(spp_list,
-             TransIndex,
-             year,
-             data_type = "Catch",
-             ensamble_list,
-             path,
-             Neighbours,
-             eez_centroid
+               GetTransIndex,
+               year = year,
+               data_type = "Catch",
+               ensamble_list = ensamble_list,
+               path = path,
+               Neighbours = Neighbours,
+               eez_centroid = eez_centroid
       )
     )
   )
@@ -779,6 +835,9 @@ suppressMessages(
 
 
 t_end <- Sys.time()-t_start;t_end
+
+write_csv(Test,
+          "~/Desktop/Test.csv")
 
 # Version 1 (embeded loop) <- 3.01
 # Version 2 (embeded lapply) <- 2.71
@@ -1250,5 +1309,287 @@ ggtheme_map() +
                          limits = c(0,25),
                          breaks = seq(0,25,5)
   )
+
+```
+
+
+# Old Code
+
+
+```{r TransIndex, eval = F, echo = T}
+
+TransIndex <- function(Spp,year, data_type = "Catch",ensamble_list,path,Neighbours,eez_centroid){
+  
+  # ----------------- #
+  # Get Species Centrodis
+  #  ---------------- #
+  
+  # Get model data from spps
+  Spp_Dist <- bind_rows(
+    lapply(
+      ensamble_list,
+      dbem_import,
+      taxon_key = Spp,
+      year = year,
+      data_type = data_type,
+      path = path
+    )
+  )
+  
+  
+  #### Control for Spp id so I can fix problems
+  
+if(file.exists("~/Desktop/spp_df.csv") == FALSE){
+  spp_df <- tibble() %>% 
+    write_csv(.,
+            "~/Desktop/spp_df.csv")
+}
+
+  suppressMessages(
+    spp_df <- read_csv("~/Desktop/spp_df.csv")
+  )
+  spp_df <- tibble(Spp) %>% 
+    bind_rows(spp_df) %>% 
+    write_csv(.,
+              "~/Desktop/spp_df.csv")
+  
+  
+  #____________ Selecting only the transboundary nature of the species _________ #
+  Trans_Spp <- Spp_Dist %>%
+    left_join(index_code,
+              by= "index") %>% 
+    filter(!is.na(value)) %>% 
+    semi_join(Transboundary_spp, # filter only transboundary cases
+              by = c("taxon_key","eez_name")
+    )
+  
+  # Step
+  nr <- nrow(Trans_Spp)
+  if(nr > 0){
+    
+
+    # Filter eez by those transboundary
+  unique_eez <- unique(Trans_Spp$eez_name)
+  
+  Neighbours_combo <- Neighbours %>% 
+    filter(eez_name %in% unique_eez,
+           eez_neighbour %in% unique_eez)
+    
+    
+    # Get the centroid of each country
+    EEZ_centroid <- eez_centroid %>% 
+      filter(eez_name %in% Trans_Spp$eez_name) %>% 
+      mutate(taxon_key = Spp)
+    
+    
+    Ids <- unique(Neighbours_combo$neighbour_id)
+    
+  corefx <- function(Ids){  
+    
+      EEZ_ids <- Neighbours_combo %>% 
+        filter(neighbour_id == Ids)
+      
+      Sub_Trans_Spp <- Trans_Spp %>% 
+        filter(eez_name %in% EEZ_ids$eez_name)
+      
+      Sub_EEZ_centroid <- EEZ_centroid %>% 
+        filter(eez_name %in% EEZ_ids$eez_name)
+      
+      # Centroid is defined as the tile with the higest species value
+      Centroids <- Sub_Trans_Spp %>% 
+        left_join(EEZ_ids, by = "eez_name") %>% 
+        group_by(taxon_key,year,ensamble,neighbour_id) %>%  # for whole distribution
+        top_n(1,value) %>% 
+        distinct(value,year, .keep_all = TRUE) %>%  # removes duplicates when tile is in between EEZs
+        left_join(Sub_EEZ_centroid, by = "taxon_key") %>%
+        select(eez_name =eez_name.y, everything() ,-eez_name.x)
+      
+      # Estimate distances between spp centroid and EEZ centroid
+      Distance_Data <- Centroids %>%
+        rename(
+          catch_lon = lon,
+          catch_lat = lat,
+          eez_lon = longitude,
+          eez_lat= latitude
+        ) %>% 
+        # Estimate the distance between centriods
+        mutate(
+          distance = geodist(eez_lon, eez_lat, catch_lon, catch_lat, units="km")
+        ) %>% 
+        select(taxon_key,eez_name,neighbour_id,ensamble,year,distance)
+      
+      # Historical mean and sd of distance
+      historical <- Distance_Data %>%
+        filter(year <= 2000) %>%
+        ungroup() %>%
+        group_by(taxon_key,ensamble,eez_name,neighbour_id) %>%
+        summarise_at(vars("distance"),
+                     c(hd_temp_mean=mean,
+                       hd_temp_sd=sd)
+        )
+      
+      
+      # Future results
+      future <- Distance_Data %>% 
+        filter(year > 2000)
+      
+      # Transboundary Index
+      Trans_index <- Distance_Data %>% 
+        left_join(historical,
+                  by = c("taxon_key","eez_name","ensamble","neighbour_id")
+        ) %>%
+        # Re arrenging table for mutate
+        gather("variable","value",distance:hd_temp_sd) %>%
+        ungroup()
+      
+      
+      Partial <- Trans_index %>% 
+        mutate(
+          names = ifelse(eez_name ==Sub_EEZ_centroid$eez_name[1],paste("Country_A",variable,sep="_"),paste("Country_B",variable,sep="_"))
+        ) %>%
+        select(-eez_name,-variable) %>%
+        spread(names,value) %>% 
+        # mutate index
+        mutate(
+          trans_index = (Country_A_distance/Country_A_hd_temp_sd - Country_B_distance/Country_B_hd_temp_sd)^2
+        ) %>% 
+        group_by(taxon_key,ensamble,neighbour_id) %>% 
+        mutate(RMean = rollmean(x = trans_index, 
+                                10, 
+                                align = "right", 
+                                fill = trans_index)
+        ) %>% 
+        filter(year > 1960) %>% 
+        select(taxon_key,neighbour_id,year,ensamble,trans_index,RMean)
+      
+      # Average of 10 years mean of ensamble members results
+      mean_sd_index <- Partial %>% 
+        group_by(taxon_key,year,neighbour_id) %>% 
+        summarise_at(vars("RMean"),
+                     c(trend=mean,
+                       ensamble_sd=sd)
+        )
+      
+      # Estimate noice from ensamble members
+      historic_sd <- mean_sd_index %>% 
+        filter(year < 2000) %>% 
+        group_by(taxon_key) %>% 
+        summarise_at(vars("trend"),
+                     c(hist_mean=mean,
+                       noise=sd)
+        )
+      
+      
+      # Plot the result, bruh
+      # ggplot() +
+      #   geom_line(data = mean_sd_index,
+      #             aes(
+      #               x = year,
+      #               y = trend
+      #             )
+      #   ) +
+      #   geom_ribbon(data = mean_sd_index,
+      #               aes(x=year,
+      #                   ymin=historic_sd$hist_mean-historic_sd$noise,
+      #                   ymax=historic_sd$hist_mean+historic_sd$noise),
+      #               alpha = 0.5,
+      #               fill = "grey50"
+      #   ) +
+      #   geom_line(data = mean_sd_index,
+      #             aes(
+      #               x = year,
+      #               y = historic_sd$hist_mean
+      #             ),
+      #             colour = "grey50"
+      #   ) +
+      #   geom_point(data = subset(mean_sd_index, trend > (historic_sd$hist_mean+historic_sd$noise) | trend < (historic_sd$hist_mean-historic_sd$noise)),
+      #              aes(
+      #                x = year,
+      #                y = trend,
+      #                colour = "red",
+      #              ),
+      #              shape = 1,
+      #              size = 3
+      #   ) +
+      #   geom_vline(xintercept = 2000,colour="blue",alpha = 0.5) +
+      #   theme_classic()
+      
+      # #     
+      Final_Result <- mean_sd_index %>%
+        filter(year > 2000,
+               trend > (historic_sd$hist_mean+historic_sd$noise) |
+                 trend < (historic_sd$hist_mean-historic_sd$noise)
+        ) %>%
+        group_by(taxon_key,neighbour_id) %>%
+        summarise(emerging_yr= min(year)) %>%
+        left_join(EEZ_ids) %>%
+        ungroup() %>%
+        select(taxon_key,eez_name,eez_neighbour,emerging_yr)
+      
+      
+      # if(i == 1){
+      #   f_df <- Final_Result
+      # }else{
+      #   f_df <- bind_rows(f_df,Final_Result)
+      # }
+    return(Final_Result)
+      }
+    
+  
+  x <- bind_rows(
+    mclapply(Ids,corefx)
+  )
+    # return(f_df)
+    
+  }else{
+    
+    print("no share data")
+    
+    x <- tibble(
+      taxon_key = Spp,
+      eez_name = NA,
+      emerging_yr = NA
+    )
+    
+  }
+  
+  return(x)
+
+}
+
+ 
+#  #One spp works 
+# suppressMessages(
+# TransIndex(Spp = 600006,
+#              year,
+#              data_type = "Catch",
+#              ensamble_list,
+#              path,
+#              Neighbours = Neighbours,
+#              eez_centroid)
+# Multiple spp
+
+# spp_list <- c(600004,
+#               600005,
+#               600245,
+#               600006
+#               )
+# 
+# suppressMessages(
+#   suppressWarnings(
+#     Test <- bind_rows(
+#       lapply(spp_list,
+#              TransIndex,
+#              year,
+#              data_type = "Catch",
+#              ensamble_list,
+#              path,
+#              Neighbours,
+#              eez_centroid
+#       )
+#     )
+#   )
+# )
+
 
 ```
