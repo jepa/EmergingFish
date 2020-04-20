@@ -425,15 +425,16 @@ t_end <- Sys.time()-t_start;t_end
 
 #### Fun `GetCentroids` 
 
+This function estimates the distance between the centroid of each neighbouring EEZ and the distribution of the species along both EEZs. We define species centroid as the tile with the highest value of maimum catch potential from all of the species distribution in each year.
+
 ```{r GetCentroids, eval = F, echo = T}
 
 GetCentroids <- function(taxon_key,year, data_type = "Catch", ensamble, path, Neighbours, eez_centroid){
   
   # ----------------- #
-  # Get Species Centrodis
+  # Get model data from spps for one ensamble
   #  ---------------- #
   
-  # Get model data from spps
   Spp_Dist <- dbem_import(
     taxon_key = taxon_key,
     year = year,
@@ -442,9 +443,11 @@ GetCentroids <- function(taxon_key,year, data_type = "Catch", ensamble, path, Ne
     path = path
   )
   
+  # ----------------- #
+  # Extra step 
+  # ----------------- #
   
-  #### Control for Spp id so I can fix problems
-  
+  #### Creates a data to control computational time
   if(file.exists("~/Desktop/spp_df.csv") == FALSE){
     spp_df <- tibble() %>% 
       write_csv(.,
@@ -460,8 +463,11 @@ GetCentroids <- function(taxon_key,year, data_type = "Catch", ensamble, path, Ne
     write_csv(.,
               "~/Desktop/spp_df.csv")
   
+  # ----------------- #
+  # Estimate distance between centroids
+  # ----------------- #
   
-  #____________ Selecting only the transboundary nature of the species _________ #
+  # Filter only the transboundary nature of the species 
   Trans_Spp <- Spp_Dist %>%
     left_join(index_code,
               by= "index") %>% 
@@ -470,10 +476,12 @@ GetCentroids <- function(taxon_key,year, data_type = "Catch", ensamble, path, Ne
               by = c("taxon_key","eez_name")
     )
   
-  # Step
+  # ----------------- #
+  # Extra step 
+  # ----------------- #
+  # Controls for cases with no-data
   nr <- nrow(Trans_Spp)
   if(nr > 0){
-    
     
     # Filter eez by those transboundary
     unique_eez <- unique(Trans_Spp$eez_name)
@@ -488,8 +496,17 @@ GetCentroids <- function(taxon_key,year, data_type = "Catch", ensamble, path, Ne
       filter(eez_name %in% Trans_Spp$eez_name) %>% 
       mutate(taxon_key = taxon_key)
     
+    # ----------------- #
+    # Centroid function
+    # ----------------- #
+    
+    # This function estimates the distance of each neighbouring EEZ
+    # It uses Ids wich is a pre-determine identifier of neighbouring
+    # EEZs. Fo example Peru and Chile have Id = 167, and viceversa
+    
     CentroidsFx <- function(Ids){  
       
+      # Filter data by Ids
       EEZ_ids <- Neighbours_combo %>% 
         filter(neighbour_id == Ids)
       
@@ -506,28 +523,25 @@ GetCentroids <- function(taxon_key,year, data_type = "Catch", ensamble, path, Ne
         top_n(1,value) %>% 
         distinct(value,year, .keep_all = TRUE) %>%  # removes duplicates when tile is in between EEZs
         left_join(Sub_EEZ_centroid, by = "taxon_key") %>%
-        select(eez_name =eez_name.y, everything() ,-eez_name.x)
-      
-      # Estimate distances between spp centroid and EEZ centroid
-      Distance_Data <- Centroids %>%
-        rename(
-          catch_lon = lon,
-          catch_lat = lat,
-          eez_lon = longitude,
-          eez_lat= latitude
-        ) %>% 
-        # Estimate the distance between centriods
+        select(eez_name =eez_name.y, everything() ,-eez_name.x) %>% 
+        # Estimate distances between spp centroid and EEZ centroid
         mutate(
-          distance = geodist(eez_lon, eez_lat, catch_lon, catch_lat, units="km")
+          distance = geodist(longitude, # eez longitude
+                             latitude,  # eez latitude
+                             lon,  # species longitude
+                             lat, # species latitude
+                             units="km")
         ) %>% 
         select(taxon_key,eez_name,neighbour_id,ensamble,year,distance)
       
-      return(Distance_Data)
+      return(Centroids)
       
     }
     
+    # Determine the ids
     Ids <- unique(Neighbours_combo$neighbour_id)
     
+    # Run function
     Centroids_Data <- bind_rows(
       lapply(Ids,CentroidsFx)
     )
@@ -551,6 +565,7 @@ GetCentroids <- function(taxon_key,year, data_type = "Catch", ensamble, path, Ne
 
 TransIndex <- function(Centroids,Ids){
   
+  # Filter data by neighbouring ID
   Centroids_id <- Centroids %>% 
     filter(neighbour_id %in% Ids)
   
