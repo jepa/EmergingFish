@@ -284,7 +284,7 @@ This part of the analysis estimates the Stock Share Ratio and its change under c
 
 ### Fun `EstPropChange`
 
-```{r EstPropChange, eval = F, echo = F}
+```{r EstPropChange, eval = T, echo = F}
 
 EstPropChange <- function(taxon_key,
                           year,
@@ -448,7 +448,7 @@ EstPropChange <- function(taxon_key,
 
 ### Proportion Control Panel
 
-```{r Emerging_control_panel, eval = F}
+```{r Emerging_control_panel, eval = T, echo = F}
 
 ## ----------------- ##
 # Data needed for estimating year of emergence
@@ -486,10 +486,9 @@ spp_list <- unique(Transboundary_spp$taxon_key)[1:2]
 
 ```
 
-
 ### Proportion routine
 
-```{r Proportion_routine, eval = F, echo = F}
+```{r Proportion_routine, eval = T, echo = F}
 
 ####_______________________ ####
 # Estimating proportion change
@@ -811,7 +810,7 @@ TransIndex <- function(Centroids, # Expecting the results from the GetCentroids 
 
 This is the last function of the emerging year evaluation. It was made so we could run the analysis per each species. The function function simply runs the functions `GetCentroids` by ensabmble member and then `TransIndex` by pairing EEZ. Thus, with this function we run the whole set by species * paired EEZ * ten ensamble members. 
 
-```{r GetTransIndex, eval = F, echo = T}
+```{r GetTransIndex, eval = T, echo = T}
   
 GetTransIndex <- function(taxon_key,
                             year,
@@ -883,7 +882,7 @@ GetTransIndex <- function(taxon_key,
 
 ### Emerging Control Panel
 
-```{r Emerging_control_panel, eval = F}
+```{r Emerging_control_panel, eval = T, echo = T}
 
 ## ----------------- ##
 # Data needed for estimating year of emergence
@@ -932,7 +931,6 @@ spp_list <- unique(Transboundary_spp$taxon_key)[1:2]
 # Estimating year of eergence
 ####_______________________ ####
 
-
 t_start <- Sys.time()
 
 suppressMessages(
@@ -965,7 +963,6 @@ write_csv(Emerging_result,
 
 ```
 
-
 # Results
 
 ## Percentage Change
@@ -978,8 +975,7 @@ This results only shows the average percentage change in proportion of all speec
 
 This function estimates the total change in MCP proportion of each species for each EEZ. It looses the connection with neighbours as you only know for x species houw much is the proportion changing.
 
-
-```{r fun_SummaryProp, eval = T, echo =F}
+```{r fun_SummaryProp, eval = F, echo =F}
 
 SummaryProp <- function(taxon_key,links="NA"){
   
@@ -1013,7 +1009,7 @@ SummaryProp <- function(taxon_key,links="NA"){
 
 The next step is to summarize all species per eez so our results shows average change of all species within an EEZ towards a neighbour
 
-```{r fun_EEZProp, eval = T, echo = F}
+```{r fun_EEZProp, eval = F, echo = F}
 
 EEZProp <- function(taxon_list,links="NA"){
 
@@ -1056,13 +1052,11 @@ EEZProp <- function(taxon_list,links="NA"){
 
 ```
 
-
 #### Fun `PropChange`
 
 Finally, we estimate the average proportion change of all species within each eez
 
-
-```{r fun_PropChange, eval = T, echo =F}
+```{r fun_PropChange, eval = F, echo =F}
 
 PropChange <- function(taxon_list,links="NA"){
 
@@ -1083,10 +1077,9 @@ PropChange <- function(taxon_list,links="NA"){
 
 ```
 
-
 ### Run Results Analysis
 
-```{r fun_PropChange, eval = T, echo =F}
+```{r fun_PropChange, eval = F, echo =F}
 
 # Get taxon list
 Taxon_List <- list.files(paste(result_path,"/Proportion/",sep=""))
@@ -1425,7 +1418,7 @@ ggtheme_map() +
 # Old Code
 
 
-```{r TransIndex, eval = F, echo = T}
+```{r TransIndex, eval = F, echo = F}
 
 TransIndex <- function(Spp,year, data_type = "Catch",ensamble_list,path,Neighbours,eez_centroid){
   
