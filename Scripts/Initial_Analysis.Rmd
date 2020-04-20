@@ -4,7 +4,8 @@ title: Matching the Time of Emergence of Transboundary Fish Stocks to Lead Time 
 author: "Juliano Palacios Abrantes"
 date: "09/03/2020"
 output:
-  word_document: default
+  word_document: 
+    keep_md: yes
   html_document: default
 subtitle: Initital analysis
 editor_options: 
@@ -12,7 +13,7 @@ editor_options:
 ---
 
 
-```{r setup, eval = T, echo=F, warning=F,message=F, results='hide'}
+```{r setup, eval = T, echo = F, warning = F, message = F, results = 'hide'}
 
 #### READ ME !!! ####
 # Run this chunk before knit so you make sure you have all pkgs installed in R
@@ -25,7 +26,7 @@ ipak <- function(pkg){
 }
 
 
-#### Library ####
+#### Project's Library
 packages <- c(
   "tidyverse",
   "here", # for dbem_import `here()`
@@ -34,7 +35,7 @@ packages <- c(
   "janitor", # for clearing names
   "geosphere", # estimate distances between points `distm()`
   "ggrepel",
-  "zoo",
+  "zoo", # for average mean
   "parallel", # for mclapply,
   "sf", # for mapping
   "st", # for mapping
@@ -63,7 +64,7 @@ if(Sys.info()[7] == "hall1000"){
 }
 
 
-
+# standarize maps
 ggtheme_map <- function(base_size = 9, Region = "NA") {
   
   theme(text             = element_text(#family = "Helvetica",
@@ -90,12 +91,17 @@ ggtheme_map <- function(base_size = 9, Region = "NA") {
 
 # Methods
 
+See methods section of the paper (e.g. Manusript.Rmd)
+
+## Global functions
+
+Here we just run functions that will be used multiple times douring the analysis
+
 ### Fun `dbem_import`
 
 This function reads the DBEM data for each year and ensamble (ESM model) from 102 20 111
 
-
-```{r dbem_import, eval = F, echo = T}
+```{r dbem_import, eval = T, echo = T}
 
 dbem_import <- function(taxon_key, #Except taxon_key 
                         year, #Expects sequence of years 
@@ -152,11 +158,44 @@ dbem_import <- function(taxon_key, #Except taxon_key
 
 ```
 
+## Creating Data
 
-## Determine Coords centroids and Neighbouring ids
+Here we re-arrange existing data for the analysis. We have three steps:
+
+1- Set the SAU relations between index and EEZs and include lat long data for each index
+
+2.- Deteremine the centroid of each EEZ and asigned an id to each neighbouring interaction (e.g. Chile and Peru or Canada West Coast and US West Coast) 
+
+3.- Set Neigbouring IDs based on the interactions between neighbouring EEZs for all of those sharing transboundary species
+
+```{r pre_data_creation, eval = F, echo = F}
+
+## ---------------##
+#### 1. SAU relations between INDEX and Country's EEZs
+## ---------------##
+
+EEZIDs_List <- read_excel(paste(data_path,"Spatial/V_Lam/Updated_EEZList_17June2016.xlsx",sep="")) %>% 
+  clean_names()
+EEZ_CellID <- read_excel(paste(data_path,"Spatial/V_Lam/EEZ_CellID.xlsx",sep="")) %>% 
+  clean_names()
+colnames(EEZ_CellID) <- c("eezid","index")
+
+Lon_Lat_DBEM <- read.csv(paste(data_path,"Spatial/Lon_Lat_DBEM.txt",sep=""), header=FALSE)
+colnames(Lon_Lat_DBEM) <- c("index","lon","lat")
+
+index_code <- EEZIDs_List %>% 
+  left_join(EEZ_CellID) %>% 
+  rename(eez_name = name) %>% 
+  left_join(Lon_Lat_DBEM,
+            by = "index")
+
+write_csv(index_code,
+          "sau_index_code.csv")
 
 
-```{r, get_eez_centroids, eval = F}
+## ---------------##
+#### 2. entroids 
+## ---------------##
 
 # Load SAU shapefile name and paths
 
@@ -168,7 +207,7 @@ fnam_world <- "SAUEEZ_July2015.shp"
 
 # Load it!
 World_eez_sf <- st_read(dsn = path_world,
-                    layer =file_path_sans_ext(fnam_world)) %>% 
+                        layer =file_path_sans_ext(fnam_world)) %>% 
   rename(eez_name = Name) %>% 
   st_transform(crs = 4326) %>% # 4326
   st_simplify(preserveTopology = TRUE, dTolerance = 0.1)
@@ -201,9 +240,18 @@ coords$latitude <- gsub(")","",coords$latitude)
 coords <- coords %>% 
   mutate_at(vars(longitude,latitude),as.numeric)
 
-write_csv(coords,
-          "eez_centroids.csv")
+# Save dataframe so we don't need to run this ewvery time
+# write_csv(coords,
+#           "eez_centroids.csv")
 
+
+## ---------------##
+#### 3. Set Neigbouring IDs
+## ---------------##
+
+# Read transboundary species database from Palacios-Abrantes et al 2020 (FishForVisa)
+Transboundary_spp <- read.csv(paste(data_path,"Species/Transboundary_spp.csv",sep="")) %>% 
+  clean_names()
 
 # Get id of neighbouring pairs
 Neighbours_spp <- Transboundary_spp %>% 
@@ -212,36 +260,43 @@ Neighbours_spp <- Transboundary_spp %>%
   ungroup() %>% 
   select(-n) %>% 
   rownames_to_column("neighbour_id")
-    
-#  set ids 
+
+# Split dataframes to merge neighbouring ids
 df1 <- Neighbours_spp
 df2 <- Neighbours_spp
 colnames(df2) <- c("neighbour_id", "eez_neighbour", "eez_name")
 
+# Merge neighbouring ids
 df_full <- bind_rows(df1, df2) %>% 
   group_by(eez_neighbour,eez_name) %>% 
   summarise(neighbour_id = min(neighbour_id))
 
-# write_csv(df_full, "Neighbours_eez_id.csv")
+# Save dataframe so we don't need to run this every time
+# write_csv(df_full, 
+#           "Neighbours_eez_id.csv")
     
 ```
 
 ## Estimating Proportion Change
 
-#### Fun `EstPropChange`
+This part of the analysis estimates the Stock Share Ratio and its change under cliamte change under two time frames; early (2030) and mid (2050). Note that 2020 is the average of 2021 to 2040 and mid is the average of 2041 to 2060.
+
+
+### Fun `EstPropChange`
 
 ```{r EstPropChange, eval = F, echo = F}
 
 EstPropChange <- function(taxon_key,
                           year,
-                          data_type,
+                          hist_y,
+                          data_type = "Catch",
                           ensamble_list, # expects a list of ensambles to averrage by
                           path,
                           neighbours){
   
   
   # Loads species data for all ensambles
-  spp_dist <- bind_rows(
+  Spp_Dist <- bind_rows(
     lapply(
       ensamble_list,
       dbem_import,
@@ -252,55 +307,41 @@ EstPropChange <- function(taxon_key,
     )
   )
   
-  
-  # head(spp_dist)
-  
-  # Result 1. Number of Countries that share the species
+
+  # Filter Species distribution to that of the neighbouring EEZs
+  # ------------ #
+  # Warning message:
+  # Column `eez_name` joining factor and character vector, coercing into character vector 
+# ------------ #
   
   suppressWarnings(
-    trans_EEZ <- Transboundary_spp %>% 
-      filter(taxon_key %in% spp_dist$taxon_key) %>% 
-      left_join(Neighbours,
-                by = c("eez_name","eez_neighbour")
+    Trans_EEZ <- Transboundary_spp %>% 
+      filter(taxon_key %in% Spp_Dist$taxon_key) %>% 
+      left_join(index_code,
+                by = c("eez_name")
       )
-  )
+    )
   
-  
-  # List of indexes per EEZ
-  index_id <- trans_EEZ %>% 
-    group_by(eez_name,index) %>% 
-    summarise(n=n()) %>% 
-    select(-n)
-  
-  
-  # --------------- #
-  # Warning messages:
-  # 1: Column `eez_name` joining factor and character vector, coercing into character vector 
-  # 2: Column `eez_neighbour` joining factor and character vector, coercing into character vector 
-  # --------------- #
-  
-  
-  #____________ Selecting only the transboundary nature of the species _________ #
-  trans_spp <- spp_dist %>%
-    filter(index %in% trans_EEZ$index) %>% 
-    left_join(index_id,
-              by = "index")
-  
-  #____________ ESTIMATING DISTRIBUTION INDEX (TRESHOLD 3)_________ #
-  # The number of species' cells present within each country's EEZ
-  
-  #Step 1.  Get EEZ id and Neighbour
+  # Get neighbouring id
   Neighbours_List <- Neighbours %>% 
-    group_by(eez_name,eez_neighbour) %>% 
-    summarise(n=n()) %>% 
-    ungroup() %>% 
-    select(-n) %>% 
-    semi_join(trans_EEZ,
+    semi_join(Trans_EEZ,
               by = c("eez_name","eez_neighbour")
     )
   
-  # Step 2. Determines the amount of grids present in each country
-  spp_grid <- trans_spp %>% 
+  # Selecting only the transboundary nature of the species
+  Trans_Spp <- Spp_Dist %>%
+    filter(index %in% Trans_EEZ$index) %>% 
+    left_join(index_code,
+              by = "index") %>% 
+    filter(eez_name %in% Neighbours_List$eez_name)
+  
+  # -------------------- #
+  # Estimate area index
+  # The number of species' cells present within each country's EEZ
+  # -------------------- #
+  
+  #Determines the amount of grids present in each country
+  Spp_Grid <- Trans_Spp %>% 
     group_by(taxon_key,
              eez_name,
              year,
@@ -309,10 +350,8 @@ EstPropChange <- function(taxon_key,
     left_join(Neighbours_List,
               by = "eez_name")
   
-  # Step 3. Sum total grids per Neighbours
-  
   # Split dataframes to merge latter
-  Territory_T <- spp_grid %>% 
+  Territory_T <- Spp_Grid %>% 
     ungroup() %>% 
     select(
       taxon_key,
@@ -322,7 +361,7 @@ EstPropChange <- function(taxon_key,
       ensamble
     )
   
-  Neighbour_T <- spp_grid %>% 
+  Neighbour_T <- Spp_Grid %>% 
     ungroup() %>% 
     select(
       taxon_key,
@@ -333,7 +372,8 @@ EstPropChange <- function(taxon_key,
       ensamble
     )
   
-  per_change_d <- full_join(Territory_T,
+  # Estimate Area index and % change
+  Per_Ghange_D <- full_join(Territory_T,
                             Neighbour_T, 
                             by = c("Name","taxon_key","year","ensamble")
   ) %>%
@@ -345,11 +385,11 @@ EstPropChange <- function(taxon_key,
            n_spp_Country = n_spp_eez.x,
            n_spp_Neighbour = n_spp_eez.y) %>% 
     mutate(area_index = n_spp_Country/Spp_Total) %>% 
-    # select(taxon_key,year,ensamble_list,eez_name,eez_neighbour,area_index) %>% 
+    # Determine the three time frames for comparrison
     mutate(
-      time_step = ifelse(year < 2000,"historical",
-                         ifelse(year >= 2045 & year <= 2064, "mid",
-                                ifelse(year >= 2080, "n_end","NA")
+      time_step = ifelse(year < hist_y,"historical",
+                         ifelse(year >= 2021 & year <= 2040, "early",
+                                ifelse(year >= 2041 & year <= 2060, "mid","NA")
                          )
       )
     ) %>%
@@ -373,28 +413,81 @@ EstPropChange <- function(taxon_key,
   # End function
   # --------------- #
   
-  if(nrow(per_change_d) > 0){
+  if(nrow(Per_Ghange_D) > 0){
   
   # Save Result
   name <- paste("proportion_",taxon_key,".csv",sep="")
   path_name <- paste(result_path,"Proportion/",name, sep="")
   
-  write_csv(per_change_d,
+  write_csv(Per_Ghange_D,
             path_name)
   
   return(print(paste("analysis done",taxon_key)))
+  # return(Per_Ghange_D)
   
   }else{
     print(paste("no result for",taxon_key))
   }
   
   # Or return a df
-  # return(per_change_d)
+  return(Per_Ghange_D)
 }
+
+# EstPropChange(taxon_key = 600004,
+#               year = year_df,
+#               hist_y = 2000,
+#               data_type = "Catch",
+#               ensamble_list = ensamble_list,
+#               path = path,
+#               neighbours = neighbours)
+
+
 
 ```
 
-#### Proportion routine
+
+### Proportion Control Panel
+
+```{r Emerging_control_panel, eval = F}
+
+## ----------------- ##
+# Data needed for estimating year of emergence
+## ----------------- ##
+
+# SAU relations between INDEX and Country's EEZs (see chunk 3)
+index_code <- read_csv(paste(data_path,"Spatial/sau_index_code.csv",sep=""))
+
+# Neighbour list and their respective id (see chunk 3)
+Neighbours <- read_csv(paste(data_path,"Spatial/Neighbours_eez_id.csv",sep="")) %>% clean_names()
+
+# Transboundary species and their sharing EEZs (see Palacios-Abrantes et al; FishForVisa)
+Transboundary_spp <- read_csv(paste(data_path,"Species/Transboundary_spp.csv",sep="")) %>% 
+  clean_names() %>% 
+  select(-x1)
+
+## ----------------- ##
+# Global variables
+## ----------------- ##
+
+# Year timeframe
+year_df <- tibble(year =  c(seq(1951,2000,1), seq(2001,2099,1)),
+                  time_period = c(rep("historic", 50), rep("future", 99))
+                  )
+
+# Data path
+path = DBEM_path
+
+# List of ensamble members
+ensamble_list <- seq(102,103,1) # for testing
+# ensamble_list <- seq(102,111,1)
+
+#  List os species
+spp_list <- unique(Transboundary_spp$taxon_key)[1:2]
+
+```
+
+
+### Proportion routine
 
 ```{r Proportion_routine, eval = F, echo = F}
 
@@ -420,16 +513,23 @@ t_end <- Sys.time()-t_start;t_end
 
 ```
 
-
 ## Estimating emerging year
 
-#### Fun `GetCentroids` 
+This rutine estimates the time (e.g. year) in which the changes in stock share ratio is more likely to happen based on historical variations (e.g. model noise) and future trends (e.g signal). This result uses teh average of the 10 ensamble members
+
+### Fun `GetCentroids` 
 
 This function estimates the distance between the centroid of each neighbouring EEZ and the distribution of the species along both EEZs. We define species centroid as the tile with the highest value of maimum catch potential from all of the species distribution in each year.
 
-```{r GetCentroids, eval = F, echo = T}
+```{r GetCentroids, eval = T, echo = F}
 
-GetCentroids <- function(taxon_key,year, data_type = "Catch", ensamble, path, Neighbours, eez_centroid){
+GetCentroids <- function(taxon_key,
+                         year, 
+                         data_type = "Catch",
+                         ensamble, 
+                         path,
+                         Neighbours,
+                         eez_centroid){
   
   # ----------------- #
   # Get model data from spps for one ensamble
@@ -438,7 +538,7 @@ GetCentroids <- function(taxon_key,year, data_type = "Catch", ensamble, path, Ne
   Spp_Dist <- dbem_import(
     taxon_key = taxon_key,
     year = year,
-    data_type = "Catch",
+    data_type = data_type,
     ensamble = ensamble,
     path = path
   )
@@ -490,7 +590,6 @@ GetCentroids <- function(taxon_key,year, data_type = "Catch", ensamble, path, Ne
       filter(eez_name %in% unique_eez,
              eez_neighbour %in% unique_eez)
     
-    
     # Get the centroid of each country
     EEZ_centroid <- eez_centroid %>% 
       filter(eez_name %in% Trans_Spp$eez_name) %>% 
@@ -541,29 +640,48 @@ GetCentroids <- function(taxon_key,year, data_type = "Catch", ensamble, path, Ne
     # Determine the ids
     Ids <- unique(Neighbours_combo$neighbour_id)
     
-    # Run function
+    # Run sub-function
     Centroids_Data <- bind_rows(
       lapply(Ids,CentroidsFx)
     )
     
   }else{
-    
+    # In case there's no data
     Centroids_Data <- tibble()
     
   }
-  
   
   return(Centroids_Data)
   
 }
 
+
+
+GetCentroids(taxon_key = 600004,
+             year = year_df,
+             # data_type = data,
+             ensamble = 102,
+             path = path,
+             Neighbours = Neighbours,
+             eez_centroid = eez_centroid
+             )
+
 ```
 
-#### Fun `TransIndex`
+### Fun `TransIndex`
 
-```{r TransIndex, eval = F, echo = T}
+This functions takes on `GetCentroids` function and estimates the TransIndex (*TI*) for each pair of neighbouring countries. Presents a 10 years average of the results
 
-TransIndex <- function(Centroids,Ids){
+$$TI =(\frac{D_{A,y}}{sd(D_{A,h})} - \frac{D_{B,y}}{sd(D_{B,h)}})^2$$
+
+The year of emergece is defined as the first year where the trend is larger than the 95% CI of the historic variation.
+
+
+```{r TransIndex, eval = T, echo = T}
+
+TransIndex <- function(Centroids, # Expecting the results from the GetCentroids function
+                       Ids, # A numeric value representing a neighbouring interaction
+                       Hist_y = 2000){ # The LAST year of Historical data
   
   # Filter data by neighbouring ID
   Centroids_id <- Centroids %>% 
@@ -574,7 +692,7 @@ TransIndex <- function(Centroids,Ids){
   
   # Historical mean and sd of distance
   historical <- Centroids_id %>%
-    filter(year <= 2000) %>% 
+    filter(year <= Hist_y) %>% 
     ungroup() %>%
     group_by(taxon_key,ensamble,eez_name,neighbour_id) %>%
     summarise_at(vars("distance"),
@@ -584,7 +702,7 @@ TransIndex <- function(Centroids,Ids){
   
   # Future results
   future <- Centroids_id %>% 
-    filter(year > 2000)
+    filter(year > Hist_y)
   
   # Transboundary Index
   Trans_index <- Centroids_id %>% 
@@ -595,6 +713,7 @@ TransIndex <- function(Centroids,Ids){
     gather("variable","value",distance:hd_temp_sd) %>%
     ungroup()
   
+  # Get unique eezs
   Unique_EEZs <- unique(Trans_index$eez_name)
   
   
@@ -608,6 +727,7 @@ TransIndex <- function(Centroids,Ids){
     mutate(
       trans_index = (Country_A_distance/Country_A_hd_temp_sd - Country_B_distance/Country_B_hd_temp_sd)^2
     ) %>% 
+    # Ten years average of results
     group_by(taxon_key,ensamble,neighbour_id) %>% 
     mutate(RMean = rollmean(x = trans_index, 
                             10, 
@@ -627,7 +747,7 @@ TransIndex <- function(Centroids,Ids){
   
   # Estimate noice from ensamble members
   historic_sd <- mean_sd_index %>% 
-    filter(year < 2000) %>% 
+    filter(year < Hist_y) %>% 
     group_by(taxon_key) %>% 
     summarise_at(vars("trend"),
                  c(hist_mean=mean,
@@ -669,9 +789,9 @@ TransIndex <- function(Centroids,Ids){
   #   geom_vline(xintercept = 2000,colour="blue",alpha = 0.5) +
   #   theme_classic()
   
-  # #     
+  # Identifies the year of emergence
   Final_Result <- mean_sd_index %>%
-    filter(year > 2000,
+    filter(year > Hist_y,
            trend > (historic_sd$hist_mean+historic_sd$noise) |
              trend < (historic_sd$hist_mean-historic_sd$noise)
     ) %>%
@@ -685,35 +805,17 @@ TransIndex <- function(Centroids,Ids){
 }
 
 
-
-# test <- bind_rows(
-#   lapply(ensamble_list,
-#          GetCentroids,
-#          taxon_key = 600245,
-#          year = year,
-#          data_type = "Catch",
-#          path = path,
-#          Neighbours = Neighbours,
-#          eez_centroid = eez_centroid)
-# )
-# 
-# 
-#   TransIndex(test,819)
-#   
-#   bind_rows(
-#   lapply(Ids,
-#          TransIndex,
-#          Centroid = test)
-#   )
-
 ```
 
-#### Fun `GetTransIndex`
+### Fun `GetTransIndex`
+
+This is the last function of the emerging year evaluation. It was made so we could run the analysis per each species. The function function simply runs the functions `GetCentroids` by ensabmble member and then `TransIndex` by pairing EEZ. Thus, with this function we run the whole set by species * paired EEZ * ten ensamble members. 
 
 ```{r GetTransIndex, eval = F, echo = T}
   
 GetTransIndex <- function(taxon_key,
                             year,
+                          Hist_y,
                             data_type = "Catch",
                             path,
                             ensamble_list,
@@ -727,12 +829,13 @@ GetTransIndex <- function(taxon_key,
              GetCentroids,
              taxon_key = taxon_key,
              year = year,
-             data_type = "Catch",
+             data_type = data_type,
              path = path,
              Neighbours = Neighbours,
              eez_centroid = eez_centroid)
     )
     
+    # Set the different neighbouring pairs
     Ids <- unique(Step_one$neighbour_id)
     
     # Second Step
@@ -740,6 +843,7 @@ GetTransIndex <- function(taxon_key,
     Step_two <- bind_rows(
       lapply(Ids,
              TransIndex,
+             Hist_y = Hist_y,
              Centroid = Step_one)
     )
     
@@ -748,18 +852,18 @@ GetTransIndex <- function(taxon_key,
   }
   
   
-  
   # GetTransIndex(
   #   taxon_key = 600004,
-  #   ensamble_list = ensamble_list,
+  #   ensamble_list = ensamble_list[1:2],
   #   year = year,
-  #   data_type = "Catch",
+  #   Hist_y = 2000,
+  #   data_type = "Abd",
   #   path = path,
   #   Neighbours = Neighbours,
   #   eez_centroid = eez_centroid
   # )
-  # 
-  # 
+
+
   # spp_list <- c(600004, 600245)
   # 
   #  test <- bind_rows(
@@ -777,51 +881,50 @@ GetTransIndex <- function(taxon_key,
     
 ```
 
-#### Emerging Control Panel
+### Emerging Control Panel
 
 ```{r Emerging_control_panel, eval = F}
 
-# Data needed for estimating Proportion change
+## ----------------- ##
+# Data needed for estimating year of emergence
+## ----------------- ##
 
-# SAU relations between INDEX and Country's EEZs
-EEZIDs_List <- read_excel(paste(data_path,"Spatial/V_Lam/Updated_EEZList_17June2016.xlsx",sep="")) %>% 
-  clean_names()
-EEZ_CellID <- read_excel(paste(data_path,"Spatial/V_Lam/EEZ_CellID.xlsx",sep="")) %>% 
-  clean_names()
-colnames(EEZ_CellID) <- c("eezid","index")
+# SAU relations between INDEX and Country's EEZs (see chunk 3)
+index_code <- read_csv(paste(data_path,"Spatial/sau_index_code.csv",sep=""))
 
-Lon_Lat_DBEM <- read.csv(paste(data_path,"Spatial/Lon_Lat_DBEM.txt",sep=""), header=FALSE)
-colnames(Lon_Lat_DBEM) <- c("index","lon","lat")
-
-index_code <- EEZIDs_List %>% 
-  left_join(EEZ_CellID) %>% 
-  rename(eez_name = name) %>% 
-  left_join(Lon_Lat_DBEM,
-            by = "index")
-
-year_df <- tibble(year =  c(seq(1951,2000,1), seq(2001,2099,1)),
-                  time_period = c(rep("historic", 50), rep("future", 99))
-                  )
-
-data_type <- "catch"
-# ensamble_list <- seq(102,103,1)
-ensamble_list <- seq(102,111,1)
-
-world_grid <- tibble(index = seq(1,259200,1))
-path = DBEM_path
-
+# EEZ list and their centroid of distribution (see chunk 3)
 eez_centroid <- read.csv(paste(data_path,"Spatial/eez_centroids.csv", sep = ""), header=TRUE)
 
+# Neighbour list and their respective id (see chunk 3)
 Neighbours <- read.csv(paste(data_path,"Spatial/Neighbours_eez_id.csv",sep="")) %>% clean_names()
 
+# Transboundary species and their sharing EEZs (see Palacios-Abrantes et al; FishForVisa)
 Transboundary_spp <- read.csv(paste(data_path,"Species/Transboundary_spp.csv",sep="")) %>% 
   clean_names()
 
+## ----------------- ##
+# Global variables
+## ----------------- ##
+
+# Year timeframe
+year_df <- tibble(year =  seq(1951,2099,1))
+
+# Last year of "historic" data
+Historic_year = 2000
+
+# Data path
+path = DBEM_path
+
+# List of ensamble members
+ensamble_list <- seq(102,103,1) # for testing
+# ensamble_list <- seq(102,111,1)
+
+#  List os species
 spp_list <- unique(Transboundary_spp$taxon_key)[1:2]
 
 ```
 
-#### Emerging Routine
+### Emerging Routine
 
 ```{r Emerging_routine, eval = F, echo = F}
 
@@ -834,10 +937,11 @@ t_start <- Sys.time()
 
 suppressMessages(
   suppressWarnings(
-    Test <- bind_rows(
-      mclapply(spp_list,
+    Emerging_result <- bind_rows(
+      mclapply(spp_list[1],
                GetTransIndex,
-               year = year,
+               year = year_df,
+               Hist_y = Historic_year,
                data_type = "Catch",
                ensamble_list = ensamble_list,
                path = path,
@@ -851,14 +955,13 @@ suppressMessages(
 
 t_end <- Sys.time()-t_start;t_end
 
-write_csv(Test,
+write_csv(Emerging_result,
           "~/Desktop/Test.csv")
 
 # Version 1 (embeded loop) <- 3.01
 # Version 2 (embeded lapply) <- 2.71
 # Version 3 (embeded mclapply) <- 1.597311 mins
 # Version 4 (embeded mclapply) + mclapply in spp <- 1.597311 mins
-
 
 ```
 
@@ -875,6 +978,7 @@ This results only shows the average percentage change in proportion of all speec
 
 This function estimates the total change in MCP proportion of each species for each EEZ. It looses the connection with neighbours as you only know for x species houw much is the proportion changing.
 
+
 ```{r fun_SummaryProp, eval = T, echo =F}
 
 SummaryProp <- function(taxon_key,links="NA"){
@@ -883,7 +987,7 @@ SummaryProp <- function(taxon_key,links="NA"){
   proportion_data <- fread(paste(result_path,"Proportion/","proportion_",taxon_key,".csv", sep=""))
   
   if(links == "y"){
-    # summarizes by country
+    # summarizes by country and neighbour
     country_summary <- proportion_data %>% 
       group_by(taxon_key,eez_name,eez_neighbour,time_step) %>% 
       summarise(
@@ -907,7 +1011,7 @@ SummaryProp <- function(taxon_key,links="NA"){
 
 #### Fun `EEZProp`
 
-The next step is to summarize all species per eez
+The next step is to summarize all species per eez so our results shows average change of all species within an EEZ towards a neighbour
 
 ```{r fun_EEZProp, eval = T, echo = F}
 
@@ -985,14 +1089,14 @@ PropChange <- function(taxon_list,links="NA"){
 ```{r fun_PropChange, eval = T, echo =F}
 
 # Get taxon list
-taxon_list <- list.files(paste(result_path,"/Proportion/",sep=""))
+Taxon_List <- list.files(paste(result_path,"/Proportion/",sep=""))
 
 # clean names for function
-taxon_list <- gsub(".*_","",taxon_list) 
-taxon_list <- gsub("\\..*","",taxon_list)
+Taxon_List <- gsub(".*_","",Taxon_List) 
+Taxon_List <- gsub("\\..*","",Taxon_List)
 
 # Run results
-results <- PropChange(taxon_list, links="y") %>% 
+Proportion_Results <- PropChange(Taxon_List, links="y") %>% 
   mutate(per_mid =ifelse(per_mid >= 25, 25,
                            ifelse(per_mid <= -25,-25,per_mid)
                            )
@@ -1020,10 +1124,9 @@ World_eez_sf <- st_read(dsn = path_world,
 
 
 # Call world map from natural earth
-world_map <- rnaturalearth::ne_countries(scale = 'small', returnclass = c("sf"))
+World_map <- rnaturalearth::ne_countries(scale = 'small', returnclass = c("sf"))
 
-coords <- read.csv(coords)
-
+eez_centroid <- read_csv(paste(data_path,"Spatial/eez_centroids.csv", sep = ""))
 
 ```
 
@@ -1046,7 +1149,7 @@ World_sf %>%
   geom_sf(data=country10_sf) +
   scale_fill_gradient2("Average Change in\nStock-Share Ratio (%)\nBy Mid Century") +
   ggtheme_map() +
-  ggsave("figure_one.png",
+  ggsave("per_mid.png",
          width = 10,
          height = 6,
          units = "in"
@@ -1058,22 +1161,20 @@ World_sf %>%
 ### Fig. Netowrk
 
 ```{r fig_map_Juan, eval = F, echo =F}
-
 # Figure made thanks to Juanito!
 # http://jsmayorga.com/post/mapping-the-global-network-of-transnational-fisheries/
-
 
 # Prepare data from results
 Data <- results %>% 
   # get coords for sources
-  left_join(coords,
+  left_join(eez_centroid,
             by = "eez_name") %>%
   rename(source = eez_name,
          start_lon = longitude,
          start_lat = latitude,
          eez_name=eez_neighbour) %>% 
   # get coords for targets
-  left_join(coords,
+  left_join(eez_centroid,
             by = "eez_name") %>% 
   rename(target = eez_name,
          end_lon = longitude,
@@ -1083,10 +1184,10 @@ Data <- results %>%
   mutate(
     per_mid = ifelse(is.na(per_mid),0,per_mid)
   ) %>% 
-  drop_na() %>% 
-  filter(per_mid > 0,
-         variable == "mean_spp"#,
-         # source %in% c("Brazil","Argentina","Chile","Peru","Uruguay")
+  drop_na() %>%
+  filter(
+    variable == "mean_spp"#,
+    # source %in% c("Brazil","Argentina","Chile","Peru","Uruguay")
   )
 
 # Convert to data to spatial
@@ -1122,49 +1223,42 @@ paths <- network_data_sf %>%
 
 # Plot it!
 
+gc()# clean ram
 x <- ggplot() +
-  geom_sf(data = world_map, size = 0.1, fill = "gray90", col = "gray90") +
+  geom_sf(data = subset(World_map, sovereignt != "Antarctica"), size = 0.1, fill = "gray90", col = "gray90") +
   geom_sf(data = World_eez_sf, size = 0.1, fill = "white", col = "gray70") +
-  geom_point(data = Data,
+  geom_point(data = subset(Data, per_mid < 0),
              aes(start_lon,
                  start_lat,
                  col = per_mid),
              size = 0.05,
-             col = "black",
+             col = "gray30",
              shape = 20,
              stroke = 1.5) +
-  geom_path(data = paths,
+  geom_path(data = subset(paths, per_mid > 0),
             aes(X, Y,
                 group = interaction(line_id,subline_id),
                 col = per_mid
             ),
             size = 0.3,
-            arrow = arrow(length = unit(0.009, "npc")),
+            arrow = arrow(length = unit(0.009, "npc"),
+                          ends = "first"),
             show.legend = NA) +
-  # geom_sf_text(data =World_eez_sf, aes(label =eez_name),
-  #              size = 2) +
-  # geom_text_repel(data = paths,
-  #                  aes(
-  #                    x = X,
-  #                    y = Y,
-  #                    label =source),
-  #                  force = 1
-  # )+
   ggtheme_map() +
-  scale_colour_gradientn("Gain of Stock-Share Ratio (%)",
-                         colours = wesanderson::wes_palette("Zissou1", 100, type = "continuous"),
-                         limits = c(0,25),
-                         breaks = seq(0,25,5)
-  )+ 
-  ggsave("figure_connections.png",
+  scale_colour_viridis(
+    name="Average Gain of\nStock-Share Ratio (%)",
+    limits = c(0,25),
+    breaks = seq(0,25,5),
+    # option="magma",
+    direction = 1
+  ) +
+  ggsave("figure_connectionsc.png",
          width = 10,
          height = 6,
          units = "in"
   )
 
 ```
-
-
 
 ## Troubleshooting
 
