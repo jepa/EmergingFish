@@ -27,11 +27,11 @@ The delineation of Economic Exclusive Zones (EEZs) under the United Nations Conv
 
 # Methods
 
-## Projecting species distributions under cliamte change
+## Projecting species distributions under climate change
 
 We projected the distribution of marine species using a dynamic bioclimatic envelope model (hearafter called DBEM). The DBEM algorythm includes species physiology, habitat suitabillity, depth and latitudinal ranges, and spatial population dynamics as well as preferences to sea temperature, salinity, oxygen content, sea ice extent (for polar species) and bathymetry. For pelagic species, the model uses environmental variables at the surface (e.g. sea surface temperature) whereas demersal species distribution are driven by ocean-bottom variables (e.g. bottom temperature). This way, the model estimates species abundance and maximum catch potential (a proxy of maximum sustainable yield) over a $0.5^{\circ}$ x $0.5^{\circ}$ grid of the world (See [-@Cheung:2010dt; -@Cheung:2016jd] for model details).
 
-We coupled the DBEM with the Geophysical Fluid Dynamics Laboratory Earth system model (GFDL-ESM2M) to project species distribution from 1951 to 2100 under cliamte change [@Dunne:2012bo; @Dunne:2013db]. We run the DBEM simulating biomass and MCP from 1950 to 2100 under a “worst-case” climate change scenario accroding to the Representative Concentration Pathway 8.5 (RCP 8.5) used by the Intergovernmental Panel on Climate Change (IPCC) [@IPCC:2014bz; Riahi:2011dk]. According to the GFDL-ESM2M, under the RCP 8.5 scenario atmospheric temperature will increase by $3.2^{\circ}C$ by 2081-2100, relative to preindustrial. We run the DBEM under ten different GFDL-ESM2M ensamble members [@Roggers:2015jq]. While all ensamble members follow the same RCP, they all constitute different initial Earth conditions. As a consequence, for each GFDL-ESM2M-ensamble the Earth system is infinitesimally perturbed resulting in an unique atmosphere and ocean state at each point in time. Thus, each ensamble has a different state of internal variability representing a plausible future under RCP 8.5 [@Roggers:2015jq]. 
+We coupled the DBEM with the Geophysical Fluid Dynamics Laboratory Earth system model (GFDL-ESM2M) to project species distribution from 1951 to 2100 under cliamte change [@Dunne:2012bo; @Dunne:2013db]. We run the DBEM simulating biomass and MCP from 1950 to 2100 under a “worst-case” climate change scenario accroding to the Representative Concentration Pathway 8.5 (RCP 8.5) used by the Intergovernmental Panel on Climate Change (IPCC) [@IPCC:2014bz; Riahi:2011dk]. According to the GFDL-ESM2M, under the RCP 8.5 scenario atmospheric temperature will increase by $3.2^{\circ}C$ by 2081-2100, relative to preindustrial. We run the DBEM under ten different GFDL-ESM2M ensamble members [@Rodgers:2015jq]. While all ensamble members follow the same RCP, they all constitute different initial Earth conditions. As a consequence, for each GFDL-ESM2M-ensamble the Earth system is infinitesimally perturbed resulting in an unique atmosphere and ocean state at each point in time. Thus, each ensamble has a different state of internal variability representing a plausible future under RCP 8.5 [@Roggers:2015jq]. 
 
 ## Data analysis
 
@@ -43,13 +43,13 @@ In game theory, a “threat point” is known as the minimum payoff that a playe
 
 ### Time of Emergence Index
 
-An important question is estimating the time in which stock share ratio is going to change from a historical variablillty in order for policy to cope with the change. 
+An important question is estimating the time in which stock share ratio is going to change from a historical variablillty in order for policy to cope with the change. In here we call this event, time of emergence defined as the moment in time when the a secular trend (e.g. future variation in SSR) becomes larger than the historical trend variabillity [@Roggers:2015jq]. Thus we have to understand not only the impact of future climate change on the variabillity of the species distribution, but also the historical variabillity and its difference in the hopes to identify changes between both variabillities. We do this by following an ensemble member approach [@Roggers:2015jq; @Frolicher:2009ge]. Identifying a secular trend for the natural variabillity (e.g. backround noise) with a coupled cliamte change model (e.g. GFDL) requires multiple initial-condition ensemble simulations in order to rembove natural variability by averaging over the ensemble members [@Roggers:2015jq]. 
 
-For that we developed an index of transboundary range shift (*I*), fisheries and climate change based on a species distribution centroid:
+Thus, rely on ten GFDL ensable members described above, and developed an index of transboundary range shift, fisheries and climate change (*I*). The index is based on the variation of a species distribution centroid as follows:
 
 $$I =(\frac{D_{A,y}}{sd(D_{A,h})} - \frac{D_{B,y}}{sd(D_{B,h)}})^2$$
 
-where $D_A$ and $D_B$ represent the distribution centroid of a species in EEZs A and B, respectiveley for each time step from 2000 to 2100 (*t*) and *sd* is the standar deviation of the historical (1951 - 2000) centroid distribution for $D_A$ and $D_B$.
+where $D_A$ and $D_B$ represent the mean (among ensamble members) distribution centroid of a species in EEZs A and B, respectiveley for each time step from 2000 to 2100 (*t*) and *sd* is the standar deviation of the historical (1951 - 2000) centroid distribution for $D_A$ and $D_B$.
 
 In cases where the species is distributed in more than 2 neighbouring EEZs (e.g. *xxx*), the index is as follows:
 
