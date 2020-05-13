@@ -325,7 +325,7 @@ EstPropChange <- function(taxon_key,
   }
   
   # Or return a df
-  return(Per_Ghange_D)
+  # return(Per_Ghange_D)
 }
 
 # EstPropChange(taxon_key = 600004,
@@ -377,7 +377,7 @@ ensamble_list <- seq(102,103,1) # for testing
 # ensamble_list <- seq(102,111,1)
 
 #  List os species
-spp_list <- unique(Transboundary_spp$taxon_key)[1:2]
+spp_list <- unique(Transboundary_spp$taxon_key)
 
 ```
 
