@@ -18,13 +18,7 @@ editor_options:
 #### READ ME !!! ####
 # Run this chunk before knit so you make sure you have all pkgs installed in R
 
-ipak <- function(pkg){
-  new.pkg <- pkg[!(pkg %in% installed.packages()[, "Package"])]
-  if (length(new.pkg)) 
-    install.packages(new.pkg, dependencies = TRUE,repos = "http://cran.us.r-project.org")
-  sapply(pkg, require, character.only = TRUE)
-}
-
+library(MyFunctions)
 
 #### Project's Library
 packages <- c(
@@ -45,46 +39,7 @@ packages <- c(
   "gmt" # for estimating distances between points
 )
 
-ipak(packages)
-
-
-# Set paths depending on machine Beast (jepa88), "carmelia" or Hall1000
-if(Sys.info()[7] == "jepa88"){
-  data_path <- "Z:/DATA/DBEM/"
-}
-if(Sys.info()[7] == "carmelia"){
-  data_path <- paste(here(),"/Temporal_Data/",sep = "")
-  DBEM_path <- paste(data_path,"DBEM/",sep="")
-  result_path <- paste(here(),"/Temporal_Data/Results/",sep="")
-}
-if(Sys.info()[7] == "hall1000"){
-  data_path <- "/Volumes/DATA/JULIANO_NEYMAR/TransEmergence/Data/"
-  DBEM_path <- "/Volumes/DATA/DATA/DBEM/"
-  result_path <- "/Volumes/DATA/JULIANO_NEYMAR/TransEmergence/Results/"
-}
-
-
-# standarize maps
-ggtheme_map <- function(base_size = 9, Region = "NA") {
-  
-  theme(text             = element_text(#family = "Helvetica",
-    color = "gray30", size = base_size),
-    plot.title       = element_text(size = rel(1.25), hjust = 0, face = "bold"),
-    panel.background = element_blank(),
-    panel.border     = element_blank(),
-    panel.grid.minor = element_blank(),
-    panel.grid.major = element_line(color = "transparent"),
-    strip.background =element_rect(fill = "transparent"),
-    strip.text.x = element_text(size = 18, colour = "black",face= "bold.italic", angle = 0),
-    axis.line        = element_blank(), # element_line(colour = "grey30", size = .5))
-    axis.ticks       = element_blank(),
-    axis.text        = element_blank(),
-    axis.title       = element_blank(),
-    legend.key       = element_rect(colour = NA, fill = NA, size = 4),
-    legend.position = "bottom",
-    legend.key.width =unit(5,"line")
-  )
-}
+my_lib(packages)
 
 ```
 
@@ -92,71 +47,6 @@ ggtheme_map <- function(base_size = 9, Region = "NA") {
 # Methods
 
 See methods section of the paper (e.g. Manusript.Rmd)
-
-## Global functions
-
-Here we just run functions that will be used multiple times douring the analysis
-
-### Fun `dbem_import`
-
-This function reads the DBEM data for each year and ensamble (ESM model) from 102 20 111
-
-```{r dbem_import, eval = T, echo = T}
-
-dbem_import <- function(taxon_key, #Except taxon_key 
-                        year, #Expects sequence of years 
-                        ensamble, #Expects a number of the ensamble
-                        data_type, #Expects either "Abd" or "Catch"
-                        path = "NA"){
-  
-
-  years <- year_df %>% pull(year)
-  
-  D_Path <- paste(path,"mpa0F1ENS",ensamble,"/",taxon_key,"/",taxon_key,data_type,years,".txt",sep="")
-
-  
-  #### Importing data ####
-  cur <- lapply(D_Path, FUN=fread, na.strings="NA")
-  
-  if(length(cur)>0){
-    cur <- cur[sapply(cur, function(d) nrow(d) >= 1)] 
-    colnames <- c("index", "value")
-    cur <- lapply(cur, setNames, colnames)
-    df <- bind_rows(cur, .id = "column_label")
-    if(nrow(df)>0){
-      frame_key <- tibble(column_label = seq(1,length(unlist(years)),1), 
-                          "year"=years) %>% 
-        mutate(column_label=as.character(column_label))
-      df <- left_join(df, frame_key, by="column_label") %>% select(-column_label)
-      df <- df %>% mutate(data_type=data_type,
-                          taxon_key = taxon_key,
-                          ensamble = ensamble
-      )
-    }
-  } else {
-    df <- tibble()
-  }
-    return(df)
-} #Function end
-
-
-# x <- dbem_import(
-#   taxon_key <- 600004,
-#   Year <- year_df,
-#   data_type <- "Catch",
-#   ensamble = 102,
-#   # ensamble_list =ensamble,
-#   path <- DBEM_path
-# )
-
-
-# attach(x)
-# head(x)
-# unique(year)
-# unique(ensamble_list)
-# detach(x)
-
-```
 
 ## Creating Data
 
@@ -174,24 +64,28 @@ Here we re-arrange existing data for the analysis. We have three steps:
 #### 1. SAU relations between INDEX and Country's EEZs
 ## ---------------##
 
-EEZIDs_List <- read_excel(paste(data_path,"Spatial/V_Lam/Updated_EEZList_17June2016.xlsx",sep="")) %>% 
+EEZIDs_List <- my_path("G", extra_path = "Spatial/DBEM", name="Updated_EEZList_17June2016.xlsx", read = TRUE) %>% 
   clean_names()
-EEZ_CellID <- read_excel(paste(data_path,"Spatial/V_Lam/EEZ_CellID.xlsx",sep="")) %>% 
+
+EEZ_CellID <- my_path("G", extra_path = "Spatial/DBEM", name="EEZ_CellID.xlsx", read = TRUE) %>% 
   clean_names()
+
 colnames(EEZ_CellID) <- c("eezid","index")
 
-Lon_Lat_DBEM <- read.csv(paste(data_path,"Spatial/Lon_Lat_DBEM.txt",sep=""), header=FALSE)
+Lon_Lat_DBEM <- my_path("G", extra_path = "Spatial/DBEM", name="Lon_Lat_DBEM.txt", read = TRUE, header = FALSE)
 colnames(Lon_Lat_DBEM) <- c("index","lon","lat")
 
-index_code <- EEZIDs_List %>% 
+
+Index_Code <- EEZIDs_List %>% 
   left_join(EEZ_CellID) %>% 
   rename(eez_name = name) %>% 
   left_join(Lon_Lat_DBEM,
             by = "index")
 
+# Save Index data for future 
 write_csv(index_code,
-          "sau_index_code.csv")
-
+          paste(my_path("G",extra_path = "Spatial/DBEM"),"sau_index_code.csv",sep="")
+          )
 
 ## ---------------##
 #### 2. entroids 
@@ -200,14 +94,15 @@ write_csv(index_code,
 # Load SAU shapefile name and paths
 
 # The path
-path_world <- paste(data_path,"Spatial/SAU_Shapefile/",sep="")
+Path_SAU <- my_path("G", extra_path = "Spatial/SAU/SAU_Shapefile")
 
 # The File
-fnam_world <- "SAUEEZ_July2015.shp"
+File_Name <- "SAUEEZ_July2015.shp"
 
 # Load it!
-World_eez_sf <- st_read(dsn = path_world,
-                        layer =file_path_sans_ext(fnam_world)) %>% 
+SAU_eez_sf <- st_read(dsn = Path_SAU,
+                        layer =file_path_sans_ext(File_Name)
+                      ) %>% 
   rename(eez_name = Name) %>% 
   st_transform(crs = 4326) %>% # 4326
   st_simplify(preserveTopology = TRUE, dTolerance = 0.1)
