@@ -419,9 +419,17 @@ GetCentroids <- function(taxon_key,
                          year, 
                          data_type = "Catch",
                          ensemble, 
-                         # path,
+                         path,
                          Neighbours,
-                         eez_centroid){
+                         eez_centroid
+                         ){
+  
+  if(Sys.info()[7] == "jepa88"){
+      Sys <-FALSE
+    }else{
+      Sys <- TRUE
+    }
+  
   
   # ----------------- #
   # Get model data from spps for one ensemble
@@ -432,28 +440,29 @@ GetCentroids <- function(taxon_key,
     year = year,
     data_type = data_type,
     ensemble = ensemble,
-    path = my_path("D",extra_path = "/DBEM")
+    path = path,
+    my_path = Sys
   )
-  
+
   # ----------------- #
   # Extra step 
   # ----------------- #
   
   #### Creates a data to control computational time (lol!)
-    if(file.exists(paste(my_path("R"),"spp_df.csv",sep="")) == FALSE){
+    if(file.exists(paste(my_path("R",repo=Sys),"spp_df.csv",sep="")) == FALSE){
     spp_df <- tibble() %>% 
       write_csv(.,
-                paste(my_path("R"),"spp_df.csv",sep=""))
+                paste(my_path("R", repo =Sys),"spp_df.csv",sep=""))
   }
   
   suppressMessages(
-    spp_df <- my_path("R",name="spp_df.csv",read = TRUE)
+    spp_df <- my_path("R",name="spp_df.csv",read = TRUE, repo =Sys)
   )
   spp_df <- tibble(taxon_key,
                    ensemble) %>% 
     bind_rows(spp_df) %>% 
     write_csv(.,
-              paste(my_path("R"),"spp_df.csv",sep=""))
+              paste(my_path("R", repo =Sys),"spp_df.csv",sep=""))
   
   # ----------------- #
   # Estimate distance between centroids
@@ -549,11 +558,10 @@ GetCentroids <- function(taxon_key,
 
 # Test function
 
-# Test_centroids <- GetCentroids(taxon_key = 600004,
+# GetCentroids(taxon_key = 600004,
 #              year = year_df$year,
 #              # data_type = data,
 #              ensemble = 102,
-#              # path = path,
 #              Neighbours = Neighbours,
 #              eez_centroid = eez_centroid
 #              )
@@ -695,12 +703,13 @@ TransIndex <- function(Centroids, # Expecting the results from the GetCentroids 
     geom_vline(xintercept = 2000,colour="blue",alpha = 0.5) +
     scale_x_continuous(breaks = seq(1950,2100,5)) +
     theme_classic() +
-    ggsave("plot_example.jpg",
+    facet_wrap(~neighbour_id)+
+    ggsave(paste(taxon_key,"plot_example.jpg",sep="_"),
        plot = last_plot(),
        width = 10,
        height = 8,
        units = "in",
-       path = my_path("R")
+       path = my_path("R", repo = Sys)
        )
   
   # Identifies the year of emergence
@@ -765,15 +774,15 @@ GetTransIndex <- function(taxon_key,
   }
   
   
-  # GetTransIndex(
-  #   taxon_key = 600004,
-  #   ensemble_list = ensemble_list[1:2],
-  #   year = year,
-  #   Hist_y = 2000,
-  #   data_type = "Abd",
-  #   Neighbours = Neighbours,
-  #   eez_centroid = eez_centroid
-  # )
+  GetTransIndex(
+    taxon_key = 600006,
+    ensemble_list = ensemble_list,
+    year = year_df$year,
+    Hist_y = 2000,
+    data_type = "Abd",
+    Neighbours = Neighbours,
+    eez_centroid = eez_centroid
+  )
 
 
   # spp_list <- c(600004, 600245)
@@ -799,19 +808,20 @@ GetTransIndex <- function(taxon_key,
 
 ## ----------------- ##
 # Data needed for estimating year of emergence
+# Note: Use repo = F when running on the Beast or Hall1000
 ## ----------------- ##
 
 # SAU relations between INDEX and Country's EEZs (see chunk 3)
-index_code <- my_path("G", extra_path = "Spatial/SAU/", name="sau_index_code.csv", read = TRUE)
+index_code <- my_path("G", extra_path = "Spatial/SAU/", name="sau_index_code.csv", read = TRUE, repo = F)
 
 # EEZ list and their centroid of distribution (see chunk 3)
-eez_centroid <- my_path("D", extra_path = "Spatial/", name="eez_centroids.csv", read = TRUE)
+eez_centroid <- my_path("D", extra_path = "Spatial/", name="eez_centroids.csv", read = TRUE, repo=F )
 
 # Neighbour list and their respective id (see chunk 3)
-Neighbours <- my_path("D", extra_path = "Spatial/", name="Neighbours_eez_id.csv", read = TRUE)
+Neighbours <- my_path("D", extra_path = "Spatial/", name="Neighbours_eez_id.csv", read = TRUE, repo = F)
 
 # Transboundary species and their sharing EEZs (see Palacios-Abrantes et al; FishForVisa)
-Transboundary_spp <- my_path("D", extra_path = "Species/", name="Transboundary_spp.csv", read = TRUE) %>% 
+Transboundary_spp <- my_path("D", extra_path = "Species/", name="Transboundary_spp.csv", read = TRUE, repo = F) %>% 
   clean_names()
 
 ## ----------------- ##
@@ -828,8 +838,8 @@ Historic_year = 2000
 # path = DBEM_path
 
 # List of ensemble members
-ensemble_list <- seq(102,103,1) # for testing
-# ensemble_list <- seq(102,111,1)
+# ensemble_list <- seq(102,103,1) # for testing
+ensemble_list <- seq(102,111,1)
 
 #  List os species
 spp_list <- unique(Transboundary_spp$taxon_key)[1:2]
