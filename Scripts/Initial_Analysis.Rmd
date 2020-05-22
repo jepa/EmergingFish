@@ -424,13 +424,6 @@ GetCentroids <- function(taxon_key,
                          eez_centroid
                          ){
   
-  if(Sys.info()[7] == "jepa88"){
-      Sys <-FALSE
-    }else{
-      Sys <- TRUE
-    }
-  
-  
   # ----------------- #
   # Get model data from spps for one ensemble
   #  ---------------- #
@@ -439,9 +432,7 @@ GetCentroids <- function(taxon_key,
     taxon_key = taxon_key,
     year = year,
     data_type = data_type,
-    ensemble = ensemble,
-    path = path,
-    my_path = Sys
+    ensemble = ensemble
   )
 
   # ----------------- #
@@ -449,21 +440,21 @@ GetCentroids <- function(taxon_key,
   # ----------------- #
   
   #### Creates a data to control computational time (lol!)
-    if(file.exists(paste(my_path("R",repo=Sys),"spp_df.csv",sep="")) == FALSE){
+    if(file.exists(paste(my_path("R"),"spp_df.csv",sep="")) == FALSE){
     spp_df <- tibble() %>% 
       write_csv(.,
-                paste(my_path("R", repo =Sys),"spp_df.csv",sep=""))
+                paste(my_path("R"),"spp_df.csv",sep=""))
   }
   
   suppressMessages(
-    spp_df <- my_path("R",name="spp_df.csv",read = TRUE, repo =Sys)
+    spp_df <- my_path("R",name="spp_df.csv",read = TRUE)
   )
   spp_df <- tibble(taxon_key,
                    ensemble) %>% 
     bind_rows(spp_df) %>% 
     write_csv(.,
-              paste(my_path("R", repo =Sys),"spp_df.csv",sep=""))
-  
+              paste(my_path("R"),"spp_df.csv",sep=""))
+
   # ----------------- #
   # Estimate distance between centroids
   # ----------------- #
@@ -558,13 +549,14 @@ GetCentroids <- function(taxon_key,
 
 # Test function
 
-# GetCentroids(taxon_key = 600004,
-#              year = year_df$year,
-#              # data_type = data,
+# GetCentroids(taxon_key = 600006,
+#              year = year_df$year[1:5],
+#              data_type = "Catch",
 #              ensemble = 102,
 #              Neighbours = Neighbours,
 #              eez_centroid = eez_centroid
 #              )
+
 # head(Test_centroids)
 # unique(Test_centroids$ensemble)
 # unique(Test_centroids$neigh)
@@ -593,15 +585,16 @@ The year of emergece is defined as the first year where the trend is larger than
 ```{r TransIndex, eval = T, echo = T}
 
 TransIndex <- function(Centroids, # Expecting the results from the GetCentroids function
-                       Ids, # A numeric value representing a neighbouring interaction
-                       Hist_y = 2000){ # The LAST year of Historical data
+                       Id, # A numeric value representing a neighbouring interaction (ONE!)
+                       Hist_y = 2000,
+                       Plot = F){ # The LAST year of Historical data
   
   # Filter data by neighbouring ID
   Centroids_id <- Centroids %>% 
-    filter(neighbour_id %in% Ids)
+    filter(neighbour_id %in% Id)
   
   EEZ_ids <- Neighbours %>% 
-    filter(neighbour_id %in% Ids)
+    filter(neighbour_id %in% Id)
   
   # Historical mean and sd of distance
   historical <- Centroids_id %>%
@@ -656,7 +649,7 @@ TransIndex <- function(Centroids, # Expecting the results from the GetCentroids 
     summarise_at(vars("RMean"),
                  c(trend=mean,
                    ensemble_sd=sd)
-    )
+    ) 
   
   # Estimate noice from ensemble members
   historic_sd <- Partial %>% 
@@ -668,8 +661,13 @@ TransIndex <- function(Centroids, # Expecting the results from the GetCentroids 
     )
   
   
-  # Plot the result, bruh
   # For testing
+  if(Plot == T){
+  # Plot the result, bruh
+  
+  # Step to determine if data exists
+  Plot_Test <- nrow(subset(mean_sd_index, trend > (historic_sd$hist_mean+historic_sd$noise) | trend < (historic_sd$hist_mean-historic_sd$noise)))>0
+  
   ggplot() +
     geom_line(data = mean_sd_index,
               aes(
@@ -691,7 +689,8 @@ TransIndex <- function(Centroids, # Expecting the results from the GetCentroids 
               ),
               colour = "grey50"
     ) +
-    geom_point(data = subset(mean_sd_index, trend > (historic_sd$hist_mean+historic_sd$noise) | trend < (historic_sd$hist_mean-historic_sd$noise)),
+    # Conditional, will only plot circles if the data exists
+    {if(Plot_Test)geom_point(data = subset(mean_sd_index, trend > (historic_sd$hist_mean+historic_sd$noise) | trend < (historic_sd$hist_mean-historic_sd$noise)),
                aes(
                  x = year,
                  y = trend,
@@ -699,18 +698,20 @@ TransIndex <- function(Centroids, # Expecting the results from the GetCentroids 
                ),
                shape = 1,
                size = 3
-    ) +
+    )
+      } +
     geom_vline(xintercept = 2000,colour="blue",alpha = 0.5) +
     scale_x_continuous(breaks = seq(1950,2100,5)) +
     theme_classic() +
-    facet_wrap(~neighbour_id)+
-    ggsave(paste(taxon_key,"plot_example.jpg",sep="_"),
+    ggsave(paste(taxon_key,Id,"plot_example.jpg",sep="_"),
        plot = last_plot(),
        width = 10,
        height = 8,
        units = "in",
-       path = my_path("R", repo = Sys)
+       path = my_path("R")
        )
+  
+  }
   
   # Identifies the year of emergence
   Final_Result <- mean_sd_index %>%
@@ -737,24 +738,25 @@ This is the last function of the emerging year evaluation. It was made so we cou
 ```{r GetTransIndex, eval = T, echo = T}
   
 GetTransIndex <- function(taxon_key,
-                            year,
+                          year,
                           Hist_y,
-                            data_type = "Catch",
-                            path,
-                            ensemble_list,
-                            Neighbours,
-                            eez_centroid){
+                          data_type = "Catch",
+                          path,
+                          ensemble_list,
+                          Neighbours,
+                          eez_centroid){
     
     # First step
     # Call Get centroids fucntion for centroids data per ensemble
     Step_one <- bind_rows(
-      lapply(ensemble_list,
+      lapply(ensemble_list[1:2],
              GetCentroids,
              taxon_key = taxon_key,
-             year = year,
+             year = year_df$year,
              data_type = data_type,
              Neighbours = Neighbours,
-             eez_centroid = eez_centroid)
+             eez_centroid = eez_centroid
+             )
     )
     
     # Set the different neighbouring pairs
@@ -774,15 +776,15 @@ GetTransIndex <- function(taxon_key,
   }
   
   
-  GetTransIndex(
-    taxon_key = 600006,
-    ensemble_list = ensemble_list,
-    year = year_df$year,
-    Hist_y = 2000,
-    data_type = "Abd",
-    Neighbours = Neighbours,
-    eez_centroid = eez_centroid
-  )
+  # GetTransIndex(
+  #   taxon_key = 600006,
+  #   ensemble_list = ensemble_list,
+  #   year = year_df$year,
+  #   Hist_y = 2000,
+  #   data_type = "Abd",
+  #   Neighbours = Neighbours,
+  #   eez_centroid = eez_centroid
+  # )
 
 
   # spp_list <- c(600004, 600245)
@@ -812,16 +814,16 @@ GetTransIndex <- function(taxon_key,
 ## ----------------- ##
 
 # SAU relations between INDEX and Country's EEZs (see chunk 3)
-index_code <- my_path("G", extra_path = "Spatial/SAU/", name="sau_index_code.csv", read = TRUE, repo = F)
+index_code <- my_path("G", extra_path = "Spatial/SAU/", name="sau_index_code.csv", read = TRUE)
 
 # EEZ list and their centroid of distribution (see chunk 3)
-eez_centroid <- my_path("D", extra_path = "Spatial/", name="eez_centroids.csv", read = TRUE, repo=F )
+eez_centroid <- my_path("D", extra_path = "Spatial/", name="eez_centroids.csv", read = TRUE)
 
 # Neighbour list and their respective id (see chunk 3)
-Neighbours <- my_path("D", extra_path = "Spatial/", name="Neighbours_eez_id.csv", read = TRUE, repo = F)
+Neighbours <- my_path("D", extra_path = "Spatial/", name="Neighbours_eez_id.csv", read = TRUE)
 
 # Transboundary species and their sharing EEZs (see Palacios-Abrantes et al; FishForVisa)
-Transboundary_spp <- my_path("D", extra_path = "Species/", name="Transboundary_spp.csv", read = TRUE, repo = F) %>% 
+Transboundary_spp <- my_path("D", extra_path = "Species/", name="Transboundary_spp.csv", read = TRUE) %>% 
   clean_names()
 
 ## ----------------- ##
