@@ -595,7 +595,7 @@ TransIndex <- function(Centroids, # Expecting the results from the GetCentroids 
   
   EEZ_ids <- Neighbours %>% 
     filter(neighbour_id %in% Id)
-  
+
   # Historical mean and sd of distance
   historical <- Centroids_id %>%
     filter(year <= Hist_y) %>% 
@@ -605,9 +605,10 @@ TransIndex <- function(Centroids, # Expecting the results from the GetCentroids 
                  c(hd_temp_mean=mean,
                    hd_temp_sd=sd)
     )
+ 
   
   # Future results
-  future <- Centroids_id %>% 
+  future <- Centroids_id %>% # FIX ME CUS I PRODUCE A BUNCH OF NAs WITH SSP 600076 ENS 102 AND 104
     filter(year > Hist_y)
   
   # Transboundary Index
@@ -619,6 +620,7 @@ TransIndex <- function(Centroids, # Expecting the results from the GetCentroids 
     gather("variable","value",distance:hd_temp_sd) %>%
     ungroup()
   
+  
   # Get unique eezs
   Unique_EEZs <- unique(Trans_index$eez_name)
   
@@ -627,6 +629,8 @@ TransIndex <- function(Centroids, # Expecting the results from the GetCentroids 
     mutate(
       names = ifelse(eez_name ==Unique_EEZs[1],paste("Country_A",variable,sep="_"),paste("Country_B",variable,sep="_"))
     ) %>%
+    # Filter out ensembels that have no data
+    filter(!is.na(value)) %>% 
     select(-eez_name,-variable) %>%
     spread(names,value) %>% 
     # mutate index
@@ -749,7 +753,7 @@ GetTransIndex <- function(taxon_key,
     # First step
     # Call Get centroids fucntion for centroids data per ensemble
     Step_one <- bind_rows(
-      lapply(ensemble_list[1:2],
+      lapply(ensemble_list,
              GetCentroids,
              taxon_key = taxon_key,
              year = year_df$year,
@@ -765,7 +769,7 @@ GetTransIndex <- function(taxon_key,
     # Second Step
     # Get the transboudary index based on all centroids
     Step_two <- bind_rows(
-      lapply(Ids,
+      lapply(Ids[7],
              TransIndex,
              Hist_y = Hist_y,
              Centroid = Step_one)
@@ -844,7 +848,7 @@ Historic_year = 2000
 ensemble_list <- seq(102,111,1)
 
 #  List os species
-spp_list <- unique(Transboundary_spp$taxon_key)[1:2]
+spp_list <- unique(Transboundary_spp$taxon_key)
 
 ```
 
@@ -861,13 +865,12 @@ t_start <- Sys.time()
 suppressMessages(
   suppressWarnings(
     Emerging_result <- bind_rows(
-      mclapply(spp_list[1],
+      mclapply(spp_list,
                GetTransIndex,
                year = year_df$year,
                Hist_y = Historic_year,
                data_type = "Catch",
                ensemble_list = ensemble_list,
-               # path = path,
                Neighbours = Neighbours,
                eez_centroid = eez_centroid
       )
@@ -879,7 +882,8 @@ suppressMessages(
 t_end <- Sys.time()-t_start;t_end
 
 write_csv(Emerging_result,
-          "~/Desktop/Test.csv")
+          paste(my_path("R"),"Emerging_Results.csv",sep="")
+)
 
 # Version 1 (embeded loop) <- 3.01
 # Version 2 (embeded lapply) <- 2.71
