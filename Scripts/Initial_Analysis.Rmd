@@ -1473,7 +1473,7 @@ getEnvVar=function(yr,ModelRCP,RCP,Variable){
   getTemp <- Bottom_Data 
 }
 
-Years <-seq(2020,2100,1)
+Years <-seq(,2100,1)
 
 for(y in 1:length(Years)){
         Data <- getEnvVar(yr = Years[y],
@@ -1489,23 +1489,20 @@ for(y in 1:length(Years)){
       
         }else{
           
-          F_BData <- cbind(Data[1],F_BData)
+          F_BData <- cbind(F_BData,Data[1])
           colnames(F_BData)[y] <- Years[y]
         }
 }
 
-colnames(F_BData) <- Years
-
 
 F_BData <- F_BData %>% 
           rowid_to_column("index") %>% 
-  %>% 
-  mutate(temp = ifelse(temp == -9999,NA,temp)) %>% 
+  gather("year","temp",-index) %>% 
+   mutate(temp = ifelse(temp == -9999,NA,temp)) %>% 
   group_by(year) %>% 
   summarise(
     mean_temp = mean(temp,na.rm=T)
   ) %>% 
-  gather("year","temp",-index) %>% 
   write_csv(.,
             "SST_data.csv")
 
@@ -1517,10 +1514,10 @@ F_BData <- F_BData %>%
 
 sst_data <- my_path("D",T,"Climate","SST_data.csv",read = T) 
 
-ggplot(sst_data) +
+ggplot(F_BData) +
   geom_line(
     aes(
-      x = year,
+      x = as.numeric(year),
       y = mean_temp
     )
   )
