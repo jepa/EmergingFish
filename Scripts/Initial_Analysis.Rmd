@@ -1443,7 +1443,7 @@ getEnvVar=function(yr,ModelRCP,RCP,Variable){
     }else{
       ModelRCP <- "GFDL85"
     }
-    Filepath <- paste("/Volumes/DATA/JULIANO_NEYMAR/PristineSeasData/Climate",ModelRCP,"",sep="/")
+    Filepath <- paste("Z:/JULIANO_NEYMAR/PristineSeasData/Climate",ModelRCP,"",sep="/")
   }
   
   
@@ -1476,14 +1476,11 @@ getEnvVar=function(yr,ModelRCP,RCP,Variable){
 Years <-seq(2020,2100,1)
 
 for(y in 1:length(Years)){
-        
         Data <- getEnvVar(yr = Years[y],
                           Model = "GFDL",
                           Variable = "Temperature",
                           RCP = "rcp85"
-        ) %>% 
-          mutate(INDEX = all_Grid) %>% 
-          filter(INDEX %in% Grid$INDEX)
+        )
         
         if(y == 1){
           
@@ -1493,7 +1490,16 @@ for(y in 1:length(Years)){
           
           F_BData <- cbind(Data[1],F_BData)
         }
-      }
+}
+
+colnames(F_BData) <- Years
+
+
+F_BData <- F_BData %>% 
+          rowid_to_column("index") %>% 
+  gather("year","temp",-index) %>% 
+  write_csv(.,
+            "SST_data.csv")
 
 ```
 
