@@ -427,6 +427,9 @@ GetCentroids <- function(taxon_key,
   # ----------------- #
   # Get model data from spps for one ensemble
   #  ---------------- #
+ if(ensemble == 102){
+   print(taxon_key)
+ }
   
   Spp_Dist <- read_dbem_ens(
     taxon_key = taxon_key,
@@ -440,20 +443,20 @@ GetCentroids <- function(taxon_key,
   # ----------------- #
   
   #### Creates a data to control computational time (lol!)
-    if(file.exists(paste(my_path("R"),"spp_df.csv",sep="")) == FALSE){
-    spp_df <- tibble() %>% 
-      write_csv(.,
-                paste(my_path("R"),"spp_df.csv",sep=""))
-  }
-  
-  suppressMessages(
-    spp_df <- my_path("R",name="spp_df.csv",read = TRUE)
-  )
-  spp_df <- tibble(taxon_key,
-                   ensemble) %>% 
-    bind_rows(spp_df) %>% 
-    write_csv(.,
-              paste(my_path("R"),"spp_df.csv",sep=""))
+  #   if(file.exists(paste(my_path("R"),"spp_df.csv",sep="")) == FALSE){
+  #   spp_df <- tibble() %>% 
+  #     write_csv(.,
+  #               paste(my_path("R"),"spp_df.csv",sep=""))
+  # }
+  # 
+  # suppressMessages(
+  #   spp_df <- my_path("R",name="spp_df.csv",read = TRUE)
+  # )
+  # spp_df <- tibble(taxon_key,
+  #                  ensemble) %>% 
+  #   bind_rows(spp_df) %>% 
+  #   write_csv(.,
+  #             paste(my_path("R"),"spp_df.csv",sep=""))
 
   # ----------------- #
   # Estimate distance between centroids
@@ -549,7 +552,7 @@ GetCentroids <- function(taxon_key,
 
 # Test function
 
-# GetCentroids(taxon_key = 600006,
+# GetCentroids(taxon_key = 600076,
 #              year = year_df$year[1:5],
 #              data_type = "Catch",
 #              ensemble = 102,
@@ -581,6 +584,7 @@ $$TI =(\frac{D_{A,y}}{sd(D_{A,h})} - \frac{D_{B,y}}{sd(D_{B,h)}})^2$$
 
 The year of emergece is defined as the first year where the trend is larger than the 95% CI of the historic variation.
 
+Note: If no historic data available then emerging year is the first year of data in an EEZ
 
 ```{r TransIndex, eval = T, echo = T}
 
@@ -588,6 +592,7 @@ TransIndex <- function(Centroids, # Expecting the results from the GetCentroids 
                        Id, # A numeric value representing a neighbouring interaction (ONE!)
                        Hist_y = 2000,
                        Plot = F){ # The LAST year of Historical data
+  
   
   # Filter data by neighbouring ID
   Centroids_id <- Centroids %>% 
@@ -603,13 +608,16 @@ TransIndex <- function(Centroids, # Expecting the results from the GetCentroids 
     group_by(taxon_key,ensemble,eez_name,neighbour_id) %>%
     summarise_at(vars("distance"),
                  c(hd_temp_mean=mean,
-                   hd_temp_sd=sd)
-    )
- 
+                   hd_temp_sd=sd,
+                   n_yrs =~n())
+                 )
   
-  # Future results
-  future <- Centroids_id %>% # FIX ME CUS I PRODUCE A BUNCH OF NAs WITH SSP 600076 ENS 102 AND 104
+    # Future results
+  future <- Centroids_id %>% 
     filter(year > Hist_y)
+  
+   # Get unique eezs
+  Unique_EEZs <- unique(EEZ_ids$eez_name)
   
   # Transboundary Index
   Trans_index <- Centroids_id %>% 
@@ -618,24 +626,18 @@ TransIndex <- function(Centroids, # Expecting the results from the GetCentroids 
     ) %>%
     # Re arrenging table for mutate
     gather("variable","value",distance:hd_temp_sd) %>%
-    ungroup()
-  
-  
-  # Get unique eezs
-  Unique_EEZs <- unique(Trans_index$eez_name)
-  
-  
-  Partial <- Trans_index %>% 
+    ungroup() %>% 
+    mutate(value = ifelse(is.na(value),0,value)) %>% 
     mutate(
-      names = ifelse(eez_name ==Unique_EEZs[1],paste("Country_A",variable,sep="_"),paste("Country_B",variable,sep="_"))
+      names = ifelse(eez_name ==Unique_EEZs[1],paste("Country_A",variable,sep="_"),paste("Country_B",variable,sep="_")
+    )
     ) %>%
-    # Filter out ensembels that have no data
-    filter(!is.na(value)) %>% 
     select(-eez_name,-variable) %>%
     spread(names,value) %>% 
     # mutate index
     mutate(
       trans_index = (Country_A_distance/Country_A_hd_temp_sd - Country_B_distance/Country_B_hd_temp_sd)^2
+    # )
     ) %>% 
     # Ten years average of results
     group_by(taxon_key,ensemble,neighbour_id) %>% 
@@ -644,24 +646,26 @@ TransIndex <- function(Centroids, # Expecting the results from the GetCentroids 
                             align = "right", 
                             fill = trans_index)
     ) %>% 
-    filter(year > 1960) %>% 
+    filter(year > 1960) %>%
     select(taxon_key,neighbour_id,year,ensemble,trans_index,RMean)
   
   # Average of 10 years mean of ensemble members results
-  mean_sd_index <- Partial %>% 
+  mean_sd_index <- Trans_index %>% 
     group_by(taxon_key,year,neighbour_id) %>% 
     summarise_at(vars("RMean"),
                  c(trend=mean,
-                   ensemble_sd=sd)
+                   ensemble_sd=sd,
+                   n_ens = ~n())
     ) 
   
   # Estimate noice from ensemble members
-  historic_sd <- Partial %>% 
+  historic_sd <- Trans_index %>% 
     filter(year < Hist_y) %>% 
     group_by(taxon_key) %>% 
     summarise_at(vars("RMean"),
                  c(hist_mean=mean,
-                   noise=sd)
+                   noise=sd,
+                   n_ens = ~n())
     )
   
   
@@ -717,20 +721,39 @@ TransIndex <- function(Centroids, # Expecting the results from the GetCentroids 
   
   }
   
-  # Identifies the year of emergence
+  # If no historic data then emergin year is the first year of data
+  if(nrow(historic_sd) == 0){
+    
+    Final_Result <- mean_sd_index %>%
+      group_by(taxon_key,neighbour_id,n_ens) %>%
+      summarise(emerging_yr= min(year)) %>%
+      left_join(EEZ_ids,
+                by = "neighbour_id") %>%
+      ungroup() %>%
+      select(taxon_key,eez_name,eez_neighbour,n_ens,emerging_yr)
+  
+  return(Final_Result)
+    
+  }else{
+  
+  # Identifies the year of emergence (e.g. trend > noise)
   Final_Result <- mean_sd_index %>%
     filter(year > Hist_y,
            trend > (historic_sd$hist_mean+historic_sd$noise) |
              trend < (historic_sd$hist_mean-historic_sd$noise)
     ) %>%
-    group_by(taxon_key,neighbour_id) %>%
+    group_by(taxon_key,neighbour_id,n_ens) %>%
     summarise(emerging_yr= min(year)) %>%
-    left_join(EEZ_ids) %>%
+    left_join(EEZ_ids,
+              by = "neighbour_id") %>%
     ungroup() %>%
-    select(taxon_key,eez_name,eez_neighbour,emerging_yr)
+    select(taxon_key,eez_name,eez_neighbour,n_ens,emerging_yr)
   
   return(Final_Result)
+  }
 }
+  
+
 
 
 ```
@@ -749,7 +772,8 @@ GetTransIndex <- function(taxon_key,
                           ensemble_list,
                           Neighbours,
                           eez_centroid){
-    
+  t_start <- Sys.time()
+  print("Starting Step One")
     # First step
     # Call Get centroids fucntion for centroids data per ensemble
     Step_one <- bind_rows(
@@ -766,26 +790,35 @@ GetTransIndex <- function(taxon_key,
     # Set the different neighbouring pairs
     Ids <- unique(Step_one$neighbour_id)
     
+    print("Starting Step Two")
+    
     # Second Step
     # Get the transboudary index based on all centroids
     Step_two <- bind_rows(
-      lapply(Ids[7],
+      lapply(Ids,
              TransIndex,
              Hist_y = Hist_y,
              Centroid = Step_one)
     )
     
+    name <- paste(my_path("R",extra_path = "/Emergence/"),taxon_key,"_emergence.txt",sep="")
     
-    return(Step_two)
+    write_csv(Step_two,
+              name)
+    
+    time_dif <- Sys.time()-t_start
+     
+    message <- paste("Analysis done for", taxon_key, "in",time_dif, "minutes")
+    return(message)
   }
   
   
   # GetTransIndex(
-  #   taxon_key = 600006,
+  #   taxon_key = 600076,
   #   ensemble_list = ensemble_list,
   #   year = year_df$year,
   #   Hist_y = 2000,
-  #   data_type = "Abd",
+  #   data_type = "Catch",
   #   Neighbours = Neighbours,
   #   eez_centroid = eez_centroid
   # )
@@ -850,6 +883,14 @@ ensemble_list <- seq(102,111,1)
 #  List os species
 spp_list <- unique(Transboundary_spp$taxon_key)
 
+# Already modeled species
+spp_done <- list.files(my_path("R", extra_path = "Emergence"))
+
+spp_done <- gsub("\\_.*","",spp_done)
+
+spp_reman <- spp_list[!spp_list %in% spp_done]
+
+
 ```
 
 ### Emerging Routine
@@ -859,13 +900,12 @@ spp_list <- unique(Transboundary_spp$taxon_key)
 ####_______________________ ####
 # Estimating year of eergence
 ####_______________________ ####
-
+n_cores <- 24
 t_start <- Sys.time()
 
-suppressMessages(
-  suppressWarnings(
+
     Emerging_result <- bind_rows(
-      mclapply(spp_list,
+      lapply(spp_reman[63],
                GetTransIndex,
                year = year_df$year,
                Hist_y = Historic_year,
@@ -875,8 +915,40 @@ suppressMessages(
                eez_centroid = eez_centroid
       )
     )
+
+
+library(doParallel)
+library(doSNOW)
+
+cl <- makeCluster(12)
+registerDoSNOW(cl)
+
+
+# To show processing times
+repetitions <- length(spp_reman)
+pb <- txtProgressBar(max = repetitions, style = 3)
+
+progress <- function(n) setTxtProgressBar(pb, n)
+opts <- list(progress = progress)
+
+
+results <- foreach(i=1:repetitions,
+                    .combine = rbind,
+                    .packages = c("MyFunctions",packages),
+                    .options.snow = opts,
+                   .verbose = T) %dopar% 
+  GetTransIndex(
+    taxon_key =spp_reman[i],
+    ensemble_list = ensemble_list,
+    year = year_df$year,
+    Hist_y = 2000,
+    data_type = "Catch",
+    Neighbours = Neighbours,
+    eez_centroid = eez_centroid
   )
-)
+
+close(pb)
+stopCluster(cl)
 
 
 t_end <- Sys.time()-t_start;t_end
