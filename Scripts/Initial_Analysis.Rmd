@@ -1485,10 +1485,12 @@ for(y in 1:length(Years)){
         if(y == 1){
           
           F_BData <- Data[1]
+          colnames(F_BData) <- 2020
       
         }else{
           
           F_BData <- cbind(Data[1],F_BData)
+          colnames(F_BData)[y] <- Years[y]
         }
 }
 
@@ -1497,11 +1499,35 @@ colnames(F_BData) <- Years
 
 F_BData <- F_BData %>% 
           rowid_to_column("index") %>% 
+  %>% 
+  mutate(temp = ifelse(temp == -9999,NA,temp)) %>% 
+  group_by(year) %>% 
+  summarise(
+    mean_temp = mean(temp,na.rm=T)
+  ) %>% 
   gather("year","temp",-index) %>% 
   write_csv(.,
             "SST_data.csv")
 
 ```
+
+
+
+```{r temp_plot, eval = T, echo = T}
+
+sst_data <- my_path("D",T,"Climate","SST_data.csv",read = T) 
+
+ggplot(sst_data) +
+  geom_line(
+    aes(
+      x = year,
+      y = mean_temp
+    )
+  )
+
+
+```
+
 
 ```{r Scatter_plot,  eval = T, echo = T}
 
