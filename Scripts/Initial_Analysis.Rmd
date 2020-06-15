@@ -37,7 +37,8 @@ packages <- c(
   "rgdal", #Spatial analysis
   "tools", #Spatial analysis 
   "zeallot", # for Juanito's map
-  "gmt" # for estimating distances between points
+  "gmt", # for estimating distances between points
+  "viridis"
 )
 
 my_lib(packages)
@@ -1268,7 +1269,7 @@ Paths <- paste(my_path("R",extra_path = "Emergence_yr"),Taxon_List,"_emergence.t
 Eme_Res <- bind_rows(lapply(Paths, fread))
 # warnings() for empty data species
 
-View(Eme_Res)
+# View(Eme_Res)
 
 ### Load Data
 
@@ -1301,74 +1302,250 @@ eez_centroid <- read_csv(paste(data_path,"Spatial/eez_centroids.csv", sep = ""))
 
 ```{r histo,  eval = T, echo = T}
 
-Eme_Res %>% 
+# Per Stock
+stock_d_hist <- Eme_Res %>% 
   filter(
     n_ens == 10,
     emerging_yr >= 2020
   ) %>% 
-  group_by(eez_name,emerging_yr) %>% 
-  summarise(
-    n_tax = length(unique(taxon_key))
+  group_by(emerging_yr,taxon_key) %>%
+  # summarise(n_tax = length(unique(eez_name))) %>%
+  summarise(n()) %>% 
+  mutate(
+    level = "stock"
   ) %>% 
-  ggplot() +
-  geom_histogram(
-    aes(
-      x = emerging_yr
-    ),
-    stat = "count"
-  ) # +
-  # facet_wrap(~n_ens)
+  select(1,3,4)
+  # ggplot() +
+  # geom_histogram(
+  #   aes(
+  #     x = emerging_yr
+  #   ),
+  #   stat = "count"
+  # )
 
-Eme_Res %>% 
+
+# Per EEZs
+eez_d_hist <- Eme_Res %>% 
   filter(
-    n_ens == 10#,
-    # emerging_yr >= 2020
+    n_ens == 10,
+    emerging_yr >= 2020
   ) %>% 
-  group_by(emerging_yr) %>% 
-  summarise(
-    n_tax = length(unique(taxon_key))
+  group_by(emerging_yr,eez_name) %>% 
+  # summarise(n_tax = length(unique(taxon_key))) %>% 
+  summarise(n()) %>% 
+  mutate(
+    level = "EEZ"
   ) %>% 
-  group_by() %>%
-  mutate(RMean = rollmean(x = n_tax, 
-                          10,
-                          align = "right",
-                          fill = n_tax)
-  ) %>%
-  filter(emerging_yr >= 2020) %>% 
-  ggplot() +
-  geom_line(
+  select(1,3,4)
+
+hist_data <- stock_d_hist %>% 
+  bind_rows(eez_d_hist)
+
+ggplot() +
+  geom_density(data = subset(hist_data, level == "EEZ"),
     aes(
       x = emerging_yr,
-      y = RMean
+      fill = level
+    ),
+    stat = "count",
+    alpha= 0.8,
+    size=0.5,
+  ) +
+  geom_density(data = subset(hist_data, level == "stock"),
+    aes(
+      x = emerging_yr,
+      fill = level
+    ),
+    stat = "count",
+    alpha= 0.8,
+    size=0.5,
+  ) +
+    scale_y_continuous("Frequency",
+                       breaks = seq(0,90,10),
+                       limits = c(0,100)
+    ) +
+    scale_x_continuous("Year of emergence",
+                       breaks = seq(2000,2100,10)
+    ) +
+    my_ggtheme_p() +
+    scale_fill_viridis(discrete = T)
+
+```
+
+##### Scatter plots
+
+```{r Scatter_plot,  eval = T, echo = T}
+
+ data_stock <- Eme_Res %>% 
+  filter(
+    n_ens == 10,
+    emerging_yr >= 2020
+  ) %>% 
+  group_by(emerging_yr,eez_name) %>% 
+  summarise(
+    tax_n = length(unique(taxon_key))
+    ) %>% 
+  group_by(emerging_yr) %>% 
+  summarise(emerging_tax = sum(tax_n))
+
+data_eez <- Eme_Res %>% 
+  filter(
+    n_ens == 10,
+    emerging_yr >= 2020
+  ) %>% 
+  group_by(emerging_yr,taxon_key) %>% 
+  summarise(
+    eez_n = length(unique(eez_name))
+    ) %>% 
+    group_by(emerging_yr) %>% 
+  summarise(emerging_eez = sum(eez_n))
+
+
+data %>% 
+  left_join(data_eez,
+            by = "emerging_yr") %>% 
+  ggplot() +
+  geom_point(
+    aes(
+      x = emerging_eez,
+      y = emerging_tax,
+      fill = emerging_yr,
+      colour = emerging_yr
     )
   )
+  
+```
 
+
+##### Temperature gradient
+
+##### Fun `GetEnvData`
+
+```{r get_env_data, eval = T, echo = T}
+
+getEnvVar=function(yr,ModelRCP,RCP,Variable){
+  
+  if(ModelRCP == "IPSL"){
+    ModelRCP = "IPSL-CM5A-MR"
+    Filepath <- paste("/Volumes/DATA/DATA/Environmental data/Model Climate data/CMIP5/txt CMIP5/Reformatted",ModelRCP,RCP,"",sep="/")
+  }
+  
+  
+  if(ModelRCP == "MPI"){
+    ModelRCP = "MPI-ESM-MR"
+    Filepath <- paste("/Volumes/DATA/DATA/Environmental data/Model Climate data/CMIP5/txt CMIP5/Reformatted",ModelRCP,RCP,"",sep="/")
+  }
+  
+  if(ModelRCP == "GFDL"){
+    
+    if(RCP == "rcp26"){
+      ModelRCP <- "GFDL26"
+    }else{
+      ModelRCP <- "GFDL85"
+    }
+    Filepath <- paste("/Volumes/DATA/JULIANO_NEYMAR/PristineSeasData/Climate",ModelRCP,"",sep="/")
+  }
+  
+  
+  if(Variable == "Ice"){
+    
+    Bottom <- paste("IceExt_",yr,".txt",sep="")
+    
+  }
+  
+  if(Variable == "Temperature"){
+    
+    Bottom = paste("SST_",yr,".txt",sep="")
+    
+  }
+  
+  if(Variable == "Salinity"){
+    # Bottom
+    Bottom = paste("Salinity_btm_",yr,".txt",sep="")
+    
+  }
+  
+  Read_me <- paste(Filepath,Bottom,sep="")[1]
+  Bottom_Data <- read.csv(Read_me,header=F)
+  
+  # Retrun
+  
+  getTemp <- Bottom_Data 
+}
+
+Years <-seq(2020,2100,1)
+
+for(y in 1:length(Years)){
+        
+        Data <- getEnvVar(yr = Years[y],
+                          Model = "GFDL",
+                          Variable = "Temperature",
+                          RCP = "rcp85"
+        ) %>% 
+          mutate(INDEX = all_Grid) %>% 
+          filter(INDEX %in% Grid$INDEX)
+        
+        if(y == 1){
+          
+          F_BData <- Data[1]
+      
+        }else{
+          
+          F_BData <- cbind(Data[1],F_BData)
+        }
+      }
+
+```
+
+```{r Scatter_plot,  eval = T, echo = T}
+
+
+
+
+ data_stock <- Eme_Res %>% 
+  filter(
+    n_ens == 10,
+    emerging_yr >= 2020
+  ) %>% 
+  group_by(emerging_yr,eez_name) %>% 
+  summarise(
+    tax_n = length(unique(taxon_key))
+    ) %>% 
+  group_by(emerging_yr) %>% 
+  summarise(emerging_tax = sum(tax_n))
+
+data_eez <- Eme_Res %>% 
+  filter(
+    n_ens == 10,
+    emerging_yr >= 2020
+  ) %>% 
+  group_by(emerging_yr,taxon_key) %>% 
+  summarise(
+    eez_n = length(unique(eez_name))
+    ) %>% 
+    group_by(emerging_yr) %>% 
+  summarise(emerging_eez = sum(eez_n))
+
+
+data %>% 
+  left_join(data_eez,
+            by = "emerging_yr") %>% 
+  ggplot() +
+  geom_point(
+    aes(
+      x = emerging_eez,
+      y = emerging_tax,
+      fill = emerging_yr,
+      colour = emerging_yr
+    )
+  )
+  
 ```
 
 ##### Mapping the time of emergence
 
 ```{r time_emergence_map,  eval = T, echo = T}
 
-
-results <- Eme_Res %>% 
-  filter(
-    n_ens == 10#,
-    # emerging_yr >= 2020
-  ) %>% 
-  group_by(eez_name,eez_neighbour,emerging_yr) %>% 
-  summarise(
-    n_tax = length(unique(taxon_key))
-  ) %>% 
-  mutate(
-    time_step = ifelse(emerging_yr <= 2050, "Mid_Century","Then_End_Century")
-  ) %>% 
-  # filter(
-  #   emerging_yr >= 2030
-  # ) %>% 
-  group_by(eez_name,eez_neighbour,time_step) %>% 
-  summarise(
-    n_tax_emer = sum(n_tax)
-  )
 
 ##_----------------------- #
 # Checking on China and Indonesia
@@ -1413,7 +1590,22 @@ coords <- coords %>%
   mutate_at(vars(longitude,latitude),as.numeric)
 
 # Prepare data from results
-Test_Data <- results %>% 
+Test_Data <- Eme_Res %>% 
+  filter(
+    n_ens == 10#,
+    # emerging_yr >= 2020
+  ) %>% 
+  group_by(eez_name,eez_neighbour,emerging_yr) %>% 
+  summarise(
+    n_tax = length(unique(taxon_key))
+  ) %>% 
+  filter(
+    emerging_yr <= 2050
+  ) %>%
+  group_by(eez_name,eez_neighbour) %>% 
+  summarise(
+    n_tax_emer = sum(n_tax)
+  ) %>% 
   # get coords for sources
   left_join(coords,
             by = "eez_name") %>%
@@ -1487,9 +1679,10 @@ ggplot() +
              # data = subset(Test_Data, source %in% country & target %in% source),
              aes(start_lon,
                  start_lat,
-                 col = n_tax_emer),
+                 col = n_tax_emer
+                 ),
              size = 0.1,
-             col = "black",
+             col = "grey50",
              # shape = 21,
              stroke = 1.5) +
   geom_path(data = paths,
@@ -1499,33 +1692,21 @@ ggplot() +
                 col = n_tax_emer
             ),
             size = 0.3,
-            arrow = arrow(length = unit(0.009, "npc")),
+            # arrow = arrow(length = unit(0.009, "npc")),
             show.legend = NA) +
-  # geom_sf_text(data = subset(World_eez_sf, eez_name %in% country),
-  #              aes(label =eez_name),
-  #              size = 2) +
-  # geom_text(data = subset(Test_Data, source %in% country),
-  #              aes(start_lon,
-  #                start_lat,
-  #                label = paste(source,"to",target)
-  #              ),
-  #              size = 2) +
-  # geom_text_repel(data = Test_Data,
-  #   aes(start_lon,
-# start_lat,
-# label = paste(source,"to",target)
-# )
-# )+
-ggtheme_map() +
-  scale_colour_gradientn("Number of emerging stocks",
-                         colours = wesanderson::wes_palette("Zissou1", 100, type = "continuous"),
-                         limits = c(0,35),
-                         breaks = seq(0,35,5)
+  ggtheme_map() +
+  scale_colour_viridis(
+    name="Number of emerging stocks\nby 2050",
+    limits = c(0,40),
+    breaks = seq(0,40,10),
+    # option="magma",
+    direction = 1
   ) +
-  facet_wrap(~time_step,
-             ncol = 1)
-
-```
+  ggsave("./Figures/figure_emerging_2050.png",
+         width = 10,
+         height = 6,
+         units = "in"
+  )
 
 
 ```
