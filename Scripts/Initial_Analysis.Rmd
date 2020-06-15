@@ -916,6 +916,10 @@ t_start <- Sys.time()
       )
     )
 
+```
+
+
+```{r Emerging_routine_DoPar, eval = F, echo = F}
 
 library(doParallel)
 library(doSNOW)
@@ -932,11 +936,11 @@ progress <- function(n) setTxtProgressBar(pb, n)
 opts <- list(progress = progress)
 
 
-results <- foreach(i=1:repetitions,
-                    .combine = rbind,
-                    .packages = c("MyFunctions",packages),
-                    .options.snow = opts,
-                   .verbose = T) %dopar% 
+foreach(i=1:repetitions,
+        .combine = rbind,
+        .packages = c("MyFunctions",packages),
+        .options.snow = opts,
+        .verbose = T) %dopar% 
   GetTransIndex(
     taxon_key =spp_reman[i],
     ensemble_list = ensemble_list,
@@ -949,18 +953,6 @@ results <- foreach(i=1:repetitions,
 
 close(pb)
 stopCluster(cl)
-
-
-t_end <- Sys.time()-t_start;t_end
-
-write_csv(Emerging_result,
-          paste(my_path("R"),"Emerging_Results.csv",sep="")
-)
-
-# Version 1 (embeded loop) <- 3.01
-# Version 2 (embeded lapply) <- 2.71
-# Version 3 (embeded mclapply) <- 1.597311 mins
-# Version 4 (embeded mclapply) + mclapply in spp <- 1.597311 mins
 
 ```
 
@@ -1080,10 +1072,12 @@ PropChange <- function(taxon_list,links="NA"){
 
 ### Run Results Analysis
 
-```{r fun_PropChange, eval = F, echo =F}
+####  Prooportion Analysis
+
+```{r PropChange, eval = F, echo =F}
 
 # Get taxon list
-Taxon_List <- list.files(paste(result_path,"/Proportion/",sep=""))
+Taxon_List <- list.files(paste(my_path("R"),"Propotion",sep=""))
 
 # clean names for function
 Taxon_List <- gsub(".*_","",Taxon_List) 
@@ -1097,6 +1091,9 @@ Proportion_Results <- PropChange(Taxon_List, links="y") %>%
          )
 
 # View(results)
+
+
+
 
 ### Load Data
 
@@ -1124,7 +1121,7 @@ eez_centroid <- read_csv(paste(data_path,"Spatial/eez_centroids.csv", sep = ""))
 
 ```
 
-### Fig.Percentage Change Map
+##### Fig.Percentage Change Map
 
 ```{r fig_map_per, eval = F, echo =F}
 
@@ -1152,7 +1149,7 @@ World_sf %>%
 ```
 
 
-### Fig. Netowrk
+##### Fig. Netowrk
 
 ```{r fig_map_Juan, eval = F, echo =F}
 # Figure made thanks to Juanito!
@@ -1253,6 +1250,286 @@ x <- ggplot() +
   )
 
 ```
+
+
+####  Year of Eergence Analysis
+
+```{r PropChange, eval = F, echo =F}
+
+# Get taxon list
+Taxon_List <- list.files(my_path("R",extra_path = "Emergence_yr"))
+
+# clean names for function
+Taxon_List <- gsub("_.*","",Taxon_List) 
+
+Paths <- paste(my_path("R",extra_path = "Emergence_yr"),Taxon_List,"_emergence.txt",sep="")
+
+# Load all sp in noe table
+Eme_Res <- bind_rows(lapply(Paths, fread))
+# warnings() for empty data species
+
+View(Eme_Res)
+
+### Load Data
+
+# Load SAU shapefile name and paths
+
+# The path
+path_world <- paste(data_path,"Spatial/SAU_Shapefile/",sep="")
+
+# The File
+fnam_world <- "SAUEEZ_July2015.shp"
+
+# Load it!
+World_eez_sf <- st_read(dsn = path_world,
+                    layer =file_path_sans_ext(fnam_world)) %>% 
+  rename(eez_name = Name) %>% 
+  st_transform(crs = 4326) %>% # 4326
+  st_simplify(preserveTopology = TRUE, dTolerance = 0.1)
+
+
+
+# Call world map from natural earth
+World_map <- rnaturalearth::ne_countries(scale = 'small', returnclass = c("sf"))
+
+eez_centroid <- read_csv(paste(data_path,"Spatial/eez_centroids.csv", sep = ""))
+
+```
+
+
+##### Histogram of Data
+
+```{r histo,  eval = T, echo = T}
+
+Eme_Res %>% 
+  filter(
+    n_ens == 10,
+    emerging_yr >= 2020
+  ) %>% 
+  group_by(eez_name,emerging_yr) %>% 
+  summarise(
+    n_tax = length(unique(taxon_key))
+  ) %>% 
+  ggplot() +
+  geom_histogram(
+    aes(
+      x = emerging_yr
+    ),
+    stat = "count"
+  ) # +
+  # facet_wrap(~n_ens)
+
+Eme_Res %>% 
+  filter(
+    n_ens == 10#,
+    # emerging_yr >= 2020
+  ) %>% 
+  group_by(emerging_yr) %>% 
+  summarise(
+    n_tax = length(unique(taxon_key))
+  ) %>% 
+  group_by() %>%
+  mutate(RMean = rollmean(x = n_tax, 
+                          10,
+                          align = "right",
+                          fill = n_tax)
+  ) %>%
+  filter(emerging_yr >= 2020) %>% 
+  ggplot() +
+  geom_line(
+    aes(
+      x = emerging_yr,
+      y = RMean
+    )
+  )
+
+```
+
+##### Mapping the time of emergence
+
+```{r time_emergence_map,  eval = T, echo = T}
+
+
+results <- Eme_Res %>% 
+  filter(
+    n_ens == 10#,
+    # emerging_yr >= 2020
+  ) %>% 
+  group_by(eez_name,eez_neighbour,emerging_yr) %>% 
+  summarise(
+    n_tax = length(unique(taxon_key))
+  ) %>% 
+  mutate(
+    time_step = ifelse(emerging_yr <= 2050, "Mid_Century","Then_End_Century")
+  ) %>% 
+  # filter(
+  #   emerging_yr >= 2030
+  # ) %>% 
+  group_by(eez_name,eez_neighbour,time_step) %>% 
+  summarise(
+    n_tax_emer = sum(n_tax)
+  )
+
+##_----------------------- #
+# Checking on China and Indonesia
+# Probably due to dispute territories
+
+Neighbours <- my_path("D", extra_path = "Spatial/", name="Neighbours_eez_id.csv", read = TRUE) %>% 
+  clean_names()
+
+# 
+# Neighbours %>% 
+#   filter(eez_name == "China") %>% 
+#   pull(eez_neighbour) %>% 
+#   unique()
+
+##_----------------------- #
+
+
+# Get the center poligon of each EEZ for map source/target
+coords <- as.data.frame(st_centroid(World_eez_sf)) %>% 
+  ungroup() %>% 
+  select(eez_name,geometry) %>% 
+  separate(col = geometry, into = c("longitude", "latitude"), sep = "\\,") %>% 
+  # Manually fix issues
+  mutate(
+    longitude = ifelse(
+      eez_name == "Fiji", 178.065033,
+      ifelse(eez_name == "Tuvalu",177.6493,
+             ifelse( eez_name == "New Zealand",174.8860,
+                     ifelse( eez_name == "USA (Alaska, Subarctic)",-145.8860,longitude
+                     )
+             )
+      )
+    )
+  )
+
+# Remove "c()"
+coords$longitude <- gsub("\\(","",coords$longitude)
+coords$longitude <- gsub("c","",coords$longitude)
+coords$latitude <- gsub(")","",coords$latitude)
+
+coords <- coords %>% 
+  mutate_at(vars(longitude,latitude),as.numeric)
+
+# Prepare data from results
+Test_Data <- results %>% 
+  # get coords for sources
+  left_join(coords,
+            by = "eez_name") %>%
+  rename(source = eez_name,
+         start_lon = longitude,
+         start_lat = latitude,
+         eez_name=eez_neighbour) %>% 
+  # get coords for targets
+  left_join(coords,
+            by = "eez_name") %>% 
+  rename(target = eez_name,
+         end_lon = longitude,
+         end_lat = latitude) %>% 
+  ungroup() %>% 
+  # Plot miscs
+  # mutate(
+  #   per_mid = ifelse(is.na(per_mid),0,per_mid)
+  # ) %>% 
+  drop_na() #%>% 
+  # filter(
+    # per_mid >= 20,
+    # variable == "mean_spp",
+  # )
+
+
+# Convert to data to spatial
+network_data_sf <- Test_Data %>%
+  select(start_lon, start_lat, end_lon, end_lat) %>% 
+  purrr::transpose() %>% 
+  purrr::map(~ matrix(flatten_dbl(.), nrow = 2, byrow = TRUE)) %>% 
+  purrr::map(st_linestring) %>%
+  st_sfc(crs = 4326) %>%
+  st_sf(geometry = .)%>%
+  bind_cols(Test_Data) %>%
+  select(everything(), geometry) %>% 
+  # Set circles ('cus the world is not flat!)
+  st_segmentize(units::set_units(100, km)) %>% 
+  mutate(geometry = (geometry + c(180,90)) %% c(360) - c(180,90)) %>% 
+  st_wrap_dateline(options = c("WRAPDATELINE=YES",  "DATELINEOFFSET=180"), quiet = TRUE) %>% 
+  sf::st_sf(crs = 4326)
+
+#  unpack the coordinates of each feature 
+coord_data <- as.data.frame( st_coordinates(st_cast(network_data_sf,"MULTILINESTRING")$geometry))
+
+c(network_data_sf$line_id, network_data_sf$coords) %<-% (
+  coord_data %>% 
+    rename(subline_id = L1) %>%   
+    nest(-L2)
+)
+
+# Create data path for line connections
+paths <- network_data_sf %>% 
+  sf::st_set_geometry(NULL) %>% 
+  unnest() %>% 
+  mutate_at(vars(X,Y), round,2)
+
+# Plot it!
+
+country <- c("Fiji","Solomon Isl.","Tuvalu")
+
+ggplot() +
+  geom_sf(
+    # data = subset(world_map,name %in% country),
+    data = World_map,
+    size = 0.1, fill = "gray90", col = "gray90") +
+  geom_sf(
+    # data = subset(World_eez_sf, eez_name %in% country),
+    data = World_eez_sf,
+    size = 0.1, fill = "white", col = "gray70") +
+  geom_point(data = Test_Data,
+             # data = subset(Test_Data, source %in% country & target %in% source),
+             aes(start_lon,
+                 start_lat,
+                 col = n_tax_emer),
+             size = 0.1,
+             col = "black",
+             # shape = 21,
+             stroke = 1.5) +
+  geom_path(data = paths,
+            # data = subset(paths, source %in% country),
+            aes(X, Y,
+                group = interaction(line_id,subline_id),
+                col = n_tax_emer
+            ),
+            size = 0.3,
+            arrow = arrow(length = unit(0.009, "npc")),
+            show.legend = NA) +
+  # geom_sf_text(data = subset(World_eez_sf, eez_name %in% country),
+  #              aes(label =eez_name),
+  #              size = 2) +
+  # geom_text(data = subset(Test_Data, source %in% country),
+  #              aes(start_lon,
+  #                start_lat,
+  #                label = paste(source,"to",target)
+  #              ),
+  #              size = 2) +
+  # geom_text_repel(data = Test_Data,
+  #   aes(start_lon,
+# start_lat,
+# label = paste(source,"to",target)
+# )
+# )+
+ggtheme_map() +
+  scale_colour_gradientn("Number of emerging stocks",
+                         colours = wesanderson::wes_palette("Zissou1", 100, type = "continuous"),
+                         limits = c(0,35),
+                         breaks = seq(0,35,5)
+  ) +
+  facet_wrap(~time_step,
+             ncol = 1)
+
+```
+
+
+```
+
 
 ## Troubleshooting
 
