@@ -14,15 +14,44 @@ The delineation of Economic Exclusive Zones (EEZs) under the United Nations Conv
 
 # Introduction
 
-### Link paper un terms of SDGs
+The world is moving towards sustainable development and ocean-based activities plays a mayor role in achieveing international policies.
 
+One of the main goals of the United Nations Sustainable Development Goal No.14 (SDG 14-Life below water) is to achieve sustainable development of fisheries [@SDG14].
+(https://sustainabledevelopment.un.org/sdg14).
+
+Climate change is expected to reduce the production from global fisheries in about XX% to xx% [@Cheung; @Barange] compromisisng our capacity to reach SDG 14.
+
+Recent reseach show that the impacts of climate change on the productivity of marine wild fisheries can be offset with the proper reform of current fisheries management [@Gaines; @CheungClimateReadyFish]. While bringing fisheries that are poorly managed to a sustainable level will likeley offset the negative impacts of climate change to fisheries production [@Gaines], it will not necessarilly solve the spatial consequences of species moving from one mangement area to another. 
+
+Shifts in species distribution does not necessarilly mean a reduction in production (e.g. reduction in stock biomass) but rather a spatial re-distribution of the stock's biomass [@RefLiam?]. 
+
+Documented cases of stock shifts have resulted in international conflict and usustainable fishing rates by parties involved in the conflict.
+
+This is of specific concern to a set of 633 fished species that cross international borders, also known as transbounday species [@FishForVisa]. 
+
+With the implementation of arbritary spatial management boundaries, at least 633 species became transboudary representing an average catch (2005 - 2010) of 47.6 million tons and generating USD 65,483 million in fishing revenue [@FishorVisa]. 
+
+
+Transboudary fish stocks refere to those species that cross international jurisdictions known as Economic Exclusive Zones (EEZs) of neighbouring nations [@FAO]. These stocks are responsable for an average catch (2005 - 2010) of 47.6 million tons generating USD 65,483 million in fishing revenue [@FishorVisa].
+
+
+Historically, environmentally-driven shits in shared stocks have cause problems and threathen stock's sustainabillity. **In early 1980's Canada and the US blablabla.** Many fish stocks managed by the European Union ICES regultaroy areas have been shifting since the 1970's [@EuropeShift]. Such shifts have already result in confrontations between nations as evidenced by the expansion of the Atlantic mackerel (*Scomber scombrus*) distribution reaching the EEZ of Iceland [@Spijkers:2017ij].  More recently, Chile and Peru have declare a cooperation strategy to mange the transboundary stock of Peruvean Anchovera [@Peru]. Furthermore, as we continue to enter the $21^{st}$ century, commercial marine species are expected to continue shifting (mostly poleward) potentilly compromising shared stocks management. By the end of the century, all EEZs of the world are proyected to have at least one new transboundary species with some of them having over 10 new stocks [@Pinsky]. Consequently, as species occupy new waters they leave historic areas and so, xx% of species are expected to exit EEZs by the end of che century [@Oremus]. This entering and exicting national jurisdicions will complicate fisheries management potentially creating confllict between neighbouring nations [@Pinksy @Oremus:2020id].
+ 
+
+ So, preparing policy to species on the move is key to achieve sustainable development goals and proper governance of the world fisheries [@Pinksy].
+
+
+Undrstanding the degree by which shared stocks are going to change and the time of emergence is key for creating climate-ready fisheries policy.
+
+<!-- The concepts of transboundary stocks and EEZs were introduced in the early 1980's by the United Nations Law of the Sea (UCLOS) [@UnitedNations:1986tl]. Under UNCLOS each costal nation has the right (and responsabillity) to manage wild fish stocks up to 200 nautical mailes of the coast. Exceptions exist when territorial waters are in dispute (e.g. South China sea[@Ref]) or when menagement agreements exist between nations [@Ref]. In fact, UNCLOS incentives actions to cooperate on the management of shared stocks [Article 63, @UnitedNations:1986tl]. Climate change is shifting the distribution of marine species to the extreem that some spatial policies implemented to manage fisheries are becoming obsolete [@Pololanza; @Jessica].  -->
+
+## Link paper un terms of SDGs
 - UnitedNations2018 Blanchard:2017hl Singh:2017ds
 
-### Collaborative management of share stocks
-
+## Collaborative management of share stocks
 - Theat points
 - Concept of treaty estabillity
-- Oremus:2020id
+
 
 
 # Methods
