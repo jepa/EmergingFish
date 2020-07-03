@@ -199,8 +199,9 @@ EstPropChange <- function(taxon_key,
       year = year,
       data_type = data_type,
        model = "GFDL",
-      rcp = 85,
-      path = "",
+      rcp = "85",
+      path = "NA",
+      my_path = F
     )
   )
 
@@ -313,7 +314,7 @@ EstPropChange <- function(taxon_key,
   
   # Save Result
   name <- paste("proportion_",taxon_key,".csv",sep="")
-  path_name <- my_path("R",extra_path = "Proportion")
+  path_name <- paste(my_path("R",extra_path = "Proportion_n"),name,sep= "")
   
   write_csv(Per_Ghange_D,
             path_name)
@@ -330,13 +331,13 @@ EstPropChange <- function(taxon_key,
 }
 
 # EstPropChange(taxon_key = 600004,
-#               year = year_df,
+#               year = year_df$year,
 #               hist_y = 2000,
 #               data_type = "Catch",
-#               ensemble_list = ensemble_list,
+#               ensemble_list = 102,
 #               path = path,
 #               neighbours = neighbours)
-
+# 
 
 
 ```
@@ -376,6 +377,14 @@ ensemble_list <- seq(102,111,1)
 #  List os species
 spp_list <- unique(Transboundary_spp$taxon_key)
 
+modeled_spp <- list.files(my_path("R", extra_path = "Proportion_n"))
+
+modeled_spp <- gsub("proportion_","",modeled_spp)
+modeled_spp <- gsub(".csv","",modeled_spp)
+
+spp_list <- spp_list[!spp_list %in% modeled_spp]
+
+
 ```
 
 ### Proportion routine
@@ -385,13 +394,13 @@ spp_list <- unique(Transboundary_spp$taxon_key)
 ####_______________________ ####
 # Estimating proportion change
 ####_______________________ ####
-
+gc()
 t_start <- Sys.time()
 
 mclapply(
   spp_list,
   EstPropChange,
-  year <- year_df,
+  year <- year_df$year,
   data_type <- "Catch",
   ensemble_list = ensemble_list,
   path = DBEM_path,
