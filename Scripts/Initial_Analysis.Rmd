@@ -183,7 +183,7 @@ This part of the analysis estimates the Stock Share Ratio and its change under c
 
 EstPropChange <- function(taxon_key,
                           year,
-                          hist_y,
+                          hist_y = 2005,
                           data_type = "Catch",
                           ensemble_list, # expects a list of ensembles to averrage by
                           path,
@@ -194,14 +194,16 @@ EstPropChange <- function(taxon_key,
   Spp_Dist <- bind_rows(
     lapply(
       ensemble_list,
-      dbem_import,
+      read_dbem_ens,
       taxon_key = taxon_key,
       year = year,
       data_type = data_type,
-      path = path
+       model = "GFDL",
+      rcp = "85",
+      path = "NA",
+      my_path = F
     )
   )
-  
 
   # Filter Species distribution to that of the neighbouring EEZs
   # ------------ #
@@ -312,7 +314,7 @@ EstPropChange <- function(taxon_key,
   
   # Save Result
   name <- paste("proportion_",taxon_key,".csv",sep="")
-  path_name <- paste(result_path,"Proportion/",name, sep="")
+  path_name <- paste(my_path("R",extra_path = "Proportion_n"),name,sep= "")
   
   write_csv(Per_Ghange_D,
             path_name)
@@ -329,13 +331,13 @@ EstPropChange <- function(taxon_key,
 }
 
 # EstPropChange(taxon_key = 600004,
-#               year = year_df,
+#               year = year_df$year,
 #               hist_y = 2000,
 #               data_type = "Catch",
-#               ensemble_list = ensemble_list,
+#               ensemble_list = 102,
 #               path = path,
 #               neighbours = neighbours)
-
+# 
 
 
 ```
@@ -357,26 +359,31 @@ Neighbours <- my_path("D", extra_path = "Spatial/", name="Neighbours_eez_id.csv"
 # Transboundary species and their sharing EEZs (see Palacios-Abrantes et al; FishForVisa)
 Transboundary_spp <- my_path("D", extra_path = "Species/", name="Transboundary_spp.csv", read = TRUE) %>% 
   clean_names() %>% 
-  select(-x1)
+  select(-v1)
 
 ## ----------------- ##
 # Global variables
 ## ----------------- ##
 
 # Year timeframe
-year_df <- tibble(year =  c(seq(1951,2000,1), seq(2001,2099,1)),
-                  time_period = c(rep("historic", 50), rep("future", 99))
+year_df <- tibble(year =  c(seq(1951,2005,1), seq(2006,2099,1)),
+                  time_period = c(rep("historic", 55), rep("future", 94))
                   )
 
-# Data path
-path = DBEM_path
-
 # List of ensemble members
-ensemble_list <- seq(102,103,1) # for testing
-# ensemble_list <- seq(102,111,1)
+# ensemble_list <- seq(102,103,1) # for testing
+ensemble_list <- seq(102,111,1)
 
 #  List os species
 spp_list <- unique(Transboundary_spp$taxon_key)
+
+modeled_spp <- list.files(my_path("R", extra_path = "Proportion_n"))
+
+modeled_spp <- gsub("proportion_","",modeled_spp)
+modeled_spp <- gsub(".csv","",modeled_spp)
+
+spp_list <- spp_list[!spp_list %in% modeled_spp]
+
 
 ```
 
@@ -387,13 +394,13 @@ spp_list <- unique(Transboundary_spp$taxon_key)
 ####_______________________ ####
 # Estimating proportion change
 ####_______________________ ####
-
+gc()
 t_start <- Sys.time()
 
 mclapply(
   spp_list,
   EstPropChange,
-  year <- year_df,
+  year <- year_df$year,
   data_type <- "Catch",
   ensemble_list = ensemble_list,
   path = DBEM_path,
