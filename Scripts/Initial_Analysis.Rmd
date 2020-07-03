@@ -974,14 +974,14 @@ This function estimates the total change in MCP proportion of each species for e
 SummaryProp <- function(taxon_key,links="NA"){
   
   # Reads taxon data
-  proportion_data <- fread(paste(result_path,"Proportion/","proportion_",taxon_key,".csv", sep=""))
+  proportion_data <- fread(paste(my_path("R",extra_path = "Proportion/"),"proportion_",taxon_key,".csv", sep=""))
   
   if(links == "y"){
     # summarizes by country and neighbour
     country_summary <- proportion_data %>% 
       group_by(taxon_key,eez_name,eez_neighbour,time_step) %>% 
       summarise(
-        mean_spp = mean(ensemble_mean,na.rm=T) # average spp change from all countries sharing
+        mean_spp = mean(ensamble_mean,na.rm=T) # average spp change from all countries sharing
       )
     
   }else{
@@ -1062,7 +1062,7 @@ PropChange <- function(taxon_list,links="NA"){
    mutate_at(vars(
      "per_mid" = mid,
      "per_end" = n_end),
-            funs(round((((.-historical)/.))*100,2))
+            funs(round((((.-historical)/historical))*100,2))
    )
  
  return(proportion_change)
@@ -1078,30 +1078,27 @@ PropChange <- function(taxon_list,links="NA"){
 ```{r PropChange, eval = F, echo =F}
 
 # Get taxon list
-Taxon_List <- list.files(paste(my_path("R"),"Propotion",sep=""))
+Taxon_List <- list.files(paste(my_path("R"),"Proportion",sep=""))
 
 # clean names for function
 Taxon_List <- gsub(".*_","",Taxon_List) 
 Taxon_List <- gsub("\\..*","",Taxon_List)
-
+  
 # Run results
-Proportion_Results <- PropChange(Taxon_List, links="y") %>% 
-  mutate(per_mid =ifelse(per_mid >= 25, 25,
-                           ifelse(per_mid <= -25,-25,per_mid)
+results <- PropChange(Taxon_List, links="y") %>% 
+  mutate(per_mid_plot =ifelse(per_mid >= 50, 50,
+                           ifelse(per_mid <= -50,-50,per_mid)
                            )
          )
 
 # View(results)
-
-
-
 
 ### Load Data
 
 # Load SAU shapefile name and paths
 
 # The path
-path_world <- paste(data_path,"Spatial/SAU_Shapefile/",sep="")
+path_world <- my_path("G", extra_path = "Spatial/SAU/SAU_Shapefile")
 
 # The File
 fnam_world <- "SAUEEZ_July2015.shp"
@@ -1113,12 +1110,10 @@ World_eez_sf <- st_read(dsn = path_world,
   st_transform(crs = 4326) %>% # 4326
   st_simplify(preserveTopology = TRUE, dTolerance = 0.1)
 
-
-
 # Call world map from natural earth
 World_map <- rnaturalearth::ne_countries(scale = 'small', returnclass = c("sf"))
 
-eez_centroid <- read_csv(paste(data_path,"Spatial/eez_centroids.csv", sep = ""))
+eez_centroid <- my_path("D",extra_path = "Spatial",name = "eez_centroids.csv",read = T)
 
 ```
 
@@ -1149,7 +1144,6 @@ World_sf %>%
 
 ```
 
-
 ##### Fig. Netowrk
 
 ```{r fig_map_Juan, eval = F, echo =F}
@@ -1174,7 +1168,7 @@ Data <- results %>%
   ungroup() %>% 
   # Plot miscs
   mutate(
-    per_mid = ifelse(is.na(per_mid),0,per_mid)
+    per_mid = ifelse(is.na(per_mid_plot),0,per_mid_plot)
   ) %>% 
   drop_na() %>%
   filter(
@@ -1216,6 +1210,7 @@ paths <- network_data_sf %>%
 # Plot it!
 
 gc()# clean ram
+
 x <- ggplot() +
   geom_sf(data = subset(World_map, sovereignt != "Antarctica"), size = 0.1, fill = "gray90", col = "gray90") +
   geom_sf(data = World_eez_sf, size = 0.1, fill = "white", col = "gray70") +
@@ -1239,19 +1234,18 @@ x <- ggplot() +
   ggtheme_map() +
   scale_colour_viridis(
     name="Average Gain of\nStock-Share Ratio (%)",
-    limits = c(0,25),
-    breaks = seq(0,25,5),
+    limits = c(0,max(Data$per_mid)),
+    breaks = seq(0,max(Data$per_mid),5),
     # option="magma",
     direction = 1
   ) +
-  ggsave("figure_connectionsc.png",
+  ggsave("figure_connections_n50.png",
          width = 10,
          height = 6,
          units = "in"
   )
 
 ```
-
 
 ####  Year of Eergence Analysis
 
