@@ -981,15 +981,16 @@ This function estimates the total change in MCP proportion of each species for e
 SummaryProp <- function(taxon_key,links="NA"){
   
   # Reads taxon data
-  proportion_data <- fread(paste(my_path("R",extra_path = "Proportion/"),"proportion_",taxon_key,".csv", sep=""))
+  proportion_data <- fread(paste(my_path("R",extra_path = "Proportion_2005/"),"proportion_",taxon_key,".csv", sep=""))
   
   if(links == "y"){
     # summarizes by country and neighbour
     country_summary <- proportion_data %>% 
       group_by(taxon_key,eez_name,eez_neighbour,time_step) %>% 
       summarise(
-        mean_spp = mean(ensamble_mean,na.rm=T) # average spp change from all countries sharing
-      )
+        mean_spp = mean(ensemble_mean, na.rm = T) # average spp change from all countries sharing
+      ) %>% 
+      filter(!is.na(mean_spp))
     
   }else{
     # summarizes by country
@@ -997,7 +998,8 @@ SummaryProp <- function(taxon_key,links="NA"){
       group_by(taxon_key,eez_name,time_step) %>% 
       summarise(
         mean_spp = mean(ensemble_mean,na.rm=T) # average spp change from all countries sharing
-      )
+      ) %>% 
+      filter(!is.na(mean_spp))
     }
   
   return(country_summary)
@@ -1024,25 +1026,25 @@ EEZProp <- function(taxon_list,links="NA"){
      group_by(eez_name,eez_neighbour,time_step) %>% 
      summarise(
        n_spp = n(),
-       min_spp = min(mean_spp,na.rm=T),
-       max_spp = max(mean_spp,na.rm=T),
-       sd_spp = sd(mean_spp,na.rm=T), # for some weird reason it wont work if the order is fliped
-       mean_spp = mean(mean_spp,na.rm=T)
+       min_eez = min(mean_spp, na.rm=T),
+       max_eez = max(mean_spp, na.rm=T),
+       sd_eez = sd(mean_spp, na.rm=T), # for some weird reason it wont work if the order is fliped
+       mean_eez = mean(mean_spp,na.rm=T)
      ) %>% 
-     select(eez_name:max_spp,mean_spp,sd_spp)
+     select(eez_name:max_eez,mean_eez,sd_eez)
    
  }else{
  
    eez_summary <- spp %>% 
    group_by(eez_name,time_step) %>% 
    summarise(
-     n_spp = n(),
-     min_spp = min(mean_spp,na.rm=T),
-     max_spp = max(mean_spp,na.rm=T),
-     sd_spp = sd(mean_spp,na.rm=T), # for some weird reason it wont work if the order is fliped
-     mean_spp = mean(mean_spp,na.rm=T)
-   ) %>% 
-   select(eez_name:max_spp,mean_spp,sd_spp)
+       n_spp = n(),
+       min_eez = min(mean_spp, na.rm=T),
+       max_eez = max(mean_spp, na.rm=T),
+       sd_eez = sd(mean_spp, na.rm=T), # for some weird reason it wont work if the order is fliped
+       mean_eez = mean(mean_spp,na.rm=T)
+     ) %>% 
+     select(eez_name:max_eez,mean_eez,sd_eez)
  
  
  }
@@ -1064,11 +1066,12 @@ PropChange <- function(taxon_list,links="NA"){
  eez <- EEZProp(taxon_list,links)
  
  proportion_change <- eez %>% 
-   gather("variable","value",n_spp:sd_spp) %>% 
+   gather("variable","value",n_spp:sd_eez) %>% 
    spread(time_step,value) %>% 
    mutate_at(vars(
-     "per_mid" = mid,
-     "per_end" = n_end),
+     "per_early" = early,
+     "per_mid" = mid
+     ),
             funs(round((((.-historical)/historical))*100,2))
    )
  
@@ -1085,7 +1088,7 @@ PropChange <- function(taxon_list,links="NA"){
 ```{r PropChange, eval = F, echo =F}
 
 # Get taxon list
-Taxon_List <- list.files(paste(my_path("R"),"Proportion",sep=""))
+Taxon_List <- list.files(paste(my_path("R"),"Proportion_2005",sep=""))
 
 # clean names for function
 Taxon_List <- gsub(".*_","",Taxon_List) 
@@ -1095,6 +1098,9 @@ Taxon_List <- gsub("\\..*","",Taxon_List)
 results <- PropChange(Taxon_List, links="y") %>% 
   mutate(per_mid_plot =ifelse(per_mid >= 50, 50,
                            ifelse(per_mid <= -50,-50,per_mid)
+                           ),
+         per_early_plot =ifelse(per_early >= 50, 50,
+                           ifelse(per_early <= -50,-50,per_early)
                            )
          )
 
@@ -1175,11 +1181,12 @@ Data <- results %>%
   ungroup() %>% 
   # Plot miscs
   mutate(
+    per_early = ifelse(is.na(per_early_plot),0,per_early_plot),
     per_mid = ifelse(is.na(per_mid_plot),0,per_mid_plot)
   ) %>% 
   drop_na() %>%
   filter(
-    variable == "mean_spp"#,
+    variable == "mean_eez"#,
     # source %in% c("Brazil","Argentina","Chile","Peru","Uruguay")
   )
 
@@ -1212,41 +1219,49 @@ c(network_data_sf$line_id, network_data_sf$coords) %<-% (
 paths <- network_data_sf %>% 
   sf::st_set_geometry(NULL) %>% 
   unnest() %>% 
-  mutate_at(vars(X,Y), round,2)
-
+  mutate_at(vars(X,Y), round,2) %>% 
+  gather("time_step","per_chng",per_mid_plot:per_early_plot)
+  
 # Plot it!
 
+Data <- Data %>% 
+  gather("time_step","per_chng",per_mid_plot:per_early_plot)
+
+
 gc()# clean ram
+
+# time <- "per_mid_plot"
+time <- "per_early_plot"
 
 x <- ggplot() +
   geom_sf(data = subset(World_map, sovereignt != "Antarctica"), size = 0.1, fill = "gray90", col = "gray90") +
   geom_sf(data = World_eez_sf, size = 0.1, fill = "white", col = "gray70") +
-  geom_point(data = subset(Data, per_mid < 0),
+  geom_point(data = subset(Data, time_step == time & per_chng < 0),
              aes(start_lon,
                  start_lat,
-                 col = per_mid),
+                 col = per_chng),
              size = 0.05,
              col = "gray30",
              shape = 20,
              stroke = 1.5) +
-  geom_path(data = subset(paths, per_mid > 0),
+  geom_path(data = subset(paths, time_step == time & per_chng > 0),
             aes(X, Y,
                 group = interaction(line_id,subline_id),
-                col = per_mid
+                col = per_chng
             ),
             size = 0.3,
             arrow = arrow(length = unit(0.009, "npc"),
                           ends = "first"),
             show.legend = NA) +
-  ggtheme_map() +
+  my_ggtheme_m() +
   scale_colour_viridis(
     name="Average Gain of\nStock-Share Ratio (%)",
-    limits = c(0,max(Data$per_mid)),
-    breaks = seq(0,max(Data$per_mid),5),
+    limits = c(0,max(Data$per_chng)),
+    breaks = seq(0,max(Data$per_chng),5),
     # option="magma",
     direction = 1
   ) +
-  ggsave("figure_connections_n50.png",
+  ggsave("./Figures/figure_connections_early_n50.png",
          width = 10,
          height = 6,
          units = "in"
@@ -1266,7 +1281,7 @@ Taxon_List <- gsub("_.*","",Taxon_List)
 
 Paths <- paste(my_path("R",extra_path = "Emergence_yr"),Taxon_List,"_emergence.txt",sep="")
 
-# Load all sp in noe table
+# Load all sp in one table
 Eme_Res <- bind_rows(lapply(Paths, fread)) %>% 
   filter(
     n_ens == 10
@@ -1280,7 +1295,7 @@ Eme_Res <- bind_rows(lapply(Paths, fread)) %>%
 # Load SAU shapefile name and paths
 
 # The path
-path_world <- paste(data_path,"Spatial/SAU_Shapefile/",sep="")
+path_world <- my_path("G", extra_path = "Spatial/SAU/SAU_Shapefile")
 
 # The File
 fnam_world <- "SAUEEZ_July2015.shp"
@@ -1300,7 +1315,6 @@ World_map <- rnaturalearth::ne_countries(scale = 'small', returnclass = c("sf"))
 eez_centroid <- read_csv(paste(data_path,"Spatial/eez_centroids.csv", sep = ""))
 
 ```
-
 
 ##### Histogram of Data
 
@@ -1326,7 +1340,7 @@ stock_d_hist <- Eme_Res %>%
 
 # Per EEZs
 eez_d_hist <- Eme_Res %>% 
-  group_by(emerging_yr,eez_name) %>% 
+  group_by(eez_name,emerging_yr) %>% 
   # summarise(n_tax = length(unique(taxon_key))) %>% 
   summarise(n()) %>% 
   mutate(
