@@ -196,14 +196,15 @@ EstPropChange <- function(taxon_key,
       ensemble_list,
       read_dbem_ens,
       taxon_key = taxon_key,
-      year = year,
+      year = year_df$year,
       data_type = data_type,
-       model = "GFDL",
+      model = "GFDL",
       rcp = "85",
-      path = "NA",
+      # path = "/Volumes/DATA/DATA",
       my_path = F
     )
   )
+  
 
   # Filter Species distribution to that of the neighbouring EEZs
   # ------------ #
@@ -300,10 +301,10 @@ EstPropChange <- function(taxon_key,
     ) %>% 
     # ensemble mean and sd
     group_by(taxon_key,eez_name,eez_neighbour,time_step) %>%
-    summarise_at(vars("temporal_mean"),
-                 c(ensemble_mean=mean,
-                   ensemble_sd=sd),
-                 na.rm=T
+    summarise(
+      ensemble_mean = mean(temporal_mean, na.rm = T),
+      ensemble_sd = sd(temporal_mean, na.rm = T),
+      ensemble_n = n()
     )
   
   # --------------- #
@@ -314,7 +315,7 @@ EstPropChange <- function(taxon_key,
   
   # Save Result
   name <- paste("proportion_",taxon_key,".csv",sep="")
-  path_name <- paste(my_path("R",extra_path = "Proportion_n"),name,sep= "")
+  path_name <- paste(my_path("R",extra_path = "Proportion_2005"),name,sep= "")
   
   write_csv(Per_Ghange_D,
             path_name)
@@ -879,7 +880,7 @@ Transboundary_spp <- my_path("D", extra_path = "Species/", name="Transboundary_s
 year_df <- tibble(year =  seq(1951,2099,1))
 
 # Last year of "historic" data
-Historic_year = 2000
+Historic_year = 2005
 
 # Data path
 # path = DBEM_path
