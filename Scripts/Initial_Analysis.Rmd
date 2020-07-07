@@ -1096,6 +1096,7 @@ Taxon_List <- gsub("\\..*","",Taxon_List)
   
 # Run results
 results <- PropChange(Taxon_List, links="y") %>% 
+  filter(!is.na(eez_neighbour)) %>% 
   mutate(per_mid_plot =ifelse(per_mid >= 50, 50,
                            ifelse(per_mid <= -50,-50,per_mid)
                            ),
@@ -1103,6 +1104,10 @@ results <- PropChange(Taxon_List, links="y") %>%
                            ifelse(per_early <= -50,-50,per_early)
                            )
          )
+
+# For dat availabillity
+ # write_csv(results,
+          # "proportion_change_2005.csv")
 
 # View(results)
 
@@ -1259,10 +1264,56 @@ x <- ggplot() +
     limits = c(0,max(Data$per_chng)),
     breaks = seq(0,max(Data$per_chng),5),
     # option="magma",
-    direction = 1
+    direction = -1
   ) +
   ggsave("./Figures/figure_connections_early_n50.png",
          width = 10,
+         height = 6,
+         units = "in"
+  )
+
+```
+
+##### Histogram of change
+
+```{r hist_change}
+
+ results %>% 
+  gather("time_step","change",per_early,per_mid) %>% 
+  filter(variable == "mean_eez" & 
+           !is.na(change)
+         ) %>%
+ggplot() +
+  geom_density(
+               aes(
+                 x = ifelse(change >= 100,100,change),
+                 # x = change,
+                 fill = ifelse(time_step == "per_early","q",time_step)
+                 # fill = time_step,
+                 
+               ),
+               # stat = "count",
+               # alpha= 0.8,
+               size=0.1,
+               # position = "stack"
+  ) +
+  scale_y_continuous("Density",
+                     # breaks = seq(0,90,10),
+                     # limits = c(0,100)
+  ) +
+  scale_x_continuous("Percentage Change",
+                     breaks = seq(-75,500,25)
+  ) +
+  my_ggtheme_p() +
+  theme(legend.position = "right") +
+  scale_fill_viridis(discrete = T, 
+                     option = "plasma",
+                     alpha = 0.5,
+                     name = "Time Step", labels = c("Middle", "Early")
+                     ) +
+  coord_flip() +
+  ggsave("./Figures/hist_change.png",
+         width = 6,
          height = 6,
          units = "in"
   )
@@ -1274,12 +1325,15 @@ x <- ggplot() +
 ```{r PropChange, eval = F, echo =F}
 
 # Get taxon list
-Taxon_List <- list.files(my_path("R",extra_path = "Emergence_yr"))
+Taxon_List <- list.files(my_path("R",extra_path = "Emergence_2005"))
 
 # clean names for function
 Taxon_List <- gsub("_.*","",Taxon_List) 
 
-Paths <- paste(my_path("R",extra_path = "Emergence_yr"),Taxon_List,"_emergence.txt",sep="")
+# Neighbour list and their respective id (see chunk 3)
+Neighbours <- my_path("D", extra_path = "Spatial/", name="Neighbours_eez_id.csv", read = TRUE)
+
+Paths <- paste(my_path("R",extra_path = "Emergence_2005"),Taxon_List,"_emergence.txt",sep="")
 
 # Load all sp in one table
 Eme_Res <- bind_rows(lapply(Paths, fread)) %>% 
@@ -1322,13 +1376,12 @@ eez_centroid <- read_csv(paste(data_path,"Spatial/eez_centroids.csv", sep = ""))
 
 # Per Stock
 stock_d_hist <- Eme_Res %>% 
-  group_by(emerging_yr,taxon_key) %>%
+  group_by(emerging_yr,taxon_key,Tresh) %>%
   # summarise(n_tax = length(unique(eez_name))) %>%
   summarise(n()) %>% 
   mutate(
     level = "stock"
-  ) %>% 
-  select(1,3,4)
+  ) 
   # ggplot() +
   # geom_histogram(
   #   aes(
@@ -1340,16 +1393,18 @@ stock_d_hist <- Eme_Res %>%
 
 # Per EEZs
 eez_d_hist <- Eme_Res %>% 
-  group_by(eez_name,emerging_yr) %>% 
+  group_by(eez_name,emerging_yr,Tresh) %>% 
   # summarise(n_tax = length(unique(taxon_key))) %>% 
   summarise(n()) %>% 
   mutate(
     level = "EEZ"
   ) %>% 
+  ungroup() %>% 
   select(1,3,4)
 
 hist_data <- stock_d_hist %>% 
-  bind_rows(eez_d_hist)
+  bind_rows(eez_d_hist) %>% 
+  filter(Tresh != "NA")
 
 ggplot() +
   geom_density(data = subset(hist_data, level == "EEZ"),
@@ -1378,7 +1433,8 @@ ggplot() +
                        breaks = seq(2000,2100,10)
     ) +
     my_ggtheme_p() +
-    scale_fill_viridis(discrete = T)
+    scale_fill_viridis(discrete = T) +
+  facet_wrap(~Tresh)
 
 ```
 
@@ -1390,11 +1446,11 @@ ggplot() +
 stock_d <-  Eme_Res %>% 
   left_join(Neighbours) %>% 
     distinct(taxon_key,neighbour_id, .keep_all = TRUE) %>% 
-    group_by(taxon_key) %>% 
+    group_by(taxon_key,Tresh) %>% 
     summarise(
       taxon_emer = min(emerging_yr)
     ) %>% 
-    group_by(taxon_emer) %>% 
+    group_by(taxon_emer,Tresh) %>% 
   summarise(
     n_tax = n()
   ) %>% 
@@ -1409,11 +1465,11 @@ eez_d <-  Eme_Res %>%
   left_join(Neighbours) %>% 
   filter(n_ens == 10) %>% 
     distinct(eez_name,neighbour_id, .keep_all = TRUE) %>% 
-    group_by(eez_name) %>% 
+    group_by(eez_name,Tresh) %>% 
     summarise(
       taxon_emer = min(emerging_yr)
     ) %>% 
-    group_by(taxon_emer) %>% 
+    group_by(taxon_emer,Tresh) %>% 
   summarise(
     n_tax = n()
   ) %>% 
@@ -1425,7 +1481,8 @@ eez_d <-  Eme_Res %>%
   
 # Plot Data
 plot_data <- stock_d %>% 
-  bind_rows(eez_d)
+  bind_rows(eez_d) %>% 
+  filter(Tresh != "NA")
 
   # filter(emerging_yr >= 2020) %>% 
   ggplot() +
@@ -1463,11 +1520,12 @@ plot_data <- stock_d %>%
     ) +
     my_ggtheme_p() +
     scale_fill_viridis(discrete = T) +
-  ggsave("./Figures/figure_accumulative_curve_B.png",
-         width = 6,
-         height = 6,
-         units = "in"
-  )
+    facet_wrap(~Tresh)
+  # ggsave("./Figures/figure_accumulative_curve_B.png",
+  #        width = 6,
+  #        height = 6,
+  #        units = "in"
+  # )
 ```
 
 ##### Scatter plots
