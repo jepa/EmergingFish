@@ -611,7 +611,7 @@ Note: If no historic data available then emerging year is the first year of data
 
 TransIndex <- function(Centroids, # Expecting the results from the GetCentroids function
                        Id, # A numeric value representing a neighbouring interaction (ONE!)
-                       Hist_y = 2000,
+                       Hist_y = 2005,
                        Plot = F){ # The LAST year of Historical data
   
   
@@ -681,9 +681,9 @@ TransIndex <- function(Centroids, # Expecting the results from the GetCentroids 
   
   # Estimate noice from ensemble members
   historic_sd <- Trans_index %>% 
-    filter(year < Hist_y) %>% 
+    filter(year <= Hist_y) %>% 
     group_by(taxon_key,neighbour_id,ensemble) %>% #Average historic data per ensemble
-    summarise_at(vars("trend"),
+    summarise_at(vars("trans_index"),
                  c(trend= mean)
                  ) %>% 
     group_by(taxon_key,neighbour_id) %>% #Capture ensemble variation
