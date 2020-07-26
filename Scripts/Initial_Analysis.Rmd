@@ -15,9 +15,6 @@ editor_options:
 
 ```{r setup, eval = T, echo = F, warning = F, message = F, results = 'hide'}
 
-#### READ ME !!! ####
-# Run this chunk before knit so you make sure you have all pkgs installed in R
-
 library(MyFunctions)
 
 #### Project's Library
@@ -431,7 +428,8 @@ GetCentroids <- function(taxon_key,
                          ensemble, 
                          path,
                          Neighbours,
-                         eez_centroid
+                         eez_centroid,
+                         p = 0.95 # percentile of data for central distribution
                          ){
   
   # ----------------- #
@@ -445,7 +443,8 @@ GetCentroids <- function(taxon_key,
     taxon_key = taxon_key,
     year = year,
     data_type = data_type,
-    ensemble = ensemble
+    ensemble = ensemble,
+    path = my_path("G","DBEM")
   )
 
   # ----------------- #
@@ -520,28 +519,42 @@ GetCentroids <- function(taxon_key,
       Sub_EEZ_centroid <- EEZ_centroid %>% 
         filter(eez_name %in% EEZ_ids$eez_name)
       
-      # Centroid is defined as the tile with the higest species value
-      Centroids <- Sub_Trans_Spp %>% 
+      # Function to get percentiles
+      # https://www.tidyverse.org/blog/2020/03/dplyr-1-0-0-summarise/
+      quibble <- function(x, q = p) {
+        tibble(x = quantile(x, q), q = q)
+      }
+
+      # Get the percentile treshold per year, ensemble and neighbour id
+      percentile <- Sub_Trans_Spp %>% 
         left_join(EEZ_ids, by = "eez_name") %>% 
         group_by(taxon_key,year,ensemble,neighbour_id) %>%  # for whole distribution
-        top_n(1,value) %>% 
-        distinct(value,year, .keep_all = TRUE) %>%  # removes duplicates when tile is in between EEZs
-        left_join(Sub_EEZ_centroid, by = "taxon_key") %>%
-        select(eez_name =eez_name.y, everything() ,-eez_name.x) %>% 
-        # Estimate distances between spp centroid and EEZ centroid
-        mutate(
-          distance = geodist(latitude,  # eez latitude
-                             longitude, # eez longitude
-                             lat, # species latitude
-                             lon,  # species longitude
-                             units="km")
-        ) %>% 
-        select(taxon_key,eez_name,neighbour_id,ensemble,year,distance)
+        do(quibble(.$value, p))
       
+       Centroids <- Sub_Trans_Spp %>% 
+         left_join(EEZ_ids, by = "eez_name") %>% 
+         left_join(percentile,
+                   by = c("taxon_key","year","ensemble","neighbour_id")
+                   ) %>% 
+         mutate(to_filter = ifelse(value < x,"out","keep")) %>% 
+         filter(to_filter == "keep") %>% 
+         group_by(taxon_key,year,ensemble,neighbour_id) %>%  # for whole distribution
+         summarise_at(vars(lon,lat),mean) %>% 
+         left_join(Sub_EEZ_centroid, by = "taxon_key") %>%
+         # select(eez_name =eez_name.y, everything() ,-eez_name.x) %>% 
+         # Estimate distances between spp centroid and EEZ centroid
+         mutate(
+           distance = geodist(longitude, # eez longitude
+                              latitude,  # eez latitude
+                              lon,  # species longitude
+                              lat, # species latitude
+                              units="km")
+         ) %>% 
+         select(taxon_key,eez_name,neighbour_id,ensemble,year,distance)
+         
       return(Centroids)
       
     }
-    
     # Determine the ids
     Ids <- unique(Neighbours_combo$neighbour_id)
     
@@ -600,7 +613,7 @@ Note: If no historic data available then emerging year is the first year of data
 
 TransIndex <- function(Centroids, # Expecting the results from the GetCentroids function
                        Id, # A numeric value representing a neighbouring interaction (ONE!)
-                       Hist_y = 2000,
+                       Hist_y = 2005,
                        Plot = F){ # The LAST year of Historical data
   
   
@@ -684,15 +697,18 @@ TransIndex <- function(Centroids, # Expecting the results from the GetCentroids 
       filter(n_ens %in% n_years$n_ens)
   
   # Estimate noice from ensemble members
-  historic_sd <- mean_sd_index %>% 
-    filter(year <= Hist_y,
-           n_ens %in% n_years$n_ens) %>% 
-    group_by(taxon_key,neighbour_id) %>% 
+  historic_sd <- Trans_index %>% 
+    filter(year <= Hist_y) %>% 
+    group_by(taxon_key,neighbour_id,ensemble) %>% #Average historic data per ensemble
+    summarise_at(vars("trans_index"),
+                 c(trend= mean)
+                 ) %>% 
+    group_by(taxon_key,neighbour_id) %>% #Capture ensemble variation
     summarise_at(vars("trend"),
                  c(hist_mean=mean,
                    noise=sd,
                    n_ens = ~n())
-    )
+                 )
   
   
   # For testing
@@ -1018,15 +1034,16 @@ This function estimates the total change in MCP proportion of each species for e
 SummaryProp <- function(taxon_key,links="NA"){
   
   # Reads taxon data
-  proportion_data <- fread(paste(result_path,"Proportion/","proportion_",taxon_key,".csv", sep=""))
+  proportion_data <- fread(paste(my_path("R",extra_path = "Proportion_2005/"),"proportion_",taxon_key,".csv", sep=""))
   
   if(links == "y"){
     # summarizes by country and neighbour
     country_summary <- proportion_data %>% 
       group_by(taxon_key,eez_name,eez_neighbour,time_step) %>% 
       summarise(
-        mean_spp = mean(ensemble_mean,na.rm=T) # average spp change from all countries sharing
-      )
+        mean_spp = mean(ensemble_mean, na.rm = T) # average spp change from all countries sharing
+      ) %>% 
+      filter(!is.na(mean_spp))
     
   }else{
     # summarizes by country
@@ -1034,7 +1051,8 @@ SummaryProp <- function(taxon_key,links="NA"){
       group_by(taxon_key,eez_name,time_step) %>% 
       summarise(
         mean_spp = mean(ensemble_mean,na.rm=T) # average spp change from all countries sharing
-      )
+      ) %>% 
+      filter(!is.na(mean_spp))
     }
   
   return(country_summary)
@@ -1061,25 +1079,25 @@ EEZProp <- function(taxon_list,links="NA"){
      group_by(eez_name,eez_neighbour,time_step) %>% 
      summarise(
        n_spp = n(),
-       min_spp = min(mean_spp,na.rm=T),
-       max_spp = max(mean_spp,na.rm=T),
-       sd_spp = sd(mean_spp,na.rm=T), # for some weird reason it wont work if the order is fliped
-       mean_spp = mean(mean_spp,na.rm=T)
+       min_eez = min(mean_spp, na.rm=T),
+       max_eez = max(mean_spp, na.rm=T),
+       sd_eez = sd(mean_spp, na.rm=T), # for some weird reason it wont work if the order is fliped
+       mean_eez = mean(mean_spp,na.rm=T)
      ) %>% 
-     select(eez_name:max_spp,mean_spp,sd_spp)
+     select(eez_name:max_eez,mean_eez,sd_eez)
    
  }else{
  
    eez_summary <- spp %>% 
    group_by(eez_name,time_step) %>% 
    summarise(
-     n_spp = n(),
-     min_spp = min(mean_spp,na.rm=T),
-     max_spp = max(mean_spp,na.rm=T),
-     sd_spp = sd(mean_spp,na.rm=T), # for some weird reason it wont work if the order is fliped
-     mean_spp = mean(mean_spp,na.rm=T)
-   ) %>% 
-   select(eez_name:max_spp,mean_spp,sd_spp)
+       n_spp = n(),
+       min_eez = min(mean_spp, na.rm=T),
+       max_eez = max(mean_spp, na.rm=T),
+       sd_eez = sd(mean_spp, na.rm=T), # for some weird reason it wont work if the order is fliped
+       mean_eez = mean(mean_spp,na.rm=T)
+     ) %>% 
+     select(eez_name:max_eez,mean_eez,sd_eez)
  
  
  }
@@ -1101,12 +1119,13 @@ PropChange <- function(taxon_list,links="NA"){
  eez <- EEZProp(taxon_list,links)
  
  proportion_change <- eez %>% 
-   gather("variable","value",n_spp:sd_spp) %>% 
+   gather("variable","value",n_spp:sd_eez) %>% 
    spread(time_step,value) %>% 
    mutate_at(vars(
-     "per_mid" = mid,
-     "per_end" = n_end),
-            funs(round((((.-historical)/.))*100,2))
+     "per_early" = early,
+     "per_mid" = mid
+     ),
+            funs(round((((.-historical)/historical))*100,2))
    )
  
  return(proportion_change)
@@ -1122,30 +1141,35 @@ PropChange <- function(taxon_list,links="NA"){
 ```{r PropChange, eval = F, echo =F}
 
 # Get taxon list
-Taxon_List <- list.files(paste(my_path("R"),"Propotion",sep=""))
+Taxon_List <- list.files(paste(my_path("R"),"Proportion_2005",sep=""))
 
 # clean names for function
 Taxon_List <- gsub(".*_","",Taxon_List) 
 Taxon_List <- gsub("\\..*","",Taxon_List)
-
+  
 # Run results
-Proportion_Results <- PropChange(Taxon_List, links="y") %>% 
-  mutate(per_mid =ifelse(per_mid >= 25, 25,
-                           ifelse(per_mid <= -25,-25,per_mid)
+results <- PropChange(Taxon_List, links="y") %>% 
+  filter(!is.na(eez_neighbour)) %>% 
+  mutate(per_mid_plot =ifelse(per_mid >= 50, 50,
+                           ifelse(per_mid <= -50,-50,per_mid)
+                           ),
+         per_early_plot =ifelse(per_early >= 50, 50,
+                           ifelse(per_early <= -50,-50,per_early)
                            )
          )
 
+# For dat availabillity
+ # write_csv(results,
+          # "proportion_change_2005.csv")
+
 # View(results)
-
-
-
 
 ### Load Data
 
 # Load SAU shapefile name and paths
 
 # The path
-path_world <- paste(data_path,"Spatial/SAU_Shapefile/",sep="")
+path_world <- my_path("G", extra_path = "Spatial/SAU/SAU_Shapefile")
 
 # The File
 fnam_world <- "SAUEEZ_July2015.shp"
@@ -1157,12 +1181,10 @@ World_eez_sf <- st_read(dsn = path_world,
   st_transform(crs = 4326) %>% # 4326
   st_simplify(preserveTopology = TRUE, dTolerance = 0.1)
 
-
-
 # Call world map from natural earth
 World_map <- rnaturalearth::ne_countries(scale = 'small', returnclass = c("sf"))
 
-eez_centroid <- read_csv(paste(data_path,"Spatial/eez_centroids.csv", sep = ""))
+eez_centroid <- my_path("D",extra_path = "Spatial",name = "eez_centroids.csv",read = T)
 
 ```
 
@@ -1193,7 +1215,6 @@ World_sf %>%
 
 ```
 
-
 ##### Fig. Netowrk
 
 ```{r fig_map_Juan, eval = F, echo =F}
@@ -1218,11 +1239,12 @@ Data <- results %>%
   ungroup() %>% 
   # Plot miscs
   mutate(
-    per_mid = ifelse(is.na(per_mid),0,per_mid)
+    per_early = ifelse(is.na(per_early_plot),0,per_early_plot),
+    per_mid = ifelse(is.na(per_mid_plot),0,per_mid_plot)
   ) %>% 
   drop_na() %>%
   filter(
-    variable == "mean_spp"#,
+    variable == "mean_eez"#,
     # source %in% c("Brazil","Argentina","Chile","Peru","Uruguay")
   )
 
@@ -1255,40 +1277,49 @@ c(network_data_sf$line_id, network_data_sf$coords) %<-% (
 paths <- network_data_sf %>% 
   sf::st_set_geometry(NULL) %>% 
   unnest() %>% 
-  mutate_at(vars(X,Y), round,2)
-
+  mutate_at(vars(X,Y), round,2) %>% 
+  gather("time_step","per_chng",per_mid_plot:per_early_plot)
+  
 # Plot it!
 
+Data <- Data %>% 
+  gather("time_step","per_chng",per_mid_plot:per_early_plot)
+
+
 gc()# clean ram
+
+# time <- "per_mid_plot"
+time <- "per_early_plot"
+
 x <- ggplot() +
   geom_sf(data = subset(World_map, sovereignt != "Antarctica"), size = 0.1, fill = "gray90", col = "gray90") +
   geom_sf(data = World_eez_sf, size = 0.1, fill = "white", col = "gray70") +
-  geom_point(data = subset(Data, per_mid < 0),
+  geom_point(data = subset(Data, time_step == time & per_chng < 0),
              aes(start_lon,
                  start_lat,
-                 col = per_mid),
+                 col = per_chng),
              size = 0.05,
              col = "gray30",
              shape = 20,
              stroke = 1.5) +
-  geom_path(data = subset(paths, per_mid > 0),
+  geom_path(data = subset(paths, time_step == time & per_chng > 0),
             aes(X, Y,
                 group = interaction(line_id,subline_id),
-                col = per_mid
+                col = per_chng
             ),
             size = 0.3,
             arrow = arrow(length = unit(0.009, "npc"),
                           ends = "first"),
             show.legend = NA) +
-  ggtheme_map() +
+  my_ggtheme_m() +
   scale_colour_viridis(
     name="Average Gain of\nStock-Share Ratio (%)",
-    limits = c(0,25),
-    breaks = seq(0,25,5),
+    limits = c(0,max(Data$per_chng)),
+    breaks = seq(0,max(Data$per_chng),5),
     # option="magma",
-    direction = 1
+    direction = -1
   ) +
-  ggsave("figure_connectionsc.png",
+  ggsave("./Figures/figure_connections_early_n50.png",
          width = 10,
          height = 6,
          units = "in"
@@ -1296,24 +1327,74 @@ x <- ggplot() +
 
 ```
 
+##### Histogram of change
+
+```{r hist_change}
+
+ results %>% 
+  gather("time_step","change",per_early,per_mid) %>% 
+  filter(variable == "mean_eez" & 
+           !is.na(change)
+         ) %>%
+ggplot() +
+  geom_density(
+               aes(
+                 x = ifelse(change >= 100,100,change),
+                 # x = change,
+                 fill = ifelse(time_step == "per_early","q",time_step)
+                 # fill = time_step,
+                 
+               ),
+               # stat = "count",
+               # alpha= 0.8,
+               size=0.1,
+               # position = "stack"
+  ) +
+  scale_y_continuous("Density",
+                     # breaks = seq(0,90,10),
+                     # limits = c(0,100)
+  ) +
+  scale_x_continuous("Percentage Change",
+                     breaks = seq(-75,500,25)
+  ) +
+  my_ggtheme_p() +
+  theme(legend.position = "right") +
+  scale_fill_viridis(discrete = T, 
+                     option = "plasma",
+                     alpha = 0.5,
+                     name = "Time Step", labels = c("Middle", "Early")
+                     ) +
+  coord_flip() +
+  ggsave("./Figures/hist_change.png",
+         width = 6,
+         height = 6,
+         units = "in"
+  )
+
+```
 
 ####  Year of Eergence Analysis
 
 ```{r PropChange, eval = F, echo =F}
 
 # Get taxon list
-Taxon_List <- list.files(my_path("R",extra_path = "Emergence_yr"))
+Taxon_List <- list.files(my_path("R",extra_path = "Emergence_2005"))
 
 # clean names for function
 Taxon_List <- gsub("_.*","",Taxon_List) 
 
-Paths <- paste(my_path("R",extra_path = "Emergence_yr"),Taxon_List,"_emergence.txt",sep="")
+# Neighbour list and their respective id (see chunk 3)
+Neighbours <- my_path("D", extra_path = "Spatial/", name="Neighbours_eez_id.csv", read = TRUE)
 
-# Load all sp in noe table
+Paths <- paste(my_path("R",extra_path = "Emergence_2005"),Taxon_List,"_emergence.txt",sep="")
+
+# Load all sp in one table
 Eme_Res <- bind_rows(lapply(Paths, fread)) %>% 
   filter(
     n_ens == 10
-  )
+  ) %>% 
+  left_join(Neighbours,
+            by = c("eez_name","eez_neighbour"))
 # warnings() for empty data species
 
 # View(Eme_Res)
@@ -1323,7 +1404,7 @@ Eme_Res <- bind_rows(lapply(Paths, fread)) %>%
 # Load SAU shapefile name and paths
 
 # The path
-path_world <- paste(data_path,"Spatial/SAU_Shapefile/",sep="")
+path_world <- my_path("G", extra_path = "Spatial/SAU/SAU_Shapefile")
 
 # The File
 fnam_world <- "SAUEEZ_July2015.shp"
@@ -1333,9 +1414,7 @@ World_eez_sf <- st_read(dsn = path_world,
                     layer =file_path_sans_ext(fnam_world)) %>% 
   rename(eez_name = Name) %>% 
   st_transform(crs = 4326) %>% # 4326
-  st_simplify(preserveTopology = TRUE, dTolerance = 0.1)
-
-
+  st_simplify(preserveTopology = TRUE, dTolerance = 100)
 
 # Call world map from natural earth
 World_map <- rnaturalearth::ne_countries(scale = 'small', returnclass = c("sf"))
@@ -1344,44 +1423,105 @@ eez_centroid <- read_csv(paste(data_path,"Spatial/eez_centroids.csv", sep = ""))
 
 ```
 
-
 ##### Histogram of Data
 
 ```{r histo,  eval = T, echo = T}
 
-# Per Stock
-stock_d_hist <- Eme_Res %>% 
-  group_by(emerging_yr,taxon_key) %>%
-  # summarise(n_tax = length(unique(eez_name))) %>%
-  summarise(n()) %>% 
-  mutate(
-    level = "stock"
+# First time a Species becomes emergent
+Eme_Res %>% 
+  filter(
+    n_ens == 10#,
+    # Tresh == "Tresh_one"
   ) %>% 
-  select(1,3,4)
+  group_by(Tresh,taxon_key,emerging_yr) %>% 
+  summarise(
+    n_trans = length(unique(eez_name))
+  ) %>% 
+  group_by(Tresh,taxon_key) %>% 
+  summarise(
+    ntrans = min(emerging_yr)
+  ) %>% 
+  group_by(Tresh,ntrans) %>% 
+  summarise(
+    n_taxa = length(unique(taxon_key))
+  ) %>% 
+  arrange(-n_taxa) %>% 
+  # View()
+  # group_by(Tresh) %>% 
+  # summarise(sum(n_taxa))
+  ggplot() +
+  geom_line(
+    aes(
+      x = ntrans,
+      y = n_taxa,
+      color = Tresh
+    )
+  )
+
+
+# EEZ, first time an EEZ has a emergent stock
+Eme_Res %>% 
+  filter(
+    n_ens == 10#,
+    # Tresh == "Tresh_one"
+  ) %>% 
+  group_by(Tresh,eez_name,emerging_yr) %>% 
+  summarise(
+    n_trans = length(unique(taxon_key))
+  ) %>% 
+  group_by(Tresh,eez_name) %>% 
+  summarise(
+    ntrans = min(emerging_yr)
+  ) %>% 
+  group_by(Tresh,ntrans) %>% 
+  summarise(
+    n_taxa = length(unique(eez_name))
+  ) %>% 
+  arrange(-n_taxa) %>% 
+  View()
+  # group_by(Tresh) %>%
+  # summarise(sum(n_taxa))
   # ggplot() +
-  # geom_histogram(
+  # geom_line(
   #   aes(
-  #     x = emerging_yr
-  #   ),
-  #   stat = "count"
+  #     x = ntrans,
+  #     y = n_taxa,
+  #     color = Tresh
+  #   )
   # )
+  
+
+
+# Numer of EEZs where stocks will emerge
+stock_d_hist <- Eme_Res %>% 
+  distinct(taxon_key,neighbour_id,Tresh, .keep_all = TRUE) %>%
+  group_by(emerging_yr,taxon_key,Tresh) %>%
+  summarise(n_tax = length(unique(eez_name))) %>%
+  # summarise(n()) %>% 
+  mutate(
+    level = "EEZs per Spp"
+  )  %>% 
+  ungroup() %>% 
+  select(-taxon_key)
 
 
 # Per EEZs
 eez_d_hist <- Eme_Res %>% 
-  group_by(emerging_yr,eez_name) %>% 
+  distinct(taxon_key,neighbour_id,Tresh, .keep_all = TRUE) %>%
+  group_by(emerging_yr,eez_name,Tresh,neighbour_id) %>%  
   # summarise(n_tax = length(unique(taxon_key))) %>% 
   summarise(n()) %>% 
   mutate(
-    level = "EEZ"
+    level = "Spp per EEZ"
   ) %>% 
-  select(1,3,4)
+  ungroup() %>% 
+  select(-eez_name)
 
-hist_data <- stock_d_hist %>% 
-  bind_rows(eez_d_hist)
-
-ggplot() +
-  geom_density(data = subset(hist_data, level == "EEZ"),
+stock_d_hist %>% 
+  bind_rows(eez_d_hist) %>% 
+  filter(Tresh != "NA") %>% 
+  ggplot() +
+  geom_density(
     aes(
       x = emerging_yr,
       fill = level
@@ -1390,71 +1530,74 @@ ggplot() +
     alpha= 0.8,
     size=0.5,
   ) +
-  geom_density(data = subset(hist_data, level == "stock"),
-    aes(
-      x = emerging_yr,
-      fill = level
-    ),
-    stat = "count",
-    alpha= 0.8,
-    size=0.5,
+  scale_y_continuous("Frequency",
+                     # breaks = seq(0,300,50),
+                     # limits = c(0,300)
   ) +
-    scale_y_continuous("Frequency",
-                       breaks = seq(0,90,10),
-                       limits = c(0,100)
-    ) +
-    scale_x_continuous("Year of emergence",
-                       breaks = seq(2000,2100,10)
-    ) +
-    my_ggtheme_p() +
-    scale_fill_viridis(discrete = T)
+  scale_x_continuous("Year of emergence",
+                     # breaks = seq(2006,2100,25),
+                     # limits = c(2000,2100)
+  ) +
+  my_ggtheme_p() +
+  scale_fill_viridis(discrete = T) +
+  facet_wrap(~Tresh) +
+  ggsave("./Figures/hist_freq.png",
+         width = 6,
+         height = 6,
+         units = "in"
+  )
 
 ```
 
-##### Time Lapse plot
+##### Accumulative plots
 
 ```{r Time_lapse_plot,  eval = T, echo = T}
 
 # Per Stock
 stock_d <-  Eme_Res %>% 
   left_join(Neighbours) %>% 
-    distinct(taxon_key,neighbour_id, .keep_all = TRUE) %>% 
-    group_by(taxon_key) %>% 
+    # distinct(taxon_key,neighbour_id, .keep_all = TRUE) %>% 
+    group_by(taxon_key,Tresh) %>% 
     summarise(
       taxon_emer = min(emerging_yr)
     ) %>% 
-    group_by(taxon_emer) %>% 
+    group_by(taxon_emer,Tresh) %>% 
   summarise(
     n_tax = n()
   ) %>% 
+  group_by(Tresh) %>% 
   mutate(
     com_sum = cumsum(n_tax),
     level = "Stock"
-  ) %>% 
-    select(1,3,4)
+  )
 
   #  EEZ data
 eez_d <-  Eme_Res %>% 
   left_join(Neighbours) %>% 
   filter(n_ens == 10) %>% 
-    distinct(eez_name,neighbour_id, .keep_all = TRUE) %>% 
-    group_by(eez_name) %>% 
+    # distinct(eez_name,neighbour_id, .keep_all = TRUE) %>% 
+    group_by(eez_name,Tresh) %>% 
     summarise(
       taxon_emer = min(emerging_yr)
     ) %>% 
-    group_by(taxon_emer) %>% 
+    group_by(taxon_emer,Tresh) %>% 
   summarise(
     n_tax = n()
   ) %>% 
+  group_by(Tresh) %>% 
   mutate(
     com_sum = cumsum(n_tax),
     level = "EEZ"
-  ) %>% 
-    select(1,3,4)
+  )
   
 # Plot Data
 plot_data <- stock_d %>% 
-  bind_rows(eez_d)
+  bind_rows(eez_d) %>% 
+  filter(Tresh != "NA") %>% 
+  mutate(
+    total = ifelse(level == "Stock",length(unique(Eme_Res$taxon_key)),length(unique(Eme_Res$eez_name))),
+    per = com_sum/total*100
+  ) ;plot_data
 
   # filter(emerging_yr >= 2020) %>% 
   ggplot() +
@@ -1478,25 +1621,70 @@ plot_data <- stock_d %>%
               size=0.5,
               colour="black"
     ) +
+    facet_wrap(~Tresh) + 
     # Comment out for option A (Change plot name!!)
-    geom_hline(yintercept = length(unique(Eme_Res$eez_name)), color = "grey",linetype = "dashed") +
-  geom_text(aes(label="Total number of EEZs", x = 2010, y = length(unique(Eme_Res$eez_name))+10), color = "grey70",size =3) +
-    geom_hline(yintercept = length(unique(Eme_Res$taxon_key)), color = "grey",linetype = "dashed") +
-  geom_text(aes(label="Total number of Taxa", x = 2010, y = length(unique(Eme_Res$taxon_key))+10), color = "grey70",size =3) +
+  #   geom_hline(yintercept = length(unique(Eme_Res$eez_name)), color = "grey",linetype = "dashed") +
+  # geom_text(aes(label="Total number of EEZs", x = 2010, y = length(unique(Eme_Res$eez_name))+10), color = "grey70",size =3) +
+  #   geom_hline(yintercept = length(unique(Eme_Res$taxon_key)), color = "grey",linetype = "dashed") +
+  # geom_text(aes(label="Total number of Taxa", x = 2010, y = length(unique(Eme_Res$taxon_key))+10), color = "grey70",size =3) +
     scale_y_continuous("Cumulatuve Curve",
-                       breaks = seq(0,500,50),
-                       limits = c(0,500)
+                       breaks = seq(0,600,50),
+                       limits = c(0,600)
     ) +
     scale_x_continuous("Year of emergence",
-                       breaks = seq(2000,2100,10)
+                       breaks = seq(2005,2100,10),
+                       limits = c(2005,2100)
     ) +
     my_ggtheme_p() +
     scale_fill_viridis(discrete = T) +
-  ggsave("./Figures/figure_accumulative_curve_B.png",
+  ggsave("./Figures/figure_accumulative_curve_ab.png",
          width = 6,
          height = 6,
          units = "in"
   )
+  
+  
+  ### Percentage accumulation
+  
+  # filter(emerging_yr >= 2020) %>% 
+  ggplot() +
+    geom_area(data = subset(plot_data, level == "Stock"),
+              aes(
+                x = as.numeric(taxon_emer),
+                y = per,
+                fill = level
+              ),
+              alpha= 0.8,
+              size=0.5,
+              colour="black"
+    )  +
+    geom_area(data = subset(plot_data, level == "EEZ"),
+              aes(
+                x = taxon_emer,
+                y = per,
+                fill = level
+              ),
+              alpha= 0.8,
+              size=0.5,
+              colour="black"
+    ) +
+    scale_y_continuous("Cumulatuve Curve",
+                       breaks = seq(0,100,25),
+                       limits = c(0,100)
+    ) +
+    scale_x_continuous("Year of emergence",
+                       breaks = seq(2005,2100,10),
+                       limits = c(2005,2100)
+    ) +
+    my_ggtheme_p() +
+    scale_fill_viridis(discrete = T) +
+    facet_wrap(~Tresh) + 
+  ggsave("./Figures/figure_accumulative_curve_per.png",
+         width = 6,
+         height = 6,
+         units = "in"
+  )
+  
 ```
 
 ##### Scatter plots
@@ -1738,6 +1926,69 @@ data %>%
 ```
 
 ##### Mapping the time of emergence
+
+###### Just mean time
+
+```{r emergence_map, eval = T}
+
+# Per EEZs
+eez_d_hist <- Eme_Res %>% 
+  group_by(eez_name,Tresh) %>% 
+  # summarise(n_tax = length(unique(taxon_key))) %>% 
+  summarise(
+    mean_yr = mean(emerging_yr,na.rm=T),
+    sd_yr = sd(emerging_yr,na.rm=T)) %>% 
+  gather("metric","value",mean_yr:sd_yr)
+
+
+### Random plot
+
+ggplot(eez_d_hist) +
+  geom_density(
+    aes(
+      x = value,
+      fill = Tresh
+    ),
+    bins = 10,
+    alpha = 0.8
+  ) +
+  facet_wrap(~metric,
+             scales = "free") +
+  scale_fill_viridis(discrete = T) +
+  my_ggtheme_p() +
+  ggsave("./Figures/hist_mean.png",
+         width = 6,
+         height = 6,
+         units = "in"
+  )
+
+
+map <- World_eez_sf %>% 
+  left_join(eez_d_hist,
+            by = "eez_name") %>% 
+  # filter(Tresh == "Tresh_one") %>%
+  ggplot() +
+  geom_sf(
+    aes(
+      fill = mean_yr
+    )
+  ) +
+  geom_sf(data =World_map, aes(), size = 0.1, fill = "gray90", col = "gray90") +
+  scale_fill_viridis() +
+  my_ggtheme_m() +
+  facet_wrap(~Tresh,
+             ncol = 1) +
+  ggsave("./Figures/emer_map_T12.png",
+         width = 12,
+         height = 10,
+         units = "in"
+  )
+
+
+```
+
+
+###### With relation to neighbours
 
 ```{r time_emergence_map,  eval = T, echo = T}
 

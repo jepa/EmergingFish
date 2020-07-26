@@ -1,57 +1,85 @@
 ---
 title: "Matching the Time of Emergence of Transboundary Fish Stocks to Lead Time for Policy Response Under Climate Change"
-subtitle: "[MANUSCRIPT DRAFT DO NOT SHARE WITHOUT PERMISSION]"
+subtitle: "Climate-ready transboundary fisheries management under Climate Change"
 author: "Authors: Juliano Palacios-Abrantes*^1^, Thomas Frölicher^2^, U. Rashid Sumaila^1^,  Vicky Lam^1^, David VanderZwaag^3^, and William W.L. Cheung^1^"
 date: "Affiliations: ^1^Institute for the Oceans and Fisheries, University of British Columbia, Vancouver, Canada. ^2^Climate and Environmental Physics, Physics Institute, University of Bern. ^3^Schulich School of Law, Dalhousie University"
-output: pdf_document
+# output: pdf_document
+output: word_document
 ---
 
-* corresponding author: j.palacios@oceans.ubc.ca
+```{r setup, eval = T, echo = F, warning = F, message = F, results = 'hide'}
+
+library(MyFunctions)
+
+#### Project's Library
+packages <- c(
+  "tidyverse" 
+  # "here", # for dbem_import `here()`
+  # "data.table", #dbem_import `fread()`
+  # "readxl", # for reading excell files
+  # "janitor", # for clearing names
+  # "geosphere", # estimate distances between points `distm()`
+  # "ggrepel",
+  # "zoo", # for average mean
+  # "parallel", # for mclapply,
+  # "sf", # for mapping
+  # "st", # for mapping
+  # "rgdal", #Spatial analysis
+  # "tools", #Spatial analysis 
+  # "zeallot", # for Juanito's map
+  # "gmt", # for estimating distances between points
+  # "viridis"
+)
+
+my_lib(packages)
+
+```
+
+<!-- * corresponding author: j.palacios@oceans.ubc.ca -->
 
 # Abstract
 
-The delineation of Economic Exclusive Zones (EEZs) under the United Nations Convention on the Law of the Seas (UNCLOS) in the early 80s, established political boundaries across the distribution of many fish species, creating shared species between nations. Thus, transboundary fish stocks are defined as those populations that cross the EEZ of two or more neighboring nations. Despite not implicit, UNCLOS incentivizes nations to cooperate in the management of transboundary fisheries. Today, most management plans emplaced are based on historical distribution of catches. Climate change represents a challenge for the joint management of fish stocks. For instance, climate-driven changes in species distributions have led to conflict between nations due to changes in the proportion of captures, quota allocation, and fishery newcomers. Recent events suggests that even changes in species that contribute a relatively small proportion of the overall catch can lead to important international conflict. This is the case of the conflict between the EU, Norway, Iceland, and the Faroe Islands over Atlantic mackerel (*Scomber scombrus*) which represents 8% of the catch of involved nations. Thus, in this chapter I explore the climate-driven changes in stock-share-proportion (e.g. the proportion of the stock that each EEZ has) of the previously identified (Chapter One) transboundary species. Moreover, I determine the *time of emergence* of each fish stock, defined as the year in which the stock-share-proportion will change from its historical average. Preliminary results suggest that many neighboring EEZs will see changes in stock-share ratio between 1 and 10% with some exceeding 25%. The results of this chapter can inform fisheries management as it not only identifies at the EEZ level stocks that will be likely to create international conflict, but also estimates the time of emergence that can be used to prioritize management plans in the face of a changing world. 
+The delineation of Economic Exclusive Zones (EEZs) by the United Nations Convention on the Law of the Seas (UNCLOS) in the early 80s, established political boundaries across the distribution of many fish species, creating shared species between nations. Despite not implicit, UNCLOS incentivizes nations to cooperate in the management of transboundary fisheries and most management plans emplaced are based on historical distribution of catches. Climate change represents a challenge for the joint management of fish stocks. For instance, climate-driven changes in species distributions have led to conflict between nations due to changes in the proportion of captures, quota allocation, and fishery newcomers. Recent events suggests that even changes in species that contribute a relatively small proportion of the overall catch can lead to important international conflict when no legal framework is available. Thus, it is fundamental to prepare for cliamte change-driven impacts such as identifying the stocks that are going to change historical proportions within neighbouring EEZs, the degree by which they will cahnge, and the time when such change is going to happen. Only by adapting management plans and polocy that antecipates to these effects will international fisheries treaties be climate-ready. Here, we build on previous work to identify the transboundary stocks that will see changes in their stock-share-proportion (e.g. the proportion of the stock that each EEZ has) around the world. Moreover, we determine the time of emergence of each fish stock, defined as the year in which the stock-share-proportion will change from its historical range. Our results suggest that by the mid of the 21st century EEZs will see changes in stock-share ratio between 1 and 10% with some exceeding 25%. Most of these changes will hapen before 2050 urging policy to be re-formulated to account for the possible implications of these changes. By the end of the 21st century virtually all EEZs and transboundary sepeices will have experienced changes in stock-share-proportion relative to historical distributions. The results of this research has the potential to improve climate-ready fisheries if policy is modify to respond to the consequences presented here.
 
-# Introduction
+<!-- # Introduction -->
 
-The world is moving towards sustainable development and ocean-based activities plays a mayor role in achieveing international policies.
+<!-- The world is moving towards sustainable development and ocean-based activities plays a mayor role in achieveing international policies. -->
 
-One of the main goals of the United Nations Sustainable Development Goal No.14 (SDG 14-Life below water) is to achieve sustainable development of fisheries [@SDG14].
-(https://sustainabledevelopment.un.org/sdg14).
+<!-- One of the main goals of the United Nations Sustainable Development Goal No.14 (SDG 14-Life below water) is to achieve sustainable development of fisheries [@SDG14]. -->
+<!-- (https://sustainabledevelopment.un.org/sdg14). -->
 
-Climate change is expected to reduce the production from global fisheries in about XX% to xx% [@Cheung; @Barange] compromisisng our capacity to reach SDG 14.
+<!-- Climate change is expected to reduce the production from global fisheries in about XX% to xx% [@Cheung; @Barange] compromisisng our capacity to reach SDG 14. -->
 
-Recent reseach show that the impacts of climate change on the productivity of marine wild fisheries can be offset with the proper reform of current fisheries management [@Gaines; @CheungClimateReadyFish]. While bringing fisheries that are poorly managed to a sustainable level will likeley offset the negative impacts of climate change to fisheries production [@Gaines], it will not necessarilly solve the spatial consequences of species moving from one mangement area to another. 
+<!-- Recent reseach show that the impacts of climate change on the productivity of marine wild fisheries can be offset with the proper reform of current fisheries management [@Gaines; @CheungClimateReadyFish]. While bringing fisheries that are poorly managed to a sustainable level will likeley offset the negative impacts of climate change to fisheries production [@Gaines], it will not necessarilly solve the spatial consequences of species moving from one mangement area to another.  -->
 
-Shifts in species distribution does not necessarilly mean a reduction in production (e.g. reduction in stock biomass) but rather a spatial re-distribution of the stock's biomass [@RefLiam?]. 
+<!-- Shifts in species distribution does not necessarilly mean a reduction in production (e.g. reduction in stock biomass) but rather a spatial re-distribution of the stock's biomass [@RefLiam?].  -->
 
-Documented cases of stock shifts have resulted in international conflict and usustainable fishing rates by parties involved in the conflict.
+<!-- Documented cases of stock shifts have resulted in international conflict and usustainable fishing rates by parties involved in the conflict. -->
 
-This is of specific concern to a set of 633 fished species that cross international borders, also known as transbounday species [@FishForVisa]. 
+<!-- This is of specific concern to a set of 633 fished species that cross international borders, also known as transbounday species [@FishForVisa].  -->
 
-With the implementation of arbritary spatial management boundaries, at least 633 species became transboudary representing an average catch (2005 - 2010) of 47.6 million tons and generating USD 65,483 million in fishing revenue [@FishorVisa]. 
-
-
-Transboudary fish stocks refere to those species that cross international jurisdictions known as Economic Exclusive Zones (EEZs) of neighbouring nations [@FAO]. These stocks are responsable for an average catch (2005 - 2010) of 47.6 million tons generating USD 65,483 million in fishing revenue [@FishorVisa].
+<!-- With the implementation of arbritary spatial management boundaries, at least 633 species became transboudary representing an average catch (2005 - 2010) of 47.6 million tons and generating USD 65,483 million in fishing revenue [@FishorVisa].  -->
 
 
-Historically, environmentally-driven shits in shared stocks have cause problems and threathen stock's sustainabillity. **In early 1980's Canada and the US blablabla.** Many fish stocks managed by the European Union ICES regultaroy areas have been shifting since the 1970's [@EuropeShift]. Such shifts have already result in confrontations between nations as evidenced by the expansion of the Atlantic mackerel (*Scomber scombrus*) distribution reaching the EEZ of Iceland [@Spijkers:2017ij].  More recently, Chile and Peru have declare a cooperation strategy to mange the transboundary stock of Peruvean Anchovera [@Peru]. Furthermore, as we continue to enter the $21^{st}$ century, commercial marine species are expected to continue shifting (mostly poleward) potentilly compromising shared stocks management. By the end of the century, all EEZs of the world are proyected to have at least one new transboundary species with some of them having over 10 new stocks [@Pinsky]. Consequently, as species occupy new waters they leave historic areas and so, xx% of species are expected to exit EEZs by the end of che century [@Oremus]. This entering and exicting national jurisdicions will complicate fisheries management potentially creating confllict between neighbouring nations [@Pinksy @Oremus:2020id].
- 
-
- So, preparing policy to species on the move is key to achieve sustainable development goals and proper governance of the world fisheries [@Pinksy].
+<!-- Transboudary fish stocks refere to those species that cross international jurisdictions known as Economic Exclusive Zones (EEZs) of neighbouring nations [@FAO]. These stocks are responsable for an average catch (2005 - 2010) of 47.6 million tons generating USD 65,483 million in fishing revenue [@FishorVisa]. -->
 
 
-Undrstanding the degree by which shared stocks are going to change and the time of emergence is key for creating climate-ready fisheries policy.
+<!-- Historically, environmentally-driven shits in shared stocks have cause problems and threathen stock's sustainabillity. **In early 1980's Canada and the US blablabla.** Many fish stocks managed by the European Union ICES regultaroy areas have been shifting since the 1970's [@EuropeShift]. Such shifts have already result in confrontations between nations as evidenced by the expansion of the Atlantic mackerel (*Scomber scombrus*) distribution reaching the EEZ of Iceland [@Spijkers:2017ij].  More recently, Chile and Peru have declare a cooperation strategy to mange the transboundary stock of Peruvean Anchovera [@Peru]. Furthermore, as we continue to enter the $21^{st}$ century, commercial marine species are expected to continue shifting (mostly poleward) potentilly compromising shared stocks management. By the end of the century, all EEZs of the world are proyected to have at least one new transboundary species with some of them having over 10 new stocks [@Pinsky]. Consequently, as species occupy new waters they leave historic areas and so, xx% of species are expected to exit EEZs by the end of che century [@Oremus]. This entering and exicting national jurisdicions will complicate fisheries management potentially creating confllict between neighbouring nations [@Pinksy @Oremus:2020id]. -->
 
-<!-- The concepts of transboundary stocks and EEZs were introduced in the early 1980's by the United Nations Law of the Sea (UCLOS) [@UnitedNations:1986tl]. Under UNCLOS each costal nation has the right (and responsabillity) to manage wild fish stocks up to 200 nautical mailes of the coast. Exceptions exist when territorial waters are in dispute (e.g. South China sea[@Ref]) or when menagement agreements exist between nations [@Ref]. In fact, UNCLOS incentives actions to cooperate on the management of shared stocks [Article 63, @UnitedNations:1986tl]. Climate change is shifting the distribution of marine species to the extreem that some spatial policies implemented to manage fisheries are becoming obsolete [@Pololanza; @Jessica].  -->
 
-## Link paper un terms of SDGs
-- UnitedNations2018 Blanchard:2017hl Singh:2017ds
+<!--  So, preparing policy to species on the move is key to achieve sustainable development goals and proper governance of the world fisheries [@Pinksy]. -->
 
-## Collaborative management of share stocks
-- Theat points
-- Concept of treaty estabillity
 
+<!-- Undrstanding the degree by which shared stocks are going to change and the time of emergence is key for creating climate-ready fisheries policy. -->
+
+<!-- <!-- The concepts of transboundary stocks and EEZs were introduced in the early 1980's by the United Nations Law of the Sea (UCLOS) [@UnitedNations:1986tl]. Under UNCLOS each costal nation has the right (and responsabillity) to manage wild fish stocks up to 200 nautical mailes of the coast. Exceptions exist when territorial waters are in dispute (e.g. South China sea[@Ref]) or when menagement agreements exist between nations [@Ref]. In fact, UNCLOS incentives actions to cooperate on the management of shared stocks [Article 63, @UnitedNations:1986tl]. Climate change is shifting the distribution of marine species to the extreem that some spatial policies implemented to manage fisheries are becoming obsolete [@Pololanza; @Jessica].  --> -->
+
+<!-- ## Link paper un terms of SDGs -->
+<!-- - UnitedNations2018 Blanchard:2017hl Singh:2017ds -->
+
+<!-- ## Collaborative management of share stocks -->
+<!-- - Theat points -->
+<!-- - Concept of treaty estabillity -->
 
 
 # Methods
@@ -60,53 +88,100 @@ Undrstanding the degree by which shared stocks are going to change and the time 
 
 We projected the distribution of marine species using a dynamic bioclimatic envelope model (hearafter called DBEM). The DBEM algorythm includes species physiology, habitat suitabillity, depth and latitudinal ranges, and spatial population dynamics as well as preferences to sea temperature, salinity, oxygen content, sea ice extent (for polar species) and bathymetry. For pelagic species, the model uses environmental variables at the surface (e.g. sea surface temperature) whereas demersal species distribution are driven by ocean-bottom variables (e.g. bottom temperature). This way, the model estimates species abundance and maximum catch potential (a proxy of maximum sustainable yield) over a $0.5^{\circ}$ x $0.5^{\circ}$ grid of the world (See [-@Cheung:2010dt; -@Cheung:2016jd] for model details).
 
-We coupled the DBEM with the Geophysical Fluid Dynamics Laboratory Earth system model (GFDL-ESM2M) to project species distribution from 1951 to 2100 under cliamte change [@Dunne:2012bo; @Dunne:2013db]. We run the DBEM simulating biomass and MCP from 1950 to 2100 under a “worst-case” climate change scenario accroding to the Representative Concentration Pathway 8.5 (RCP 8.5) used by the Intergovernmental Panel on Climate Change (IPCC) [@IPCC:2014bz; Riahi:2011dk]. According to the GFDL-ESM2M, under the RCP 8.5 scenario atmospheric temperature will increase by $3.2^{\circ}C$ by 2081-2100, relative to preindustrial. We run the DBEM under ten different GFDL-ESM2M ensamble members [@Rodgers:2015jq]. While all ensamble members follow the same RCP, they all constitute different initial Earth conditions. As a consequence, for each GFDL-ESM2M-ensamble the Earth system is infinitesimally perturbed resulting in an unique atmosphere and ocean state at each point in time. Thus, each ensamble has a different state of internal variability representing a plausible future under RCP 8.5 [@Roggers:2015jq]. 
+We coupled the DBEM with the Geophysical Fluid Dynamics Laboratory Earth system model (GFDL-ESM2M) to project species distribution from 1951 to 2100 under climate change [@Dunne:2012bo; @Dunne:2013db]. We run the DBEM simulating biomass and MCP from 1950 to 2100 under a “worst-case” climate change scenario accroding to the Representative Concentration Pathway 8.5 (RCP 8.5) used by the Intergovernmental Panel on Climate Change (IPCC) [@IPCC:2014bz; Riahi:2011dk]. According to the GFDL-ESM2M, under the RCP 8.5 scenario atmospheric temperature will increase by $3.2^{\circ}C$ by 2081-2100, relative to preindustrial levels. Because the main approach of this paper relies on understanding the spatial and temporal variation of a species distribution, we have to understand both the historical as well as the future climate-driven distribution variabillity, in order to infer the differences. We do this by following an ensemble member approach where each member constitutes a different initial Earth system condition [@Rodggers:2015jq; @Frolicher:2009ge]. Thus, for our experiment, in each of the ten GFDL-ESM2M-ensambles the Earth system initial condition is infinitesimally different resulting in an unique atmosphere and ocean state at each point in time. This results in a different state of internal variability for each ensamble representing a plausible future under RCP 8.5 [@Rodggers:2015jq]. Following this approach allows us to estimate a secular trend for the natural variabillity (e.g. backround noise). At the same time, by having multiple initial-condition ensemble simulations of the GFDL-ESM2M we were able to remove the natural variability of a stock's distributio by averaging the secular trend over all ensemble members [@Rodggers:2015jq]. 
 
 ## Data analysis
 
-The Food and Agricultural Organization (FAO) of the UN define transboundary species as those that freely swim within the EEZ of neighbouring nations [@REFFAO]. Accordingly, we included in this analysis 633 marine exploited transboundary species representing 80% of the catch taken from the world's EEZs [@Palacios-Abrantes:xxxx]. We consider each species as a single stock unit within an EEZ due to lack of more detailed information [@Teh:2015gd; @Palacios-Abrantes:xxxx]. We defined the boundaries of the world EEZs (e.g., Mexico Pacific EEZ and Mexico Atlantic EEZ) using the Sea Around Us shapefile (updated 1 July 2015, available from http://www.seaaroundus.org). 
+The Food and Agricultural Organization (FAO) of the UN define transboundary stocks as those that freely swim across the EEZ of neighbouring nations [@REFFAO]. Accordingly, we included in this analysis 633 marine exploited transboundary species representing 80% of the catch taken from the world's EEZs [@Palacios-Abrantes:xxxx]. We consider each species as a single stock unit within an EEZ due to lack of more detailed information [@Teh:2015gd; @Palacios-Abrantes:xxxx]. We defined the boundaries of the world EEZs (e.g., Mexico Pacific EEZ and Mexico Atlantic EEZ) using the Sea Around Us shapefile (updated 1 July 2015, available from http://www.seaaroundus.org).
 
 ### Changes in Stocks Share Ratio
 
-In game theory, a “threat point” is known as the minimum payoff that a player is willing to receive in order to cooperate with other players [@Sumaila:E&S]. We estimate each stock's stock share ratio (e.g. a players threat point) defined as the minimum proportion of the catch that each country will acept if they were to cooperate in the management of transboundary stocks [@Palacios-Abrantes:E&S]. For each stock and time step (1951-2100) we first aggregate the number of $0.5^{\circ}$ x $0.5^{\circ}$ grid cells where the species was present within neighbouring EEZs, and then calculated the proportion that each EEZ had [@Palacios-Abrantes:xxxx]. We then average the results in three time periods in order tho reduce climate variabillity within the projections. The first time period ($t_h$) comprises (1951 - 2005) and is assumed as the historic distribution of each species, thus representing each neighbouring nation's threat point. This time frame matches the historic climate data that the GFDL uses to project climate change [@Dunne:2012bo; @Dunne:2013db], and has previouslly been used as a reference point in fisheries studies [@REF]. We then selected two future periods; early $21^st$ century as the average of 2021 to 2040 ($t_e$), and mid $21^st$ century as the average of 2041 to 2060 ($t_m$). We choose these time periods to match the challenges of achieving fisheries-related UN-SDGs [@UnitedNations2018] such as SDG 14.4 (end overfishing) and  SDG 1.2 (poverty reduction), aimed to be achieved by 2020 and 2030, respectively [@Singh:2017ds]. We then estimate the percentage change in stock share ratio of each future time period relative to the historic value. The analysis was repplicated for each of the ten ensamble members and ensamble variation captured by averaging results among ensamble members (mean $\pm$ standar deviation). 
+In game theory, a threat point is known as the minimum payoff that a player is willing to receive in order to cooperate with other players. Thus, if a player's payoff is lower than the theat point, such player will liekly break off any collaboration agreement and proceed to act solo [@Sumaila:E&S]. Here, we adopted the concept of threat point as the minimum proportion of the catch that each country will acept if they were to cooperate in the management of a transboundary stock [@Palacios-Abrantes:E&S] hereafter referred as stock share ratio (SSR).  For each stock and time step (1951-2100) we first aggregate the number of $0.5^{\circ}$ x $0.5^{\circ}$ grid cells where the species was present within neighbouring EEZs, and then calculated the proportion that each EEZ had [@Palacios-Abrantes:xxxx]. We then average the results in three time periods in order to reduce climate variabillity within the projections. The first time period ($t_h$) comprises (1951 - 2005) and is assumed as the historic distribution of each species, thus representing each neighbouring nation's threat point. This time frame matches the historic climate data that the GFDL uses to project climate change [@Dunne:2012bo; @Dunne:2013db]. We then selected two future periods; early $21^st$ century as the average of 2021 to 2040 ($t_e$), and mid $21^st$ century as the average of 2041 to 2060 ($t_m$). We choose these time periods to match the challenges of achieving fisheries-related UN-SDGs [@UnitedNations2018] such as SDG 14.4 (end overfishing) and SDG 1.2 (poverty reduction), aimed to be achieved by 2020 and 2030, respectively [@Singh:2017ds]. We then estimate the percentage change in sthe SSR of each future time period relative to the historic time period. To address the natural spatal variabillity of the stock we only considered a SSR chgange when the future SSR was higher or lower than the average historic SSR $\pm$ 1 s.d. The analysis was repplicated for each of the ten ensamble members capturing variation by averaging results among ensamble members (mean $\pm$ standar deviation).
 
 ### Time of Emergence Index
 
-An important question is estimating the time in which stock share ratio is going to change from a historical variablillty in order for policy to cope with the change. In here we call this event, time of emergence defined as the moment in time when the a secular trend (e.g. future variation in SSR) becomes larger than the historical trend variabillity [@Roggers:2015jq]. Thus we have to understand not only the impact of future climate change on the variabillity of the species distribution, but also the historical variabillity and its difference in the hopes to identify changes between both variabillities. We do this by following an ensemble member approach [@Roggers:2015jq; @Frolicher:2009ge]. Identifying a secular trend for the natural variabillity (e.g. backround noise) with a coupled cliamte change model (e.g. GFDL) requires multiple initial-condition ensemble simulations in order to rembove natural variability by averaging over the ensemble members [@Roggers:2015jq]. 
+Knowing the time (e.g. year) in whitch SSR is going to diverge from a historical variablillty can be key for policy to prepare to such change. In here we call this event time of emergence and defined it as the moment in time when the future variation in SSR becomes larger than the historical trend variabillity [@Roggers:2015jq]. We emplot the ten GFDL ensable members described above, and developed an index of transboundary range shift, fisheries and climate change (*TI*). The index is based on the variation of a species distribution centroid in realtion to the centroid of the neighbouring EEZs it ocuppys. We define the species centroid as the gridcell within neighbouring EEZs with the highest abundance in each year. First, for each ensamble member, neighbouring EEZ and species, we computed the distance between centroids assuming a perfect sphere and ignoring elevation differences:
 
-Thus, rely on ten GFDL ensable members described above, and developed an index of transboundary range shift, fisheries and climate change (*I*). The index is based on the variation of a species distribution centroid as follows:
+$$D_{ens} = acos(sin(lat_{eez})*sin(lat_{spp}) + cos(lat_{eez})*cos(lat_{spp})*cos(lon_{eez}-lon_{spp}))$$
+where $lat_{eez}$ and $lat_{spp}$ are the latitudes of the EEZ and specie centroid, respectiveley and $lon_{eez}$ and $lon_{spp}$ are the respectevly longitudes.
 
-$$I =(\frac{D_{A,y}}{sd(D_{A,h})} - \frac{D_{B,y}}{sd(D_{B,h)}})^2$$
+Then, for each year we calculated the transboundary index as follows:
 
-where $D_A$ and $D_B$ represent the mean (among ensamble members) distribution centroid of a species in EEZs A and B, respectiveley for each time step from 2000 to 2100 (*t*) and *sd* is the standar deviation of the historical (1951 - 2000) centroid distribution for $D_A$ and $D_B$.
+$$TI =(\frac{D_{A,t}}{sd(D_{A,h})} - \frac{D_{B,t}}{sd(D_{B,h)}})^2$$
 
-In cases where the species is distributed in more than 2 neighbouring EEZs (e.g. *xxx*), the index is as follows:
+where $D_A$ and $D_B$ represent the distance between EEZ and distribution centroids of a species in EEZs A and B, respectiveley for each future time step from 2006 to 2100 (*t*); *sd* is the standar deviation of the historical (*h*, 1951 - 2005) centroid distribution for $D_A$ and $D_B$. The index was then smoothed to a 10 years average. Finally, to determine the time of emergence we estimated a signal to noise ratio (SNR) and set an arbritary treshold as follows [@Rodggers:2015jq]:
 
-$$I =(\frac{D_{A,y}}{sd(D_{A,h})} - \frac{D_{B,y}}{sd(D_{B,h})}) |  \\  +(\frac{D_{A,y}}{sd(D_{A,h})} - \frac{D_{C,y}}{sd(D_{B,h})}) | \\  +(\frac{D_{A,y}}{sd(D_{A,h})} - \frac{D_{Cy}}{sd(D_{B,h})})/N$$
+$$SNR = TREND/NOISE$$
+
+where *TREND* is the yearly mean *TI* ($\mu$) of all ten ensemble members and *NOISE* is the standar deviation of the TREND ($\sigma$) between 1951 and 2005. Note that in some cases not all ensemble members show the presence of a species in a certain EEZ. We presented the results only for those cases wher all 10 ensemble members had results. We determine a $\mu \pm \sigma$ (confidence interval of 68%) to show the first year when the "signal" of the transboundary index overpasses the historic "noise". Since this was an arbritary decission, we have included a more conservative estimation ($\mu \pm 2*\sigma$ for a 95% confidence interval).
 
 
-This way, for two neighbouring EEZs sharing a stock, if the centroid shifts towards EEZ A (*DA* decreases) but away from EEZ A B (*DB* increases), EEZ A may catch a bigger share over B and the risk of dispute increases. Consequently, if the centroid shifts are within historical variability, risk of dispute between EEZ A and B is lower, finally, if the centroid shifts are beyond historical variability, the risk of dispute is higher. Thus, risk is positively related to the frequency of centroid shifts beyond historical variability (Fig. 1). 
+
+
+<!-- In cases where the species is distributed in more than 2 neighbouring EEZs (e.g. *xxx*), the index is as follows: -->
+
+<!-- $$I =(\frac{D_{A,y}}{sd(D_{A,h})} - \frac{D_{B,y}}{sd(D_{B,h})}) |  \\  +(\frac{D_{A,y}}{sd(D_{A,h})} - \frac{D_{C,y}}{sd(D_{B,h})}) | \\  +(\frac{D_{A,y}}{sd(D_{A,h})} - \frac{D_{Cy}}{sd(D_{B,h})})/N$$ -->
+
+
+In other words, for two neighbouring EEZs sharing a stock, if the centroid shifts towards EEZ A ($D_A$ decreases) but away from EEZ A B ($D_B$ increases), EEZ A may catch a bigger share over B and the risk of dispute increases (see *TI* equation). Consequently, if the centroid shifts are within historical variability (*SNR* < 1), risk of dispute between EEZ A and B is lower, finally, if the centroid shifts are beyond historical variability (*SNR* > 1), the risk of dispute is higher. Thus, risk is positively related to the frequency of centroid shifts beyond historical variability (Fig. 1). 
 
 ![Fig 1. Theorical representation of transboundary Index. (A) Case with two neighbouring EEZs. (B) Case with three neigbouring EEZs. Grey dotted boxes represent each EEZ boundaries, t1 and t2 represent time periods one and two, respectiveley, and green and red lines represent an increase and decrease in D, respectiveley](~/GitHub/TransEmergence/Figures/Fig1.png)
 
+All analyses were run using the statistical software *R version 3.5.2 (2018-12-20; Eggshell Igloo)* with the packages *data.table* [@Packagedatatable:2019uh], *janitor* [@PackagejanitorSim:2018ur], *wesanderson* [@Packagewesanderson:2018vn], *rfishbase* [@PackagerfishbaseR:2019th], *R.matlab* [@PackageRmatlabRe:2018un], *sf* [@PackagesfSimpleF:2018vp], *sp* [@PackagespClasses:2019tn], *tidiverse* [@PackagetidyverseE:2017vq], *tidytext* [@PackagetidytextTe:2019vk], *gmt* [@gmt] and *zoo* [@PackagezooSInfr:2019tm]. All code is available at https://github.com/jepa/TransEmergence
 
-
-
-
-
-### Statistical analysis
-
-
-All analyses were run using the statistical software *R version 3.5.2 (2018-12-20; Eggshell Igloo)* with the packages *data.table* [@Packagedatatable:2019uh], *janitor* [@PackagejanitorSim:2018ur], *wesanderson* [@Packagewesanderson:2018vn], *rfishbase* [@PackagerfishbaseR:2019th], *R.matlab* [@PackageRmatlabRe:2018un], *sf* [@PackagesfSimpleF:2018vp], *sp* [@PackagespClasses:2019tn], *tidiverse* [@PackagetidyverseE:2017vq], *tidytext* [@PackagetidytextTe:2019vk], and *zoo* [@PackagezooSInfr:2019tm]. All code is available at https://github.com/jepa/TransEmergence
-
-
-
-
-
-Things to consider:
-
-- Disputed territories (e.g. China)
 
 # Results
 
+```{r Load_Results, eval = TRUE,  echo = FALSE, include = FALSE}
+
+prop_r <- read_csv("/Volumes/HALL2000/Data/TransEmergence/Results/proportion_change_2005.csv") %>% 
+  gather("time_step","change",per_early,per_mid)
+
+```
+  
+
+## Changes in Stock Share Ratio
+
+```{r Load_Results, eval = TRUE,  echo = FALSE, include = FALSE}
+
+# Early century
+n_eez <- prop_r %>%
+  filter(variable == "mean_eez" & 
+           !is.na(change),
+         time_step == "per_early"
+         ) %>% 
+  pull(eez_name) %>% 
+  unique() %>% 
+  length()
+
+n_eez_per <- round(n_eez/275*100,2)
+
+
+### Max values early
+max_values <- prop_r %>% 
+  filter(variable == "max_eez" & 
+           !is.na(change),
+         # time_step == "per_early"
+         )
+
+### Average
+average_mid <- prop_r %>% 
+  filter(variable == "mean_eez" & 
+           !is.na(change)
+         ) 
+```
+
+Our results suggest that `r n_eez_per`% (n = `r n_eez`) of the world EEZs will see a change in SSR by early $21^{st}$ century (Fig. 1). The change in SSR will range from gains of over 100% of a sertain shared stock (e.g. Guatemala' SSR of *species* shared with Mexico is projected to go from 12% to 26%) to loses of up to -71% of SSR (e.g. Honduras SSR of *species* shared with the Nicaragua in the Pacific coast is projected to decline from 50% to 14%). Despite no substantial changes in SSR per EEZ can be seen by the mid $21^st$ century (**Supplements Fig 1 (map)**), changes in SSR are expected to increase in intensity (**Supplements Fig 2 (histogram)**).
+
+```{r SSR_gain, eval = F,  echo = F, fig.width=9, fig.height=12, fig.cap =  "Average transboundary species SSR gain of neighbouring EEZs by 2030 (2021-2040) relative to 1951-2005 under RCP 8.5. Arrows go from the loosing EEZ (point) to the winner (arrowhead)"}
+
+img <- readPNG("../Figures/figure_connections_n50.png")
+grid.raster(img)
+
+```
+
+![Average transboundary species SSR gain of neighbouring EEZs by 2030 (2021-2040) relative to 1951-2005 under RCP 8.5. Arrows go from the loosing EEZ (point) to the winner (arrowhead)](../Figures/figure_connections_n50.png)
+
+
+## Time of Emergence Index
 # Discussion
