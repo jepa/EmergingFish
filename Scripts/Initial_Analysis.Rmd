@@ -145,19 +145,20 @@ coords$latitude <- gsub(")","",coords$latitude)
 coords <- coords %>% 
   mutate_at(vars(longitude,latitude),as.numeric)
 
-# Test coords
+# Double check coords
+# Note that Australia and Ggreenland have points in the middle of the country because of the EEZ shape
 
-maptest <- ggplot() +
+coords_map <- ggplot() +
   geom_sf(data = SAU_eez_sf, aes(), fill = NA) +
-  geom_point(data = coords,
+  geom_point(data = eez_centroid,
              aes(
                x = longitude,
                y = latitude
              )
   )
 
-ggsave("maptest.png",
-       plot = maptest,
+ggsave("coords_map.png",
+       plot = coords_map,
        width = 10,
        height = 8,
        units = "in"
@@ -167,9 +168,6 @@ ggsave("maptest.png",
 # Save dataframe so we don't need to run this ewvery time
 # write_csv(coords,
 #           "eez_centroids.csv")
-
-
-
 
 
 ## ---------------##
