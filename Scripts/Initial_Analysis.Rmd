@@ -1375,7 +1375,7 @@ ggplot() +
 
 ####  Year of Eergence Analysis
 
-```{r PropChange, eval = F, echo =F}
+```{r Emergence-analysis, eval = F, echo =F}
 
 # Get taxon list
 Taxon_List <- list.files(my_path("R",extra_path = "Emergence_2005"))
@@ -1394,7 +1394,8 @@ Eme_Res <- bind_rows(lapply(Paths, fread)) %>%
     n_ens == 10
   ) %>% 
   left_join(Neighbours,
-            by = c("eez_name","eez_neighbour"))
+            by = c("eez_name","eez_neighbour")
+            )
 # warnings() for empty data species
 
 # View(Eme_Res)
@@ -1414,12 +1415,14 @@ World_eez_sf <- st_read(dsn = path_world,
                     layer =file_path_sans_ext(fnam_world)) %>% 
   rename(eez_name = Name) %>% 
   st_transform(crs = 4326) %>% # 4326
-  st_simplify(preserveTopology = TRUE, dTolerance = 100)
+  # st_transform(crs = "+proj=eck4") %>% 
+  st_simplify(preserveTopology = TRUE, dTolerance = 0.1)
 
 # Call world map from natural earth
 World_map <- rnaturalearth::ne_countries(scale = 'small', returnclass = c("sf"))
 
 eez_centroid <- read_csv(paste(data_path,"Spatial/eez_centroids.csv", sep = ""))
+
 
 ```
 
@@ -1716,7 +1719,7 @@ data_eez <- Eme_Res %>%
   summarise(emerging_eez = sum(eez_n))
 
 
-data %>% 
+data_stock %>% 
   left_join(data_eez,
             by = "emerging_yr") %>% 
   ggplot() +
@@ -1908,7 +1911,7 @@ data_eez <- Eme_Res %>%
   summarise(emerging_eez = sum(eez_n))
 
 
-data %>% 
+data_stock %>% 
   left_join(data_eez,
             by = "emerging_yr") %>% 
   rename(year = emerging_yr) %>% 
@@ -1966,19 +1969,20 @@ ggplot(eez_d_hist) +
 map <- World_eez_sf %>% 
   left_join(eez_d_hist,
             by = "eez_name") %>% 
-  # filter(Tresh == "Tresh_one") %>%
+  filter(Tresh == "Tresh_two",
+         metric == "mean_yr") %>%
   ggplot() +
   geom_sf(
     aes(
-      fill = mean_yr
+      fill = value
     )
   ) +
   geom_sf(data =World_map, aes(), size = 0.1, fill = "gray90", col = "gray90") +
   scale_fill_viridis() +
   my_ggtheme_m() +
-  facet_wrap(~Tresh,
-             ncol = 1) +
-  ggsave("./Figures/emer_map_T12.png",
+  # facet_wrap(~Tresh,
+             # ncol = 1) +
+  ggsave("./Figures/emer_map_T2a.png",
          width = 12,
          height = 10,
          units = "in"
