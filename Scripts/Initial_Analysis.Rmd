@@ -61,29 +61,41 @@ Here we re-arrange existing data for the analysis. We have three steps:
 
 ## ---------------##
 #### 1. SAU relations between INDEX and Country's EEZs
+# Re-ran with new names data
 ## ---------------##
 
-EEZIDs_List <- my_path("G", extra_path = "Spatial/DBEM", name="Updated_EEZList_17June2016.xlsx", read = TRUE) %>% 
-  clean_names()
+# EEZIDs_List <- my_path("G", extra_path = "Spatial/V_Lam", name="Updated_EEZList_17June2016.xlsx", read = TRUE) %>%
+  # clean_names()
 
-EEZ_CellID <- my_path("G", extra_path = "Spatial/DBEM", name="EEZ_CellID.xlsx", read = TRUE) %>% 
+EEZ_CellID <- my_path("G", extra_path = "Spatial/V_Lam", name="EEZ_CellID.xlsx", read = TRUE) %>%
   clean_names()
 colnames(EEZ_CellID) <- c("eezid","index")
 
-Lon_Lat_DBEM <- my_path("G", extra_path = "Spatial/DBEM", name="Lon_Lat_DBEM.txt", read = TRUE, header = FALSE)
+# SAU name relatioal table (Fish For Visa)
+sau_clean_names <- my_path("G", extra_path = "Spatial/SAU/", name="SAU_matching_names.csv", read = TRUE)
+
+Lon_Lat_DBEM <- my_path("G", extra_path = "Spatial", name="Lon_Lat_DBEM.txt", read = TRUE, header = FALSE)
 colnames(Lon_Lat_DBEM) <- c("index","lon","lat")
 
 
-Index_Code <- EEZIDs_List %>% 
-  left_join(EEZ_CellID) %>% 
-  rename(eez_name = name) %>% 
+# Index_Code <- EEZIDs_List %>% 
+#   left_join(EEZ_CellID) %>% 
+#   rename(eez_name = name) %>% 
+#   left_join(Lon_Lat_DBEM,
+#             by = "index")
+
+
+Index_Code <-  sau_clean_names %>% 
+  select(eezid = sf_eezid) %>% 
+  left_join(EEZ_CellID,
+            by = "eezid") %>% 
   left_join(Lon_Lat_DBEM,
-            by = "index")
+            by =  "index")
 
 # Save Index data for future 
-write_csv(index_code,
-          paste(my_path("G",extra_path = "Spatial/DBEM"),"sau_index_code.csv",sep="")
-          )
+# write_csv(index_code,
+          # paste(my_path("G",extra_path = "Spatial/DBEM"),"sau_index_code.csv",sep="")
+          # )
 
 ## ---------------##
 #### 2. entroids 
@@ -106,7 +118,7 @@ SAU_eez_sf <- st_read(dsn = Path_SAU,
   st_simplify(preserveTopology = TRUE, dTolerance = 0.1)
 
 # Get the center poligon of each EEZ for map source/target with st_centroid
-coords <- as.data.frame(st_centroid(World_eez_sf)) %>% 
+coords <- as.data.frame(st_centroid(SAU_eez_sf)) %>% 
   ungroup() %>% 
   select(eez_name,geometry) %>% 
   separate(col = geometry, into = c("longitude", "latitude"), sep = "\\,") %>% 
@@ -133,9 +145,31 @@ coords$latitude <- gsub(")","",coords$latitude)
 coords <- coords %>% 
   mutate_at(vars(longitude,latitude),as.numeric)
 
+# Test coords
+
+maptest <- ggplot() +
+  geom_sf(data = SAU_eez_sf, aes(), fill = NA) +
+  geom_point(data = coords,
+             aes(
+               x = longitude,
+               y = latitude
+             )
+  )
+
+ggsave("maptest.png",
+       plot = maptest,
+       width = 10,
+       height = 8,
+       units = "in"
+       )
+  
+
 # Save dataframe so we don't need to run this ewvery time
 # write_csv(coords,
 #           "eez_centroids.csv")
+
+
+
 
 
 ## ---------------##
@@ -908,7 +942,7 @@ GetTransIndex <- function(taxon_key,
 ## ----------------- ##
 
 # SAU relations between INDEX and Country's EEZs (see chunk 3)
-index_code <- my_path("G", extra_path = "Spatial/SAU/", name="sau_index_code.csv", read = TRUE)
+index_code <- my_path("G", extra_path = "Spatial/SAU/", name="SAU_matching_names.csv", read = TRUE)
 
 # EEZ list and their centroid of distribution (see chunk 3)
 eez_centroid <- my_path("D", extra_path = "Spatial/", name="eez_centroids.csv", read = TRUE)
