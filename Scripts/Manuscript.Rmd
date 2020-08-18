@@ -92,7 +92,7 @@ We coupled the DBEM with the Geophysical Fluid Dynamics Laboratory Earth system 
 
 ## Data analysis
 
-The Food and Agricultural Organization (FAO) of the UN define transboundary stocks as those that freely swim across the EEZ of neighbouring nations [@REFFAO]. Accordingly, we included in this analysis 633 marine exploited transboundary species representing 80% of the catch taken from the world's EEZs [@Palacios-Abrantes:xxxx]. We consider each species as a single stock unit within an EEZ due to lack of more detailed information [@Teh:2015gd; @Palacios-Abrantes:xxxx]. We defined the boundaries of the world EEZs (e.g., Mexico Pacific EEZ and Mexico Atlantic EEZ) using the Sea Around Us shapefile (updated 1 July 2015, available from http://www.seaaroundus.org).
+The Food and Agricultural Organization (FAO) of the UN define transboundary stocks as those that freely swim across the EEZ of neighbouring nations [@REFFAO]. Accordingly, we included in this analysis 633 marine exploited transboundary species representing 80% of the catch taken from the world's EEZs [@Palacios-Abrantes:xxxx]. We consider each species as a single stock unit within an EEZ due to lack of more detailed information [@Teh:2015gd; @Palacios-Abrantes:xxxx]. We defined the boundaries of the world EEZs (e.g., Mexico Pacific EEZ and Mexico Atlantic EEZ) using the Sea Around Us shapefile (updated 1 July 2015, available from http://www.seaaroundus.org) **noting that it subdivides the EEZs of 198 coastal states into 280 regions (e.g., Mexico's EEZ is divided in Mexico Pacific and Mexico Atlantic) including islands territories**, and determined the intersections between polygons using the R package *sf* [@PackagesfSimpleF:2018vp]. 
 
 ### Changes in Stocks Share Ratio
 
@@ -100,7 +100,7 @@ In game theory, a threat point is known as the minimum payoff that a player is w
 
 ### Time of Emergence Index
 
-Knowing the time (e.g. year) in whitch SSR is going to diverge from a historical variablillty can be key for policy to prepare to such change. In here we call this event time of emergence and defined it as the moment in time when the future variation in SSR becomes larger than the historical trend variabillity [@Roggers:2015jq]. We emplot the ten GFDL ensable members described above, and developed an index of transboundary range shift, fisheries and climate change (*TI*). The index is based on the variation of a species distribution centroid in realtion to the centroid of the neighbouring EEZs it ocuppys. We define the species centroid as the gridcell within neighbouring EEZs with the highest abundance in each year. First, for each ensamble member, neighbouring EEZ and species, we computed the distance between centroids assuming a perfect sphere and ignoring elevation differences:
+Knowing the time (e.g. year) in whitch SSR is going to diverge from a historical variablillty can be key for policy to prepare to such change. In here we call this event time of emergence and defined it as the moment in time when the future variation in SSR becomes larger than the historical trend variabillity [@Roggers:2015jq]. We employed the ten GFDL ensable members described above, and developed an index of transboundary range shift, fisheries and climate change (*TI*). The index is based on the variation of a species distribution centroid in realtion to the centroid of the neighbouring EEZs it ocuppys. Each species centroid was determined by the average latitude and longitude of the grid cells containing the top 10% abundance percentile of each year. The EEZ centroid was estimated using the *st* package of *R* statistical software. For each ensamble member, neighbouring EEZ and species, we computed the distance between centroids assuming a perfect sphere and ignoring elevation differences:
 
 $$D_{ens} = acos(sin(lat_{eez})*sin(lat_{spp}) + cos(lat_{eez})*cos(lat_{spp})*cos(lon_{eez}-lon_{spp}))$$
 where $lat_{eez}$ and $lat_{spp}$ are the latitudes of the EEZ and specie centroid, respectiveley and $lon_{eez}$ and $lon_{spp}$ are the respectevly longitudes.
@@ -109,13 +109,11 @@ Then, for each year we calculated the transboundary index as follows:
 
 $$TI =(\frac{D_{A,t}}{sd(D_{A,h})} - \frac{D_{B,t}}{sd(D_{B,h)}})^2$$
 
-where $D_A$ and $D_B$ represent the distance between EEZ and distribution centroids of a species in EEZs A and B, respectiveley for each future time step from 2006 to 2100 (*t*); *sd* is the standar deviation of the historical (*h*, 1951 - 2005) centroid distribution for $D_A$ and $D_B$. The index was then smoothed to a 10 years average. Finally, to determine the time of emergence we estimated a signal to noise ratio (SNR) and set an arbritary treshold as follows [@Rodggers:2015jq]:
+where $D_A$ and $D_B$ represent the distance between EEZ and distribution centroids of a species in EEZs A and B, respectiveley for each future time step from 2006 to 2100 (*t*); *sd* is the standard deviation of the historical (*h*, 1951 - 2005) centroid distribution for $D_A$ and $D_B$. The index was then smoothed to a 10 years average. Finally, to determine the time of emergence we estimated a signal to noise ratio (SNR) and set an arbitrary threshold as follows [@Rodggers:2015jq]:
 
 $$SNR = TREND/NOISE$$
 
-where *TREND* is the yearly mean *TI* ($\mu$) of all ten ensemble members and *NOISE* is the standar deviation of the TREND ($\sigma$) between 1951 and 2005. Note that in some cases not all ensemble members show the presence of a species in a certain EEZ. We presented the results only for those cases wher all 10 ensemble members had results. We determine a $\mu \pm \sigma$ (confidence interval of 68%) to show the first year when the "signal" of the transboundary index overpasses the historic "noise". Since this was an arbritary decission, we have included a more conservative estimation ($\mu \pm 2*\sigma$ for a 95% confidence interval).
-
-
+where *TREND* is the yearly mean *TI* ($\mu$) of all ten ensemble members and *NOISE* is the standar deviation of the TREND ($\sigma$) between 1951 and 2005. Note that in some cases not all ensemble members show the presence of a species in a certain EEZ throughout the study's time frame. We presented the results only for those cases where all 10 ensemble members had results for each year between 1951 and 2100 (n = 150). We determine a $\mu \pm \sigma$ (confidence interval of 68%) to show the first year when the "signal" of the transboundary index overpasses the historic "noise". Since this was an arbritary decission, we have included a more conservative estimation ($\mu \pm 2*\sigma$ for a 95% confidence interval).
 
 
 <!-- In cases where the species is distributed in more than 2 neighbouring EEZs (e.g. *xxx*), the index is as follows: -->
@@ -128,7 +126,6 @@ In other words, for two neighbouring EEZs sharing a stock, if the centroid shift
 ![Fig 1. Theorical representation of transboundary Index. (A) Case with two neighbouring EEZs. (B) Case with three neigbouring EEZs. Grey dotted boxes represent each EEZ boundaries, t1 and t2 represent time periods one and two, respectiveley, and green and red lines represent an increase and decrease in D, respectiveley](~/GitHub/TransEmergence/Figures/Fig1.png)
 
 All analyses were run using the statistical software *R version 3.5.2 (2018-12-20; Eggshell Igloo)* with the packages *data.table* [@Packagedatatable:2019uh], *janitor* [@PackagejanitorSim:2018ur], *wesanderson* [@Packagewesanderson:2018vn], *rfishbase* [@PackagerfishbaseR:2019th], *R.matlab* [@PackageRmatlabRe:2018un], *sf* [@PackagesfSimpleF:2018vp], *sp* [@PackagespClasses:2019tn], *tidiverse* [@PackagetidyverseE:2017vq], *tidytext* [@PackagetidytextTe:2019vk], *gmt* [@gmt] and *zoo* [@PackagezooSInfr:2019tm]. All code is available at https://github.com/jepa/TransEmergence
-
 
 # Results
 
