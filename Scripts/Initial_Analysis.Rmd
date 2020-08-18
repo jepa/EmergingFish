@@ -1248,6 +1248,9 @@ results <- PropChange(Taxon_List, links="y") %>%
  # write_csv(results,
           # "proportion_change_2005.csv")
 
+
+results <- my_path("R",name="proportion_change_2005.csv", read=T)
+
 # View(results)
 
 ### Load Data
@@ -1265,12 +1268,16 @@ World_eez_sf <- st_read(dsn = path_world,
                     layer =file_path_sans_ext(fnam_world)) %>% 
   rename(eez_name = Name) %>% 
   st_transform(crs = 4326) %>% # 4326
-  st_simplify(preserveTopology = TRUE, dTolerance = 0.1)
+  st_simplify(preserveTopology = TRUE, dTolerance = 0.1) %>% 
+  clean_names()
 
 # Call world map from natural earth
-World_map <- rnaturalearth::ne_countries(scale = 'small', returnclass = c("sf"))
+World_map <- rnaturalearth::ne_countries(scale = 'small', returnclass = c("sf")) %>% 
+  rename(fishing_entity = name_long) %>% 
+  clean_names()
 
 eez_centroid <- my_path("D",extra_path = "Spatial",name = "eez_centroids.csv",read = T)
+
 
 ```
 
@@ -1474,6 +1481,11 @@ Neighbours <- my_path("D", extra_path = "Spatial/", name="Neighbours_eez_id.csv"
 
 Paths <- paste(my_path("R",extra_path = "Emergence_2005"),Taxon_List,"_emergence.txt",sep="")
 
+# Clean names to match data
+matching_names <- my_path("G","Spatial/SAU", "sau_matching_names.csv", read = T)
+
+
+
 # Load all sp in one table
 Eme_Res <- bind_rows(lapply(Paths, fread)) %>% 
   filter(
@@ -1481,7 +1493,11 @@ Eme_Res <- bind_rows(lapply(Paths, fread)) %>%
   ) %>% 
   left_join(Neighbours,
             by = c("eez_name","eez_neighbour")
-            )
+  ) %>% 
+  rename(sf_eez_name=eez_name) %>% 
+  left_join(matching_names,
+            by=  "sf_eez_name") %>% 
+  clean_names()
 # warnings() for empty data species
 
 # View(Eme_Res)
@@ -1500,14 +1516,20 @@ fnam_world <- "SAUEEZ_July2015.shp"
 World_eez_sf <- st_read(dsn = path_world,
                     layer =file_path_sans_ext(fnam_world)) %>% 
   rename(eez_name = Name) %>% 
-  st_transform(crs = 4326) %>% # 4326
-  # st_transform(crs = "+proj=eck4") %>% 
-  st_simplify(preserveTopology = TRUE, dTolerance = 0.1)
+  # st_transform(crs = 4326) %>% # 4326
+  st_transform(crs = "+proj=eck4") %>% # for tbular plot
+  st_simplify(preserveTopology = TRUE, dTolerance = 0.1) %>% 
+  clean_names()
 
 # Call world map from natural earth
-World_map <- rnaturalearth::ne_countries(scale = 'small', returnclass = c("sf"))
+World_map <- rnaturalearth::ne_countries(scale = 'small', returnclass = c("sf")) %>% 
+  rename(fishing_entity = name_long) %>%
+  left_join(matching_names,
+            by = "fishing_entity") %>% 
+  distinct(fishing_entity,.keep_all = TRUE) %>% 
+  st_transform(crs = "+proj=eck4") %>% # for tbular plot
 
-eez_centroid <- read_csv(paste(data_path,"Spatial/eez_centroids.csv", sep = ""))
+# eez_centroid <- read_csv(paste(data_path,"Spatial/eez_centroids.csv", sep = ""))
 
 
 ```
@@ -2022,12 +2044,25 @@ data_stock %>%
 
 # Per EEZs
 eez_d_hist <- Eme_Res %>% 
-  group_by(eez_name,Tresh) %>% 
+  group_by(eezid  = sf_eezid,fishing_entity,tresh) %>% 
   # summarise(n_tax = length(unique(taxon_key))) %>% 
   summarise(
     mean_yr = mean(emerging_yr,na.rm=T),
-    sd_yr = sd(emerging_yr,na.rm=T)) %>% 
-  gather("metric","value",mean_yr:sd_yr)
+    sd_yr = sd(emerging_yr,na.rm=T),
+    n_taxa = length(unique(taxon_key))
+    ) %>% 
+  gather("metric","value",mean_yr:n_taxa) 
+
+
+# Per fishing entity
+
+fish_d_hist <- Eme_Res %>% 
+  group_by(fishing_entity,tresh) %>% 
+  # summarise(n_tax = length(unique(taxon_key))) %>% 
+  summarise(
+    value = length(unique(taxon_key))
+    ) %>% 
+  filter(!is.na(fishing_entity))
 
 
 ### Random plot
@@ -2052,28 +2087,57 @@ ggplot(eez_d_hist) +
   )
 
 
-map <- World_eez_sf %>% 
-  left_join(eez_d_hist,
-            by = "eez_name") %>% 
-  filter(Tresh == "Tresh_two",
-         metric == "mean_yr") %>%
-  ggplot() +
-  geom_sf(
-    aes(
-      fill = value
-    )
-  ) +
-  geom_sf(data =World_map, aes(), size = 0.1, fill = "gray90", col = "gray90") +
-  scale_fill_viridis() +
-  my_ggtheme_m() +
-  # facet_wrap(~Tresh,
-             # ncol = 1) +
-  ggsave("./Figures/emer_map_T2a.png",
-         width = 12,
-         height = 10,
-         units = "in"
-  )
+World_map_nemer <- World_map %>%
+  mutate(fishing_entity = ifelse(fishing_entity == "United States","USA", fishing_entity)) %>% 
+  left_join(fish_d_hist,
+            by = "fishing_entity")
 
+for(i in 1:2){
+  
+  Tresh_list <- c("Tresh_one","Tresh_two")
+  name_save <- paste("./Figures/emer_map_",Tresh_list[i],".png")
+  
+  map <- World_eez_sf %>% 
+    left_join(eez_d_hist,
+              by = "eezid") %>% 
+    filter(tresh == Tresh_list[i],
+           metric == "mean_yr") %>% 
+    ggplot() +
+    geom_sf(
+      aes(
+        fill = value
+      ),
+      color =  "white",
+      size = 0.1
+    ) +
+    geom_sf(data = World_map_nemer, aes(fill = value +2000   # to match scales
+                                        ),
+      color =  "white",
+      size = 0.1
+      ) +
+    annotate("text", 
+             x =(c(-85.5,-30,25,81,136)+5),
+             y = -93.5,
+             # x =(c(-8500000,-3000000,2500000,7500000,12800000)),
+             # y = -9050000,
+             label = c(0,25,50,75,100), 
+             color="black", 
+             size=3, 
+             angle=0, 
+             # fontface="bold",
+             hjust=0) +
+    scale_fill_viridis(
+      limits = c(2000,2100),
+      breaks = seq(2000,2100,25)
+    ) +
+    my_ggtheme_m() +
+    ggsave(name_save,
+           width = 12,
+           height = 10,
+           units = "in"
+    )
+  
+}
 
 ```
 
