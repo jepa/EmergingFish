@@ -1222,38 +1222,77 @@ PropChange <- function(taxon_list,links="NA"){
 
 ### Run Results Analysis
 
-####  Prooportion Analysis
+#### Data Needed for Analysis
 
-```{r PropChange, eval = F, echo =F}
+```{r General_Data, eval = F, echo =F}
+
+# --------------- #
+# General Data needed
+# --------------- #
+
 
 # Get taxon list
-Taxon_List <- list.files(paste(my_path("R"),"Proportion_2005",sep=""))
+Taxon_List_emer <- list.files(my_path("R",extra_path = "Emergence_2005"))
 
 # clean names for function
-Taxon_List <- gsub(".*_","",Taxon_List) 
-Taxon_List <- gsub("\\..*","",Taxon_List)
-  
-# Run results
-results <- PropChange(Taxon_List, links="y") %>% 
-  filter(!is.na(eez_neighbour)) %>% 
-  mutate(per_mid_plot =ifelse(per_mid >= 50, 50,
-                           ifelse(per_mid <= -50,-50,per_mid)
-                           ),
-         per_early_plot =ifelse(per_early >= 50, 50,
-                           ifelse(per_early <= -50,-50,per_early)
-                           )
-         )
+Taxon_List_emer <- gsub("_.*","",Taxon_List_emer) 
+
+# Neighbour list and their respective id (see chunk 3)
+Neighbours <- my_path("D", extra_path = "Spatial/", name="Neighbours_eez_id.csv", read = TRUE)
+
+Paths <- paste(my_path("R",extra_path = "Emergence_2005"),Taxon_List,"_emergence.txt",sep="")
+
+# Clean names to match data
+matching_names <- my_path("G","Spatial/SAU", "sau_matching_names.csv", read = T)
+
+# --------------- #
+# Load Proportion results
+# --------------- #
+
+
+# Read proportion results
+# prop_results <- PropChange(Taxon_List, links="y") %>% 
+  # filter(!is.na(eez_neighbour)) %>% 
+  # mutate(per_mid_plot =ifelse(per_mid >= 50, 50,
+  #                          ifelse(per_mid <= -50,-50,per_mid)
+  #                          ),
+  #        per_early_plot =ifelse(per_early >= 50, 50,
+  #                          ifelse(per_early <= -50,-50,per_early)
+  #                          )
+  #        )
 
 # For dat availabillity
- # write_csv(results,
+ # write_csv(prop_results,
           # "proportion_change_2005.csv")
 
 
-results <- my_path("R",name="proportion_change_2005.csv", read=T)
+prop_results <- my_path("R",name="proportion_change_2005.csv", read=T)
 
-# View(results)
+# --------------- #
+# Load year of emergence results
+# --------------- #
 
-### Load Data
+# Load all sp in one table
+Eme_Res <- bind_rows(lapply(Paths, fread)) %>% 
+  filter(
+    n_ens == 10
+  ) %>% 
+  left_join(Neighbours,
+            by = c("eez_name","eez_neighbour")
+  ) %>% 
+  rename(sf_eez_name=eez_name) %>% 
+  left_join(matching_names,
+            by=  "sf_eez_name") %>% 
+  clean_names()
+# warnings() for empty data species
+
+# View(Eme_Res)
+
+
+
+# --------------- #
+# Load shapefiles for figures
+# --------------- #
 
 # Load SAU shapefile name and paths
 
@@ -1267,19 +1306,25 @@ fnam_world <- "SAUEEZ_July2015.shp"
 World_eez_sf <- st_read(dsn = path_world,
                     layer =file_path_sans_ext(fnam_world)) %>% 
   rename(eez_name = Name) %>% 
-  st_transform(crs = 4326) %>% # 4326
+  # st_transform(crs = 4326) %>% # 4326
+  st_transform(crs = "+proj=eck4") %>% # for tbular plot
   st_simplify(preserveTopology = TRUE, dTolerance = 0.1) %>% 
   clean_names()
 
 # Call world map from natural earth
 World_map <- rnaturalearth::ne_countries(scale = 'small', returnclass = c("sf")) %>% 
-  rename(fishing_entity = name_long) %>% 
-  clean_names()
+  rename(fishing_entity = name_long) %>%
+  left_join(matching_names,
+            by = "fishing_entity") %>% 
+  distinct(fishing_entity,.keep_all = TRUE) %>% 
+  st_transform(crs = "+proj=eck4") %>% # for tbular plot
 
-eez_centroid <- my_path("D",extra_path = "Spatial",name = "eez_centroids.csv",read = T)
+# eez_centroid <- read_csv(paste(data_path,"Spatial/eez_centroids.csv", sep = ""))
 
 
 ```
+
+####  Prooportion Analysis
 
 ##### Fig.Percentage Change Map
 
@@ -1466,73 +1511,7 @@ ggplot() +
 
 ```
 
-####  Year of Eergence Analysis
-
-```{r Emergence-analysis, eval = F, echo =F}
-
-# Get taxon list
-Taxon_List <- list.files(my_path("R",extra_path = "Emergence_2005"))
-
-# clean names for function
-Taxon_List <- gsub("_.*","",Taxon_List) 
-
-# Neighbour list and their respective id (see chunk 3)
-Neighbours <- my_path("D", extra_path = "Spatial/", name="Neighbours_eez_id.csv", read = TRUE)
-
-Paths <- paste(my_path("R",extra_path = "Emergence_2005"),Taxon_List,"_emergence.txt",sep="")
-
-# Clean names to match data
-matching_names <- my_path("G","Spatial/SAU", "sau_matching_names.csv", read = T)
-
-
-
-# Load all sp in one table
-Eme_Res <- bind_rows(lapply(Paths, fread)) %>% 
-  filter(
-    n_ens == 10
-  ) %>% 
-  left_join(Neighbours,
-            by = c("eez_name","eez_neighbour")
-  ) %>% 
-  rename(sf_eez_name=eez_name) %>% 
-  left_join(matching_names,
-            by=  "sf_eez_name") %>% 
-  clean_names()
-# warnings() for empty data species
-
-# View(Eme_Res)
-
-### Load Data
-
-# Load SAU shapefile name and paths
-
-# The path
-path_world <- my_path("G", extra_path = "Spatial/SAU/SAU_Shapefile")
-
-# The File
-fnam_world <- "SAUEEZ_July2015.shp"
-
-# Load it!
-World_eez_sf <- st_read(dsn = path_world,
-                    layer =file_path_sans_ext(fnam_world)) %>% 
-  rename(eez_name = Name) %>% 
-  # st_transform(crs = 4326) %>% # 4326
-  st_transform(crs = "+proj=eck4") %>% # for tbular plot
-  st_simplify(preserveTopology = TRUE, dTolerance = 0.1) %>% 
-  clean_names()
-
-# Call world map from natural earth
-World_map <- rnaturalearth::ne_countries(scale = 'small', returnclass = c("sf")) %>% 
-  rename(fishing_entity = name_long) %>%
-  left_join(matching_names,
-            by = "fishing_entity") %>% 
-  distinct(fishing_entity,.keep_all = TRUE) %>% 
-  st_transform(crs = "+proj=eck4") %>% # for tbular plot
-
-# eez_centroid <- read_csv(paste(data_path,"Spatial/eez_centroids.csv", sep = ""))
-
-
-```
+####  Year of Eergence Analysisç
 
 ##### Histogram of Data
 
