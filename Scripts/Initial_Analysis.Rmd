@@ -869,7 +869,7 @@ TransIndex <- function(Centroids, # Expecting the results from the GetCentroids 
                 by = "neighbour_id") %>%
       ungroup() %>%
       select(taxon_key,eez_name,eez_neighbour,n_ens,emerging_yr) %>% 
-      mutate(Tresh= NA)
+      mutate(tresh= NA)
   
   return(Final_Result)
     
@@ -878,17 +878,17 @@ TransIndex <- function(Centroids, # Expecting the results from the GetCentroids 
     Final_Result <- mean_sd_index %>%
       filter(year > Hist_y) %>%
       mutate(
-        Tresh_one = ifelse(trend > (historic_sd$hist_mean+historic_sd$noise) | trend < (historic_sd$hist_mean-historic_sd$noise),"One",NA),
-        Tresh_two = ifelse(trend > (historic_sd$hist_mean+(2*historic_sd$noise)) | trend < (historic_sd$hist_mean-(2*historic_sd$noise)),"Two",NA)
+        tresh_one = ifelse(trend > (historic_sd$hist_mean+historic_sd$noise) | trend < (historic_sd$hist_mean-historic_sd$noise),"One",NA),
+        tresh_two = ifelse(trend > (historic_sd$hist_mean+(2*historic_sd$noise)) | trend < (historic_sd$hist_mean-(2*historic_sd$noise)),"Two",NA)
       ) %>%
-      gather("Tresh","YesNo",Tresh_one,Tresh_two) %>% 
+      gather("tresh","YesNo",tresh_one,tresh_two) %>% 
       filter(!is.na(YesNo)) %>% 
-      group_by(taxon_key,neighbour_id,n_ens,Tresh) %>%
+      group_by(taxon_key,neighbour_id,n_ens,tresh) %>%
       summarise(emerging_yr= min(year)) %>%
       left_join(EEZ_ids,
                 by = "neighbour_id") %>%
       ungroup() %>%
-      select(taxon_key,eez_name,eez_neighbour,n_ens,emerging_yr,Tresh)
+      select(taxon_key,eez_name,eez_neighbour,n_ens,emerging_yr,tresh)
   
   return(Final_Result)
   }
@@ -1291,6 +1291,25 @@ Eme_Res <- bind_rows(lapply(Paths, fread)) %>%
 # View(Eme_Res)
 
 # --------------- #
+# Load SAU catch and revenue data
+# --------------- #
+
+Sau_data <-fread(paste(my_path("D"),"SAU/sau_catch_value_country_taxon_JEPA.csv", sep ="")) %>%
+  clean_names() %>% 
+  # Remove high seas and 207 and 208 that are unknown
+  filter(!fishing_entity_id %in% c(213,223)) %>%  # 207,208
+  # Allocate catch of islands to UK
+  mutate(fishing_entity_id = ifelse(fishing_entity_id %in% c(219,220), 183,fishing_entity_id)) %>% 
+  # Convert to 2019 real USD
+  mutate(values = 1.16 * value) %>%
+  # Average 10 years of data
+  group_by(fishing_entity_id,taxon_key) %>% 
+  summarise_at(c("catch","value"),
+               mean,na.rm=T) %>% 
+  gather("variable","value",catch:value)
+
+
+# --------------- #
 # Load shapefiles for figures
 # --------------- #
 
@@ -1319,6 +1338,7 @@ World_map_dat <- Matching_names %>%
   select(-n) 
 
 World_map <- rnaturalearth::ne_countries(scale = 'small', returnclass = c("sf")) %>%
+  clean_names() %>% 
   # st_transform(crs = "+proj=eck4") %>%
   st_transform(crs = 4326) %>% # 4326
   left_join(World_map_dat,
@@ -1375,7 +1395,7 @@ World_sf %>%
 
 ```
 
-##### Fig. Netowrk
+##### Fig. 2 and S1. (Netowrk)
 
 ```{r fig_map_Juan, eval = F, echo =F}
 # Figure made thanks to Juanito!
@@ -1453,8 +1473,8 @@ Data <- Data %>%
 
 gc()# clean ram
 
-# time <- "per_mid_plot"
-time <- "per_early_plot"
+time <- "per_mid_plot"
+# time <- "per_early_plot"
 
 ## ------------------- ##
 # Global Plot
@@ -1489,7 +1509,7 @@ Prop_map <- ggplot() +
     # option="magma",
     # direction = -1
   ) +
-  ggsave("./Figures/figure_connections_early_n50.png",
+  ggsave("./Figures/figS1a.png",
   width = 10,
   height = 6,
   units = "in"
@@ -1697,44 +1717,44 @@ Eu_map <- ggplot() +
 # Final Figure
 ## ------------------- ##
 
-gc()
-plot_all <- ggdraw() +
-      # map
-      draw_plot(Prop_map, x = 0, y = 0.45, width = 1, height = 0.58) +
-      # Lat America reg plor
-      draw_plot(Lat_am_map, x = 0.1, y = 0.08, width = 0.3, height = 0.4) +
-      # Europe reg plot
-      draw_plot(Eu_map, x = 0.35, y = 0.08, width = 0.3, height = 0.4) +
-      # Med regional plot
-      draw_plot(Med_map, x = 0.65, y = 0.08, width = 0.3, height = 0.4) +
-      draw_plot_label(label = c("a", "b"), 
-                      size = 20,
-                      x = c(0, 0), 
-                      y = c(1, 0.45)
-      ) #+
-      # draw_plot_label(label = c("Revenue (USD) | Catch (Tonnes)","(Million)"), 
-                      # size = 8,
-                      # x = c(0.325,0.485), 
-                      # y = c(0.31,0.29)
-      )
-    
-    
-    save_plot(
-      # paste(Figures_Path,"100_25_Bins_Value_Region.png",sep=""),
-      "test.png",
-      plot_all,
-      base_height = 8,
-      base_width = 8
-    )
+# gc()
+# plot_all <- ggdraw() +
+#       # map
+#       draw_plot(Prop_map, x = 0, y = 0.45, width = 1, height = 0.58) +
+#       # Lat America reg plor
+#       draw_plot(Lat_am_map, x = 0.1, y = 0.08, width = 0.3, height = 0.4) +
+#       # Europe reg plot
+#       draw_plot(Eu_map, x = 0.35, y = 0.08, width = 0.3, height = 0.4) +
+#       # Med regional plot
+#       draw_plot(Med_map, x = 0.65, y = 0.08, width = 0.3, height = 0.4) +
+#       draw_plot_label(label = c("a", "b"), 
+#                       size = 20,
+#                       x = c(0, 0), 
+#                       y = c(1, 0.45)
+#       ) #+
+#       # draw_plot_label(label = c("Revenue (USD) | Catch (Tonnes)","(Million)"), 
+#                       # size = 8,
+#                       # x = c(0.325,0.485), 
+#                       # y = c(0.31,0.29)
+#       )
+#     
+#     
+#     save_plot(
+#       # paste(Figures_Path,"100_25_Bins_Value_Region.png",sep=""),
+#       "test.png",
+#       plot_all,
+#       base_height = 8,
+#       base_width = 8
+#     )
   
 
 ```
 
-##### Histogram of change
+##### Fig S2 (Histogram of change)
 
 ```{r hist_change}
 
- results %>% 
+ Prop_results %>% 
   gather("time_step","change",per_early,per_mid) %>% 
   filter(variable == "mean_eez" & 
            !is.na(change)
@@ -1776,7 +1796,7 @@ ggplot() +
 
 ```
 
-####  Year of Eergence Analysisç
+####  Year of Eergence Analysis
 
 ##### Histogram of Data
 
@@ -1786,30 +1806,30 @@ ggplot() +
 Eme_Res %>% 
   filter(
     n_ens == 10#,
-    # Tresh == "Tresh_one"
+    # tresh == "tresh_one"
   ) %>% 
-  group_by(Tresh,taxon_key,emerging_yr) %>% 
+  group_by(tresh,taxon_key,emerging_yr) %>% 
   summarise(
-    n_trans = length(unique(eez_name))
+    n_trans = length(unique(sf_eez_name))
   ) %>% 
-  group_by(Tresh,taxon_key) %>% 
+  group_by(tresh,taxon_key) %>% 
   summarise(
     ntrans = min(emerging_yr)
   ) %>% 
-  group_by(Tresh,ntrans) %>% 
+  group_by(tresh,ntrans) %>% 
   summarise(
     n_taxa = length(unique(taxon_key))
   ) %>% 
   arrange(-n_taxa) %>% 
   # View()
-  # group_by(Tresh) %>% 
+  # group_by(tresh) %>% 
   # summarise(sum(n_taxa))
   ggplot() +
   geom_line(
     aes(
       x = ntrans,
       y = n_taxa,
-      color = Tresh
+      color = tresh
     )
   )
 
@@ -1818,30 +1838,30 @@ Eme_Res %>%
 Eme_Res %>% 
   filter(
     n_ens == 10#,
-    # Tresh == "Tresh_one"
+    # tresh == "tresh_one"
   ) %>% 
-  group_by(Tresh,eez_name,emerging_yr) %>% 
+  group_by(tresh,sf_eez_name,emerging_yr) %>% 
   summarise(
     n_trans = length(unique(taxon_key))
   ) %>% 
-  group_by(Tresh,eez_name) %>% 
+  group_by(tresh,sf_eez_name) %>% 
   summarise(
     ntrans = min(emerging_yr)
   ) %>% 
-  group_by(Tresh,ntrans) %>% 
+  group_by(tresh,ntrans) %>% 
   summarise(
-    n_taxa = length(unique(eez_name))
+    n_taxa = length(unique(sf_eez_name))
   ) %>% 
   arrange(-n_taxa) %>% 
   View()
-  # group_by(Tresh) %>%
+  # group_by(tresh) %>%
   # summarise(sum(n_taxa))
   # ggplot() +
   # geom_line(
   #   aes(
   #     x = ntrans,
   #     y = n_taxa,
-  #     color = Tresh
+  #     color = tresh
   #   )
   # )
   
@@ -1849,9 +1869,9 @@ Eme_Res %>%
 
 # Numer of EEZs where stocks will emerge
 stock_d_hist <- Eme_Res %>% 
-  distinct(taxon_key,neighbour_id,Tresh, .keep_all = TRUE) %>%
-  group_by(emerging_yr,taxon_key,Tresh) %>%
-  summarise(n_tax = length(unique(eez_name))) %>%
+  distinct(taxon_key,neighbour_id,tresh, .keep_all = TRUE) %>%
+  group_by(emerging_yr,taxon_key,tresh) %>%
+  summarise(n_tax = length(unique(sf_eez_name))) %>%
   # summarise(n()) %>% 
   mutate(
     level = "EEZs per Spp"
@@ -1862,19 +1882,19 @@ stock_d_hist <- Eme_Res %>%
 
 # Per EEZs
 eez_d_hist <- Eme_Res %>% 
-  distinct(taxon_key,neighbour_id,Tresh, .keep_all = TRUE) %>%
-  group_by(emerging_yr,eez_name,Tresh,neighbour_id) %>%  
+  distinct(taxon_key,neighbour_id,tresh, .keep_all = TRUE) %>%
+  group_by(emerging_yr,sf_eez_name,tresh,neighbour_id) %>%  
   # summarise(n_tax = length(unique(taxon_key))) %>% 
   summarise(n()) %>% 
   mutate(
     level = "Spp per EEZ"
   ) %>% 
   ungroup() %>% 
-  select(-eez_name)
+  select(-sf_eez_name)
 
 stock_d_hist %>% 
   bind_rows(eez_d_hist) %>% 
-  filter(Tresh != "NA") %>% 
+  filter(tresh != "NA") %>% 
   ggplot() +
   geom_density(
     aes(
@@ -1895,7 +1915,7 @@ stock_d_hist %>%
   ) +
   my_ggtheme_p() +
   scale_fill_viridis(discrete = T) +
-  facet_wrap(~Tresh) +
+  facet_wrap(~tresh) +
   ggsave("./Figures/hist_freq.png",
          width = 6,
          height = 6,
@@ -1912,15 +1932,15 @@ stock_d_hist %>%
 stock_d <-  Eme_Res %>% 
   left_join(Neighbours) %>% 
     # distinct(taxon_key,neighbour_id, .keep_all = TRUE) %>% 
-    group_by(taxon_key,Tresh) %>% 
+    group_by(taxon_key,tresh) %>% 
     summarise(
       taxon_emer = min(emerging_yr)
     ) %>% 
-    group_by(taxon_emer,Tresh) %>% 
+    group_by(taxon_emer,tresh) %>% 
   summarise(
     n_tax = n()
   ) %>% 
-  group_by(Tresh) %>% 
+  group_by(tresh) %>% 
   mutate(
     com_sum = cumsum(n_tax),
     level = "Stock"
@@ -1931,15 +1951,15 @@ eez_d <-  Eme_Res %>%
   left_join(Neighbours) %>% 
   filter(n_ens == 10) %>% 
     # distinct(eez_name,neighbour_id, .keep_all = TRUE) %>% 
-    group_by(eez_name,Tresh) %>% 
+    group_by(sf_eez_name,tresh) %>% 
     summarise(
       taxon_emer = min(emerging_yr)
     ) %>% 
-    group_by(taxon_emer,Tresh) %>% 
+    group_by(taxon_emer,tresh) %>% 
   summarise(
     n_tax = n()
   ) %>% 
-  group_by(Tresh) %>% 
+  group_by(tresh) %>% 
   mutate(
     com_sum = cumsum(n_tax),
     level = "EEZ"
@@ -1948,7 +1968,7 @@ eez_d <-  Eme_Res %>%
 # Plot Data
 plot_data <- stock_d %>% 
   bind_rows(eez_d) %>% 
-  filter(Tresh != "NA") %>% 
+  filter(tresh != "NA") %>% 
   mutate(
     total = ifelse(level == "Stock",length(unique(Eme_Res$taxon_key)),length(unique(Eme_Res$eez_name))),
     per = com_sum/total*100
@@ -1976,7 +1996,7 @@ plot_data <- stock_d %>%
               size=0.5,
               colour="black"
     ) +
-    facet_wrap(~Tresh) + 
+    facet_wrap(~tresh) + 
     # Comment out for option A (Change plot name!!)
   #   geom_hline(yintercept = length(unique(Eme_Res$eez_name)), color = "grey",linetype = "dashed") +
   # geom_text(aes(label="Total number of EEZs", x = 2010, y = length(unique(Eme_Res$eez_name))+10), color = "grey70",size =3) +
@@ -2028,15 +2048,15 @@ plot_data <- stock_d %>%
                        limits = c(0,100)
     ) +
     scale_x_continuous("Year of emergence",
-                       breaks = seq(2005,2100,10),
+                       breaks = seq(2005,2100,15),
                        limits = c(2005,2100)
     ) +
     my_ggtheme_p() +
     scale_fill_viridis(discrete = T) +
-    facet_wrap(~Tresh) + 
-  ggsave("./Figures/figure_accumulative_curve_per.png",
-         width = 6,
-         height = 6,
+    facet_wrap(~tresh) + 
+  ggsave("./Figures/Fig4.png",
+         width = 8,
+         height = 8,
          units = "in"
   )
   
@@ -2280,42 +2300,67 @@ data_stock %>%
   
 ```
 
-##### Mapping the time of emergence
+##### Fig. 3 Mapping the time of emergence
 
 ###### Just mean time
 
 ```{r emergence_map, eval = T}
 
 # Per EEZs
-eez_d_hist <- Eme_Res %>% 
-  group_by(eezid  = sf_eezid,fishing_entity,tresh) %>% 
+Eez_d_hist <- Eme_Res %>% 
+  group_by(eezid= eez_id ,sau_fishing_entity,tresh) %>% 
   # summarise(n_tax = length(unique(taxon_key))) %>% 
   summarise(
     mean_yr = mean(emerging_yr,na.rm=T),
     sd_yr = sd(emerging_yr,na.rm=T),
     n_taxa = length(unique(taxon_key))
     ) %>% 
-  gather("metric","value",mean_yr:n_taxa) 
+  gather("metric","value",mean_yr:n_taxa) %>% 
+  filter(metric != "n_taxa")
+
+# Estimate the value (catch and USD) of emerging species
+Eme_value_data <- Eme_Res %>% 
+  group_by(sau_fishing_entity,fishing_entity_id,tresh,taxon_key) %>% 
+  summarise(n()) %>% 
+  left_join(Sau_data,
+            by = c("fishing_entity_id","taxon_key")) %>% 
+  filter(!is.na(variable)) %>% 
+  group_by(sau_fishing_entity,fishing_entity_id,tresh,variable) %>% 
+  summarise(
+   sum_value = sum(value,na.rm=T),
+    n_taxa = length(unique(taxon_key)) 
+  )
+  
+# Total value of each fishing nation
+
+Total_value <- Sau_data %>% 
+  group_by(fishing_entity_id,variable) %>% 
+  summarise(tot_value= sum(value,na.rm=T))
+
+
+Value_map_data <- Eme_value_data %>% 
+  left_join(Total_value,
+            by = c("fishing_entity_id","variable")) %>% 
+  mutate(participation = (sum_value/tot_value)*100)
 
 
 # Per fishing entity
 
 fish_d_hist <- Eme_Res %>% 
-  group_by(fishing_entity,tresh) %>% 
+  group_by(sau_fishing_entity,tresh) %>% 
   # summarise(n_tax = length(unique(taxon_key))) %>% 
   summarise(
     value = length(unique(taxon_key))
     ) %>% 
-  filter(!is.na(fishing_entity))
-
+  filter(!is.na(sau_fishing_entity))
 
 ### Random plot
 
-ggplot(eez_d_hist) +
+ggplot(subset(eez_d_hist, tresh == "Tresh_one")) +
   geom_density(
     aes(
       x = value,
-      fill = Tresh
+      fill = tresh
     ),
     bins = 10,
     alpha = 0.8
@@ -2332,19 +2377,33 @@ ggplot(eez_d_hist) +
 
 
 World_map_nemer <- World_map %>%
-  mutate(fishing_entity = ifelse(fishing_entity == "United States","USA", fishing_entity)) %>% 
-  left_join(fish_d_hist,
-            by = "fishing_entity")
+  left_join(Value_map_data,
+            by = c("sau_fishing_entity","fishing_entity_id")
+  )
+
+
+grey_land <- World_map %>% 
+  filter(!fishing_entity_id %in% World_map_nemer$fishing_entity_id)
+
+grey_eez <- World_eez_sf %>% 
+  filter(!eezid %in% eez_d_hist$eezid)
+
 
 for(i in 1:2){
   
-  Tresh_list <- c("Tresh_one","Tresh_two")
-  name_save <- paste("./Figures/emer_map_",Tresh_list[i],".png")
+  tresh_list <- c("Tresh_one","Tresh_two")
+  name_save <- paste("./Figures/emer_map_par_",tresh_list[i],".png",sep = "")
+  
+  World_map_nemer <- World_map_nemer %>% 
+    filter(
+      tresh ==  tresh_list[i], 
+      variable == "value"
+    )
   
   map <- World_eez_sf %>% 
     left_join(eez_d_hist,
               by = "eezid") %>% 
-    filter(tresh == Tresh_list[i],
+    filter(tresh == tresh_list[i],
            metric == "mean_yr") %>% 
     ggplot() +
     geom_sf(
@@ -2354,11 +2413,14 @@ for(i in 1:2){
       color =  "white",
       size = 0.1
     ) +
-    geom_sf(data = World_map_nemer, aes(fill = value +2000   # to match scales
-                                        ),
-      color =  "white",
-      size = 0.1
-      ) +
+    geom_sf(data = World_map_nemer,
+            aes(fill = participation+2000),
+            color =  "white",
+            size = 0.1
+            ) +
+    # grey maps
+    geom_sf(data = grey_land, aes(),fill = "grey50", color =  "white",size = 0.1) +
+    geom_sf(data = grey_eez, aes(),fill = "grey50", color =  "white",size = 0.1) +
     annotate("text", 
              x =(c(-85.5,-30,25,81,136)+5),
              y = -93.5,
