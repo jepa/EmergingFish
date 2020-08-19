@@ -1223,7 +1223,7 @@ PropChange <- function(taxon_list,links="NA"){
 
 ### Run Results Analysis
 
-#### Data Needed for Analysis
+#### Read Data for Analysis
 
 ```{r General_Data, eval = F, echo =F}
 
@@ -1245,6 +1245,12 @@ Neighbours <- my_path("D", extra_path = "Spatial/", name="Neighbours_eez_id.csv"
 
 # Clean names to match data
 Matching_names <- my_path("G","Spatial/SAU", "matching_names.csv", read = T)
+
+# Species depth clasification
+
+Spp_depth <-fread(paste(my_path("D"),"SAU/SppTaxonName.csv", sep ="")) %>% 
+  clean_names()
+
 
 # --------------- #
 # Load Proportion results
@@ -1419,12 +1425,12 @@ Data <- Prop_results %>%
   ungroup() %>% 
   # Plot miscs
   mutate(
-    per_early = ifelse(is.na(per_early_plot),0,per_early_plot),
-    per_mid = ifelse(is.na(per_mid_plot),0,per_mid_plot)
+    per_early = ifelse(is.na(per_early),0,per_early),
+    per_mid = ifelse(is.na(per_mid),0,per_mid)
   ) %>% 
   drop_na() %>%
   filter(
-    variable == "mean_eez"#,
+    variable %in% c("mean_eez","n_spp")#,
     # source %in% c("Brazil","Argentina","Chile","Peru","Uruguay")
   )
 
@@ -1463,18 +1469,36 @@ paths <- network_data_sf %>%
   sf::st_set_geometry(NULL) %>% 
   unnest() %>% 
   mutate_at(vars(X,Y), round,2) %>% 
-  gather("time_step","per_chng",per_mid_plot:per_early_plot)
+  gather("time_step","per_chng",per_early:per_mid) %>% 
+  mutate(per_plot = ifelse(per_chng > 100,100,per_chng))
   
 # Plot it!
 
-Data <- Data %>% 
-  gather("time_step","per_chng",per_mid_plot:per_early_plot)
+# Proportion map data 
+Map_data <- Data %>% 
+  gather("time_step","per_chng",per_early:per_mid) %>% 
+  mutate(per_plot = ifelse(per_chng > 100,100,per_chng))
+
+# Average number of taxa to change per eez
+
+n_taxa_data <- Prop_results %>% 
+  filter(variable == "n_spp") %>% 
+  rename(sf_eez_name = eez_name) %>% 
+  left_join(Matching_names) %>% 
+  group_by(sau_fishing_entity,fishing_entity_id) %>% 
+  summarise(total_spp = mean(early,na.rm=T))
+  
+n_taxa_map <- World_map %>% 
+  left_join(n_taxa_data,
+            by = c("sau_fishing_entity","fishing_entity_id")
+            )
+
 
 
 gc()# clean ram
 
-time <- "per_mid_plot"
-# time <- "per_early_plot"
+# time <- "per_mid_plot"
+time <- "per_early"
 
 ## ------------------- ##
 # Global Plot
@@ -1482,36 +1506,46 @@ time <- "per_mid_plot"
 
 
 Prop_map <- ggplot() +
-  geom_sf(data = subset(World_map, sovereignt != "Antarctica"), size = 0.1, fill = "gray50", col = "gray50") +
+  geom_sf(data = subset(n_taxa_map, sovereignt != "Antarctica"),
+          aes(fill = total_spp),
+          size = 0.1,col = "white") +
   geom_sf(data = World_eez_sf, size = 0.1, fill = "white", col = "gray30") +
-  geom_point(data = subset(Data, time_step == time & per_chng < 0),
+  geom_point(data = subset(Map_data, time_step == time & per_plot < 0),
              aes(start_lon,
                  start_lat,
-                 col = per_chng),
+                 col = per_plot),
              size = 0.05,
              col = "gray30",
              shape = 20,
              stroke = 1.5) +
-  geom_path(data = subset(paths, time_step == time & per_chng > 0),
+  geom_path(data = subset(paths, time_step == time & per_plot > 0),
             aes(X, Y,
                 group = interaction(line_id,subline_id),
-                col = per_chng
+                col = per_plot
             ),
             size = 0.3,
-            arrow = arrow(length = unit(0.009, "npc"),
+            arrow = arrow(length = unit(0.008, "npc"),
                           ends = "first"),
             show.legend = NA) +
   my_ggtheme_m() +
   scale_colour_viridis(
-    name="Average Gain of\nStock-Share Ratio (%)",
-    limits = c(0,max(Data$per_chng)),
-    breaks = seq(0,max(Data$per_chng),5),
+    name="Average Gain of Stock-Share Ratio (%)\nand Number of taxa (n)",
+    limits = c(0,max(Map_data$per_plot)),
+    breaks = seq(0,max(Map_data$per_plot),10),
     # option="magma",
     # direction = -1
   ) +
-  ggsave("./Figures/figS1a.png",
-  width = 10,
-  height = 6,
+  scale_fill_viridis(
+    name="Average Gain of Stock-Share Ratio (%)\nand Number of taxa (n)",
+    limits = c(0,max(Map_data$per_plot)),
+    breaks = seq(0,max(Map_data$per_plot),10),
+    alpha = 0.8
+    # option="magma",
+    # direction = -1
+  ) +
+  ggsave("./Figures/fig2ax.png",
+  width = 12,
+  height = 8,
   units = "in"
   )
 
@@ -1534,9 +1568,9 @@ Lat_am_eez <- World_eez_sf %>%
          !sf_eez_name %in% c("USA (East Coast)","Suriname","Guyana","French Guiana","Bermuda (UK)","Brazil","El Salvador")
          )
 
-Lat_am_eez %>% filter(str_detect(sf_eez_name,"Tri")) 
+# Lat_am_eez %>% filter(str_detect(sf_eez_name,"Tri")) 
 
-Lat_am_data <- Data %>% 
+Lat_am_data <- Map_data %>% 
   filter(source %in% Lat_am_eez$sf_eez_name)
 
 Lat_am_paths <- paths %>% 
@@ -1546,19 +1580,21 @@ Lat_am_paths <- paths %>%
 
 Lat_am_map <- ggplot() +
   geom_sf(data = Lat_am_eez, size = 0.1, fill = "white", col = "gray30") +
-  geom_sf(data = Lat_am_land, size = 0.1, fill = "gray50", col = "gray40") +
-  geom_point(data = subset(Lat_am_data, time_step == time & per_chng < 0 ),
+  geom_sf(data = subset(n_taxa_map, sovereignt != "Antarctica"),
+          aes(fill = total_spp),
+          size = 0.1,col = "white") +
+  geom_point(data = subset(Lat_am_data, time_step == time & per_plot < 0 ),
              aes(start_lon,
                  start_lat,
-                 col = per_chng),
+                 col = per_plot),
              size = 1,
              col = "gray30",
              shape = 20,
              stroke = 1.5) +
-  geom_path(data = subset(Lat_am_paths, time_step == time & per_chng > 0),
+  geom_path(data = subset(Lat_am_paths, time_step == time & per_plot > 0),
             aes(X, Y,
                 group = interaction(line_id,subline_id),
-                col = per_chng
+                col = per_plot
             ),
             size = 1,
             arrow = arrow(length = unit(0.05, "npc"),
@@ -1570,11 +1606,20 @@ Lat_am_map <- ggplot() +
   scale_y_continuous(breaks = seq(10,30,5)) +
   # my_ggtheme_m() +
   theme(legend.position = "",
-        panel.background = element_rect(fill = "white")) +
+        panel.background = element_rect(fill = "white", color = "white"),
+        panel.grid.major =  element_line(color = "white")
+        ) +
   scale_colour_viridis(
     name="Average Gain of\nStock-Share Ratio (%)",
-    limits = c(0,max(Lat_am_data$per_chng)),
-    breaks = seq(0,max(Lat_am_data$per_chng),5),
+    limits = c(0,max(Lat_am_data$per_plot)),
+    breaks = seq(0,max(Lat_am_data$per_plot),10),
+    # option="magma",
+    # direction = -1
+  )+
+  scale_fill_viridis(
+    name="Average Gain of\nStock-Share Ratio (%)",
+    limits = c(0,max(Lat_am_data$per_plot)),
+    breaks = seq(0,max(Lat_am_data$per_plot),10),
     # option="magma",
     # direction = -1
   );Lat_am_map
@@ -1598,7 +1643,7 @@ Med_eez <- World_eez_sf %>%
          sf_eez_name != "Spain (Northwest)")
 
 # Med data
-Med_data <- Data %>% 
+Med_data <- Map_data %>% 
   filter(source %in% Med_eez$sf_eez_name)
 
 # Med paths
@@ -1609,19 +1654,21 @@ Med_paths <- paths %>%
 # Med plot
 Med_map <- ggplot() +
   geom_sf(data = Med_eez, size = 0.5, fill = "white", col = "gray30") +
-  geom_sf(data = Med_land, size = 0.5, fill = "gray50", col = "gray40") +
-  geom_point(data = subset(Med_data, time_step == time & per_chng < 0 ),
+  geom_sf(data = subset(n_taxa_map, sovereignt != "Antarctica"),
+          aes(fill = total_spp),
+          size = 0.1,col = "white") +
+  geom_point(data = subset(Med_data, time_step == time & per_plot < 0 ),
              aes(start_lon,
                  start_lat,
-                 col = per_chng),
+                 col = per_plot),
              size = 1,
              col = "gray30",
              shape = 20,
              stroke = 1.5) +
-  geom_path(data = subset(Med_paths, time_step == time & per_chng > 0),
+  geom_path(data = subset(Med_paths, time_step == time & per_plot > 0),
             aes(X, Y,
                 group = interaction(line_id,subline_id),
-                col = per_chng
+                col = per_plot
             ),
             size = 1,
             arrow = arrow(length = unit(0.05, "npc"),
@@ -1633,11 +1680,20 @@ Med_map <- ggplot() +
   scale_y_continuous(breaks = seq(30,50,5)) +
   # my_ggtheme_m() +
   theme(legend.position = "",
-        panel.background = element_rect(fill = "white")) +
+        panel.background = element_rect(fill = "white", color = "white"),
+        panel.grid.major =  element_line(color = "white")
+        ) +
   scale_colour_viridis(
     name="Average Gain of\nStock-Share Ratio (%)",
-    limits = c(0,max(Med_data$per_chng)),
-    breaks = seq(0,max(Med_data$per_chng),5),
+    limits = c(0,max(Med_data$per_plot)),
+    breaks = seq(0,max(Med_data$per_plot),5),
+    # option="magma",
+    # direction = -1
+  )+
+  scale_fill_viridis(
+    name="Average Gain of\nStock-Share Ratio (%)",
+    limits = c(0,max(Med_data$per_plot)),
+    breaks = seq(0,max(Med_data$per_plot),5),
     # option="magma",
     # direction = -1
   );Med_map
@@ -1665,9 +1721,9 @@ Eu_eez <- World_eez_sf %>%
     !str_detect(sf_eez_name,"Spain")
   )
 
-Eu_eez %>% filter(str_detect(sf_eez_name,"Romania"))
+# Eu_eez %>% filter(str_detect(sf_eez_name,"Romania"))
 
-Eu_data <- Data %>% 
+Eu_data <- Map_data %>% 
   filter(source %in% Eu_eez$sf_eez_name)
 
 Eu_paths <- paths %>% 
@@ -1677,19 +1733,21 @@ Eu_paths <- paths %>%
 
 Eu_map <- ggplot() +
   geom_sf(data = Eu_eez, size = 0.5, fill = "white", col = "gray30") +
-  geom_sf(data = Eu_land, size = 0.5, fill = "gray50", col = "gray40") +
-  geom_point(data = subset(Med_data, time_step == time & per_chng < 0 ),
+  geom_sf(data = subset(n_taxa_map, sovereignt != "Antarctica"),
+          aes(fill = total_spp),
+          size = 0.1,col = "white") +
+  geom_point(data = subset(Med_data, time_step == time & per_plot < 0 ),
              aes(start_lon,
                  start_lat,
-                 col = per_chng),
+                 col = per_plot),
              size = 1,
              col = "gray30",
              shape = 20,
              stroke = 1.5) +
-  geom_path(data = subset(Eu_paths, time_step == time & per_chng > 0),
+  geom_path(data = subset(Eu_paths, time_step == time & per_plot > 0),
             aes(X, Y,
                 group = interaction(line_id,subline_id),
-                col = per_chng
+                col = per_plot
             ),
             size = 1,
             arrow = arrow(length = unit(0.05, "npc"),
@@ -1706,8 +1764,15 @@ Eu_map <- ggplot() +
         ) +
   scale_colour_viridis(
     name="Average Gain of\nStock-Share Ratio (%)",
-    limits = c(0,max(Eu_data$per_chng)),
-    breaks = seq(0,max(Eu_data$per_chng),5),
+    limits = c(0,max(Eu_data$per_plot)),
+    breaks = seq(0,max(Eu_data$per_plot),5),
+    # option="magma",
+    # direction = -1
+   )+
+  scale_fill_viridis(
+    name="Average Gain of\nStock-Share Ratio (%)",
+    limits = c(0,max(Med_data$per_plot)),
+    breaks = seq(0,max(Med_data$per_plot),5),
     # option="magma",
     # direction = -1
   );Eu_map
@@ -2616,6 +2681,51 @@ ggplot() +
 
 
 ```
+
+### Species level analysis
+
+#### Demersal Vs Pelagic
+
+```{r deme_pela, eval = F, echo =F}
+
+Dem_pel <- Eme_Res %>% 
+  filter(tresh == "Tresh_one",
+         !is.na(un_sub_region)) %>% 
+  left_join(Spp_depth) 
+
+
+Dem_pel_mean <- Dem_pel %>% 
+  group_by(dem_pel) %>% 
+  summarise(mean  = mean(emerging_yr)) 
+
+
+ggplot(Dem_pel) +
+  geom_boxplot(
+    aes(
+      x = reorder(dem_pel,emerging_yr),
+      y = emerging_yr,
+      fill = un_sub_region
+    )
+  ) +
+  geom_line(data = Dem_pel_mean,
+    aes(
+      x = dem_pel,
+      y = mean
+    )
+)
+
+
+ggplot(Dem_pel) +
+  geom_boxplot(
+    aes(
+      x = reorder(dem_pel,emerging_yr),
+      y = emerging_yr
+    )
+  ) +
+  facet_wrap(~un_sub_region)
+
+```
+
 
 
 ## Troubleshooting
