@@ -161,24 +161,30 @@ max_values <- prop_r %>%
          # time_step == "per_early"
          )
 
+max_values$per_early
+
 ### Average
 average_mid <- prop_r %>% 
   filter(variable == "mean_eez" & 
            !is.na(change)
-         ) 
+         )
 ```
 
-Our results suggest that `r n_eez_per`% (n = `r n_eez`) of the world EEZs will see a change in SSR by early $21^{st}$ century (Fig. 1). The change in SSR will range from gains of over 100% of a sertain shared stock (e.g. Guatemala' SSR of *species* shared with Mexico is projected to go from 12% to 26%) to loses of up to -71% of SSR (e.g. Honduras SSR of *species* shared with the Nicaragua in the Pacific coast is projected to decline from 50% to 14%). Despite no substantial changes in SSR per EEZ can be seen by the mid $21^st$ century (**Supplements Fig 1 (map)**), changes in SSR are expected to increase in intensity (**Supplements Fig 2 (histogram)**).
+We estimate the changes from today (1951-2005) to the early (2020-2040) and mid $21^{st}$ century (2040-2060) in transboundary Stock Share Ratio between neighbouring countries. Our results suggest that `r n_eez_per`% (n = `r n_eez`) of the world EEZs will see a change in SSR by 2030 (Fig. 1A). While most EEZs will see and average species change lower than 20%, a few EEZs are expected to have 50% change in SSR (Fig. 2A). For example. Guatemala' SSR of *species* shared with Mexico is projected to go from 12% to 26% while Honduras SSR of *species* shared with the Nicaragua in the Pacific coast is projected to decline from 50% to 14%. Regions where EEZs are particularly small and/or have multiple borders (e.g. The Caribeean) will see a complex dynamic of changes in SSR (Fig. 2B). Towards the mid $21^st$ century, changes in SSR per EEZ will no be substantial (**Supplements Fig 1 (map)**) but are still are expected to increase in intensity (**Supplements Fig 2 (histogram)**).
+
 
 ```{r SSR_gain, eval = F,  echo = F, fig.width=9, fig.height=12, fig.cap =  "Average transboundary species SSR gain of neighbouring EEZs by 2030 (2021-2040) relative to 1951-2005 under RCP 8.5. Arrows go from the loosing EEZ (point) to the winner (arrowhead)"}
 
-img <- readPNG("../Figures/figure_connections_n50.png")
+img <- readPNG("../Figures/Fig2.png")
 grid.raster(img)
 
 ```
 
-![Average transboundary species SSR gain of neighbouring EEZs by 2030 (2021-2040) relative to 1951-2005 under RCP 8.5. Arrows go from the loosing EEZ (point) to the winner (arrowhead)](../Figures/figure_connections_n50.png)
+![Average transboundary species SSR gain of neighbouring EEZs by 2030 (2021-2040) relative to 1951-2005 under RCP 8.5. Arrows go from the loosing EEZ (point) to the winner (arrowhead)](../Figures/Fig2.png)
+
+## Time of Emergence
+
+We estimated the time of emergence between neighbouring EEZs for 633 transbboundary stocks. On average, most of the world EEZ's time of emergence will be 2030 $\pm$ 25 yers (Fig S3-A), however, all EEZs have already seen changes for at least one species (Fig S3-B).
 
 
-## Time of Emergence Index
 # Discussion
