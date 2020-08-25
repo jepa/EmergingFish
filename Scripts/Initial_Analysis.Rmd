@@ -1548,7 +1548,7 @@ Taxon_List_emer <- gsub("_.*","",Taxon_List_emer)
 # Neighbour list and their respective id (see chunk 3)
 Neighbours <- my_path("D", extra_path = "Spatial/", name="Neighbours_eez_id.csv", read = TRUE)
 
-# Paths <- paste(my_path("R",extra_path = "Emergence_2005"),Taxon_List_emer,"_emergence.txt",sep="")
+Paths <- paste(my_path("R",extra_path = "Emergence_2005"),Taxon_List_emer,"_emergence.txt",sep="")
 
 # Clean names to match data
 Matching_names <- my_path("G","Spatial/SAU", "matching_names.csv", read = T)
@@ -2688,7 +2688,10 @@ Eez_d_hist <- Eme_Res %>%
     n_taxa = length(unique(taxon_key))
     ) %>% 
   gather("metric","value",mean_yr:n_taxa) %>% 
-  filter(metric != "n_taxa")
+  filter(metric != "n_taxa") %>% 
+  mutate(
+    reverse = abs(value-2100)  + 2000
+  )
 
 # Estimate the value (catch and USD) of emerging species
 Eme_value_data <- Eme_Res %>% 
@@ -2728,7 +2731,7 @@ fish_d_hist <- Eme_Res %>%
 
 ### Random plot
 
-ggplot(subset(eez_d_hist, tresh == "Tresh_one")) +
+ggplot(subset(Eez_d_hist, tresh == "Tresh_one")) +
   geom_density(
     aes(
       x = value,
@@ -2758,34 +2761,35 @@ grey_land <- World_map %>%
   filter(!fishing_entity_id %in% World_map_nemer$fishing_entity_id)
 
 grey_eez <- World_eez_sf %>% 
-  filter(!eezid %in% eez_d_hist$eezid)
+  filter(!eezid %in% Eez_d_hist$eezid)
 
 
 for(i in 1:2){
   
   tresh_list <- c("Tresh_one","Tresh_two")
-  name_save <- paste("./Figures/emer_map_par_",tresh_list[i],".png",sep = "")
+  name_save <- paste("./Figures/emer_map_rev_",tresh_list[i],".png",sep = "")
   
-  World_map_nemer <- World_map_nemer %>% 
+  World_map_part <- World_map_nemer %>% 
     filter(
       tresh ==  tresh_list[i], 
       variable == "value"
     )
   
   map <- World_eez_sf %>% 
-    left_join(eez_d_hist,
+    left_join(Eez_d_hist,
               by = "eezid") %>% 
     filter(tresh == tresh_list[i],
            metric == "mean_yr") %>% 
     ggplot() +
     geom_sf(
       aes(
-        fill = value
+        fill = reverse
       ),
       color =  "white",
       size = 0.1
     ) +
-    geom_sf(data = World_map_nemer,
+    # Inlcude the participation of species
+    geom_sf(data = World_map_part,
             aes(fill = participation+2000),
             color =  "white",
             size = 0.1
@@ -2806,7 +2810,9 @@ for(i in 1:2){
              hjust=0) +
     scale_fill_viridis(
       limits = c(2000,2100),
-      breaks = seq(2000,2100,25)
+      breaks = seq(2000,2100,25),
+      labels = seq(2100,2000,-25),
+      direction = -1
     ) +
     my_ggtheme_m() +
     ggsave(name_save,
