@@ -1112,11 +1112,10 @@ stopCluster(cl)
 
 ```{r get_env_data, eval = T, echo = T}
 
-ModelRCP <- "GFDL85"
 
-getEnvVar=function(yr,ModelRCP,ensemble,Variable){
+getEnvVar=function(yr,ensemble,Variable){
   
-  filepath <- paste("Z:/JULIANO_NEYMAR/PristineSeasData/Climate",ModelRCP,"",sep="/")
+  filepath <- paste("Z:/DATA/Environmental data/GFDL_CMIP5_Large_Ensemble/ens",ensemble,"",sep="/")
   
   if(Variable == "sst"){
     sst = paste("SST_",yr,".txt",sep="")
