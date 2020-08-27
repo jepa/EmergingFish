@@ -36,7 +36,8 @@ packages <- c(
   "zeallot", # for Juanito's map
   "gmt", # for estimating distances between points
   "viridis",
-  "cowplot"
+  "cowplot",
+  "rfishbase"
 )
 
 my_lib(packages)
@@ -68,12 +69,12 @@ Here we re-arrange existing data for the analysis. We have three steps:
 # EEZIDs_List <- my_path("G", extra_path = "Spatial/V_Lam", name="Updated_EEZList_17June2016.xlsx", read = TRUE) %>%
   # clean_names()
 
-EEZ_CellID <- my_path("G", extra_path = "Spatial/V_Lam", name="EEZ_CellID.xlsx", read = TRUE) %>%
+EEZ_CellID <- my_path("G", extra_path = "Spatial/DBEM", name="EEZ_CellID.xlsx", read = TRUE) %>%
   clean_names()
 colnames(EEZ_CellID) <- c("eezid","index")
 
 # SAU name relatioal table (Fish For Visa)
-sau_clean_names <- my_path("G", extra_path = "Spatial/SAU/", name="SAU_matching_names.csv", read = TRUE)
+sau_clean_names <- my_path("G", extra_path = "Spatial/SAU/", name="matching_names.csv", read = TRUE)
 
 Lon_Lat_DBEM <- my_path("G", extra_path = "Spatial", name="Lon_Lat_DBEM.txt", read = TRUE, header = FALSE)
 colnames(Lon_Lat_DBEM) <- c("index","lon","lat")
@@ -1537,25 +1538,97 @@ PropChange <- function(taxon_list,links="NA"){
 # General Data needed
 # --------------- #
 
-
 # Get taxon list
-Taxon_List_emer <- list.files(my_path("R",extra_path = "Emergence_2005"))
+Taxon_list_emer <- list.files(my_path("R",extra_path = "Emergence_2005"))
 
 # clean names for function
-Taxon_List_emer <- gsub("_.*","",Taxon_List_emer) 
+Taxon_list_emer <- gsub("_.*","",Taxon_list_emer) 
+
+# SAU exploited species list
+Exploited_spp_list <- my_path("G","SAU","exploited_species_list.csv",read = T) %>%
+  clean_names() %>% 
+  pull(taxon_name)
+
+# Get habitat preference from fishbase
+Spp_env_pref <- rbind(species(Exploited_spp_list, #species from rfishbase package
+                              fields = species_fields$habitat[4])
+                      ) %>% 
+  mutate(taxon_name = Exploited_spp_list) %>% 
+  left_join(my_path("G","SAU","exploited_species_list.csv", read = T) %>%
+              clean_names(),
+            by = "taxon_name")
 
 # Neighbour list and their respective id (see chunk 3)
 Neighbours <- my_path("D", extra_path = "Spatial/", name="Neighbours_eez_id.csv", read = TRUE)
 
+# Clean names to match data
+Matching_names <- my_path("G","Spatial/SAU", "matching_names.csv", read = T) %>% 
+  rename(eezid = eez_id)
+
+Fishing_names <- Matching_names %>% 
+  group_by(sau_fishing_entity,fishing_entity_id) %>% 
+  summarise(n=n()) %>% 
+  select(-n)
+
 Paths <- paste(my_path("R",extra_path = "Emergence_2005"),Taxon_List_emer,"_emergence.txt",sep="")
 
-# Clean names to match data
-Matching_names <- my_path("G","Spatial/SAU", "matching_names.csv", read = T)
+# eez_centroids
+Eez_centroids <- my_path("D", extra_path = "Spatial/", name="eez_centroids.csv", read = TRUE) %>% 
+  rename(sf_eez_name = eez_name) %>% 
+  left_join(Matching_names) %>% 
+  select(eezid,latitude,longitude)
 
-# Species depth clasification
-
+# Species depth clasification (SAU-fishbase)
 Spp_depth <-fread(paste(my_path("D"),"SAU/SppTaxonName.csv", sep ="")) %>% 
   clean_names()
+
+# Time of Emergence of SST using methods here
+Toe_sst <-fread(paste(my_path("D"),"Climate/ToE_sst.csv", sep ="")) %>% 
+  clean_names()
+
+# Biogeographic regions (from Rey 2020)
+Biogeo_reg <-fread(paste(my_path("D"),"Climate/SPATIAL_PARTITION_OCEAN.csv", sep ="")) %>% 
+  clean_names() %>% 
+  rowid_to_column("index")
+
+# Get eez to index relational data
+EEZ_CellID <- my_path("G", extra_path = "Spatial/DBEM", name="EEZ_CellID.xlsx", read = TRUE) %>%
+  clean_names()
+colnames(EEZ_CellID) <- c("eezid","index")
+
+Eez_biogeo <- EEZ_CellID %>% 
+  left_join(Biogeo_reg,
+       by = "index") %>% 
+  # Deal with NaNs in data
+  mutate(biome = ifelse(biome == "NaN",0,biome)) %>% 
+  filter(biome > 0) %>% 
+  # Get frequency of biome per index
+  group_by(eezid,basin,biome) %>% 
+  summarise(nbiom=n(),
+            nbasin=n()) %>% 
+  # Select the more frequent biome per eez
+  group_by(eezid,basin) %>% 
+  top_n(1,nbiom) %>% 
+  group_by(eezid,biome) %>% 
+  top_n(1,nbasin) %>% 
+  ungroup() %>% 
+  select(-nbiom,-nbasin)
+
+# Species catch trend (from FishForVisa)
+
+Catch_trend <- my_path("D","Species","Catch_trend.csv", read = T) %>% 
+  clean_names() %>% 
+  filter(taxon_key %in% Taxon_list_emer) %>% 
+  rename(sau_fishing_entity = territory) %>% 
+  left_join(fishing_names,
+            by = "sau_fishing_entity") %>% 
+  filter(status != "No Trend") %>% 
+  mutate(category = ifelse(status %in% c("Developing","Rebuilding"),"Category A",
+                         ifelse(status == "Max Exploited","Category B",
+                                ifelse(status %in% c("Over Exploited","Collapsed","Category C"),"Category C", "No Category")
+                         )
+         )
+  )
 
 
 # --------------- #
@@ -1596,7 +1669,8 @@ Eme_Res <- bind_rows(lapply(Paths, fread)) %>%
   rename(sf_eez_name=eez_name) %>% 
   left_join(Matching_names,
             by=  "sf_eez_name") %>% 
-  clean_names()
+  clean_names() %>% 
+  rename(eezid = eez_id)
 
 # warnings() for empty data species
 
@@ -2679,7 +2753,7 @@ data_stock %>%
 
 # Per EEZs
 Eez_d_hist <- Eme_Res %>% 
-  group_by(eezid= eez_id ,sau_fishing_entity,tresh) %>% 
+  group_by(eezid ,sau_fishing_entity,tresh) %>% 
   # summarise(n_tax = length(unique(taxon_key))) %>% 
   summarise(
     mean_yr = mean(emerging_yr,na.rm=T),
@@ -3037,6 +3111,120 @@ ggplot(Dem_pel) +
   facet_wrap(~un_sub_region)
 
 ```
+
+### Can we explain the ToE?
+
+```{r multiple_reg, eval = F, echo = F}
+
+# Possible explanatory variables
+
+## Habitat association (DemersPelag)
+## Dem Vs Pelagic (Dem_pel)
+## SST time of Emer (Toe_sst)
+## Stock Status [FishForVisa] (Catch_trend)
+## Biogeographic location (Biogeo_reg)
+
+
+# AIC value; model between predictive capacity and complexity (i.e., number of explanatory variables) is given by the model with lowest AIC value
+
+# -------------------------------- #
+#### Prepare data
+# -------------------------------- #
+
+Lm_data <- Eme_Res %>% 
+  filter(tresh == "Tresh_one") %>% 
+  left_join(Spp_depth) %>% 
+  select(taxon_key,tresh,sf_eez_name,sau_fishing_entity,fishing_entity_id,emerging_yr,eezid,dem_pel) %>% 
+  left_join(Toe_sst,
+            by = c("eezid","tresh")
+            ) %>% 
+  left_join(Catch_trend,
+            by = c("taxon_key","sau_fishing_entity","fishing_entity_id")
+            ) %>% 
+  left_join(Eez_biogeo,
+            by = "eezid") %>% 
+  left_join(Spp_env_pref,
+            by = "taxon_key") %>% 
+  left_join(Eez_centroids,
+            by = "eezid") %>% 
+  mutate(latitude = abs(latitude)) %>% 
+  filter(tresh == "Tresh_one") %>% 
+  distinct()
+
+
+# -------------------------------- #
+#### Build models
+# -------------------------------- #
+
+
+# Model 1; all variables
+M_all_var <- lm(emerging_yr ~ sst_toe + status + biome + dem_pel + DemersPelag, data = Lm_data)
+
+all_sum <- summary(M_all_var)
+all_aic <- AIC(M_all_var)
+all_r <-  all_sum$adj.r.squared
+
+# Model 2; non demPel
+M2 <- lm(emerging_yr ~ sst_toe + status + biome + dem_pel, data = Lm_data)
+
+M2_sum <- summary(M2)
+M2_aic <- AIC(M2)
+M2_r <-  M2_sum$adj.r.squared
+
+
+# Model 3; non biome
+M3 <- lm(emerging_yr ~ sst_toe + status + dem_pel + DemersPelag, data = Lm_data)
+
+M3_sum <- summary(M3)
+M3_aic <- AIC(M3)
+M3_r <-  M3_sum$adj.r.squared
+
+# Model 4; non status
+M4 <- lm(emerging_yr ~ sst_toe + biome + dem_pel + DemersPelag, data = Lm_data)
+
+M4_sum <- summary(M4)
+M4_aic <- AIC(M4)
+M4_r <-  M4_sum$adj.r.squared
+
+# Model 5; non sst
+M5 <- lm(emerging_yr ~ status + biome + dem_pel + DemersPelag, data = Lm_data)
+
+M5_sum <- summary(M5)
+M5_aic <- AIC(M5)
+M5_r <-  M5_sum$adj.r.squared
+
+# Model 6; all + basin
+M6 <- lm(emerging_yr ~ sst_toe + status + biome + basin + dem_pel + DemersPelag, data = Lm_data)
+
+M6_sum <- summary(M6)
+M6_aic <- AIC(M6)
+M6_r <-  M6_sum$adj.r.squared
+
+# Model 7; Categories instead of status
+M7 <- lm(emerging_yr ~ sst_toe + category + biome + dem_pel + DemersPelag, data = Lm_data)
+
+M7_sum <- summary(M7)
+M7_aic <- AIC(M7)
+M7_r <-  M7_sum$adj.r.squared
+
+# Model 8; All variables + ccentroid lat
+M8 <- lm(emerging_yr ~ sst_toe + category + biome + dem_pel + DemersPelag + latitude, data = Lm_data)
+
+M8_sum <- summary(M8)
+M8_aic <- AIC(M8)
+M8_r <-  M8_sum$adj.r.squared
+
+
+tibble(
+  "model" = c("all variables", "no demPel","no biome","no status","no sst","all + basin","Categories","lat centroids"),
+  "AIC" = c(all_aic,M2_aic,M3_aic,M4_aic,M5_aic,M6_aic,M7_aic,M8_aic),
+  "rsquared" = c(all_r,M2_r,M3_r,M4_r,M5_r,M6_r,M7_r,M8_r)
+)
+
+20282659
+
+```
+
 
 ## Troubleshooting
 
