@@ -2803,36 +2803,15 @@ fish_d_hist <- Eme_Res %>%
     ) %>% 
   filter(!is.na(sau_fishing_entity))
 
-### Random plot
-
-ggplot(subset(Eez_d_hist, tresh == "Tresh_one")) +
-  geom_density(
-    aes(
-      x = value,
-      fill = tresh
-    ),
-    bins = 10,
-    alpha = 0.8
-  ) +
-  facet_wrap(~metric,
-             scales = "free") +
-  scale_fill_viridis(discrete = T) +
-  my_ggtheme_p() +
-  ggsave("./Figures/hist_mean.png",
-         width = 6,
-         height = 6,
-         units = "in"
-  )
-
-
 World_map_nemer <- World_map %>%
   left_join(Value_map_data,
             by = c("sau_fishing_entity","fishing_entity_id")
-  )
-
+  ) %>% 
+  filter(!is.na(participation))
 
 grey_land <- World_map %>% 
-  filter(!fishing_entity_id %in% World_map_nemer$fishing_entity_id)
+  filter(!fishing_entity_id %in% World_map_nemer$fishing_entity_id) %>% 
+  filter(sovereignt != "Antarctica")
 
 grey_eez <- World_eez_sf %>% 
   filter(!eezid %in% Eez_d_hist$eezid)
@@ -2841,8 +2820,70 @@ grey_eez <- World_eez_sf %>%
 for(i in 1:2){
   
   tresh_list <- c("Tresh_one","Tresh_two")
-  name_save <- paste("./Figures/emer_map_rev_",tresh_list[i],".png",sep = "")
+  name_save <- paste("./Figures/emer_map_lat_",tresh_list[i],".png",sep = "")
   
+  ## --------------- ##
+  # Latitudinal plot
+  ## --------------- ##
+  
+  ### Random plot
+
+Eez_hist <- Eme_Res %>% 
+  group_by(eezid,eez_name = sf_eez_name) %>% 
+  left_join(Eez_centroid) %>% 
+  filter(tresh == tresh_list[i]) %>% 
+  group_by(latitude) %>% 
+  summarise(
+    number = n()
+  ) %>% 
+  group_by() %>% 
+  mutate(RMean = rollmean(x = number, 
+                          10, 
+                          align = "center", 
+                          fill = number
+  )
+  ) %>% 
+  mutate(lab="lab") %>% 
+  ggplot() +
+  geom_area(
+    aes(
+      x = latitude,
+      y = RMean,
+      fill = lab,
+      color = lab
+    )
+  ) +
+  coord_flip() +
+  scale_x_continuous("",
+    limits = c(-50,80),
+    breaks = c(-50,0,50,80)
+  ) +
+  scale_y_continuous(
+    "Emerging stocks",
+    limits = c(0, 124),
+    breaks = c(0,62,124)
+    
+  ) +
+  scale_fill_viridis(option="magma", discrete = T, begin = 0.7) +
+  scale_color_viridis(option="magma", discrete = T, begin = 0.7) +
+  theme_minimal() + 
+  theme(
+    panel.background = element_rect(fill = "white", colour = "white"),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank(),
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    axis.text.y = element_blank(),
+    axis.ticks.y = element_blank(),
+    axis.text = element_text(size = 12, colour="black"),
+    axis.title.x = element_text(size = 12, colour="black", face = "bold"),
+    legend.position = ""
+  );Eez_hist
+  
+  ## --------------- ##
+  # Map
+  ## --------------- ##
+
   World_map_part <- World_map_nemer %>% 
     filter(
       tresh ==  tresh_list[i], 
@@ -2873,16 +2914,16 @@ for(i in 1:2){
     geom_sf(data = grey_eez, aes(),fill = "grey50", color =  "white",size = 0.1) +
     # Set Participation labels
     annotate("text", 
-             x =-130,
+             x =-135,
              y = -69,
-             label = "Participation (USD)", 
+             label = "Participation (%)", 
              color="black", 
              size=4, 
              angle=0, 
              fontface="bold",
              hjust=0) +
     annotate("text", 
-             x = c(-73,-34,5,45,83),
+             x = c(-76,-35,6,48,88),
              y = -69,
              # x =(c(-8500000,-3000000,2500000,7500000,12800000)),
              # y = -9050000,
@@ -2894,7 +2935,7 @@ for(i in 1:2){
              hjust=0) +
     # Set ToE labels
     annotate("text", 
-             x =-130,
+             x =-135,
              y = -85,
              label = "Time of Emergence",
              color="black", 
@@ -2903,7 +2944,7 @@ for(i in 1:2){
              fontface="bold",
              hjust=0) +
     annotate("text", 
-             x = c(-77,-37,3,42,82),
+             x = c(-79,-39,3,45,87),
              y = -85,
              label = seq(2100,2000,-25), 
              color="black", 
@@ -2917,191 +2958,33 @@ for(i in 1:2){
       labels = c("","","","","")#,
       # direction = -1
     ) +
+    # geom_hline(yintercept = c(-50,0,50,80)) +
     my_ggtheme_m() +
     theme(
-      legend.box.margin = margin(t = -66, l = 250),
+      legend.box.margin = margin(t = -64, l = 229),
       legend.text = element_blank(),
-      legend.key.width = unit(5, "line"),
-      axis.text = element_text(colour = "blue")
-    ) +
-    # guides(fill = guide_legend(nrow = 1))+
-    ggsave(name_save,
-           width = 12,
-           height = 6,
-           units = "in"
+      legend.key.width = unit(5, "line")
     )
   
-}
-
-```
-
-
-###### With relation to neighbours
-
-```{r time_emergence_map,  eval = T, echo = T}
-
-
-##_----------------------- #
-# Checking on China and Indonesia
-# Probably due to dispute territories
-
-Neighbours <- my_path("D", extra_path = "Spatial/", name="Neighbours_eez_id.csv", read = TRUE) %>% 
-  clean_names()
-
-# 
-# Neighbours %>% 
-#   filter(eez_name == "China") %>% 
-#   pull(eez_neighbour) %>% 
-#   unique()
-
-##_----------------------- #
-
-
-# Get the center poligon of each EEZ for map source/target
-coords <- as.data.frame(st_centroid(World_eez_sf)) %>% 
-  ungroup() %>% 
-  select(eez_name,geometry) %>% 
-  separate(col = geometry, into = c("longitude", "latitude"), sep = "\\,") %>% 
-  # Manually fix issues
-  mutate(
-    longitude = ifelse(
-      eez_name == "Fiji", 178.065033,
-      ifelse(eez_name == "Tuvalu",177.6493,
-             ifelse( eez_name == "New Zealand",174.8860,
-                     ifelse( eez_name == "USA (Alaska, Subarctic)",-145.8860,longitude
-                     )
-             )
-      )
-    )
+  
+  ## --------------- ##
+  # Combine plots and save them
+  ## --------------- ##
+  
+  p <- ggdraw() +
+    # ToE Latitudinal plot
+    draw_plot(Eez_hist, x = 0.873, y = 0.13, width = 0.124, height = 0.77) +
+    # Time of Emergence Map
+    draw_plot(map, x = 0, y = 0, width = 0.95, height = 1)
+  
+  save_plot(
+    name_save,
+    p,
+    base_height = 6,
+    base_width = 12
   )
 
-# Remove "c()"
-coords$longitude <- gsub("\\(","",coords$longitude)
-coords$longitude <- gsub("c","",coords$longitude)
-coords$latitude <- gsub(")","",coords$latitude)
-
-coords <- coords %>% 
-  mutate_at(vars(longitude,latitude),as.numeric)
-
-# Prepare data from results
-Test_Data <- Eme_Res %>% 
-  filter(
-    n_ens == 10#,
-    # emerging_yr >= 2020
-  ) %>% 
-  group_by(eez_name,eez_neighbour,emerging_yr) %>% 
-  summarise(
-    n_tax = length(unique(taxon_key))
-  ) %>% 
-  filter(
-    emerging_yr <= 2050
-  ) %>%
-  group_by(eez_name,eez_neighbour) %>% 
-  summarise(
-    n_tax_emer = sum(n_tax)
-  ) %>% 
-  # get coords for sources
-  left_join(coords,
-            by = "eez_name") %>%
-  rename(source = eez_name,
-         start_lon = longitude,
-         start_lat = latitude,
-         eez_name=eez_neighbour) %>% 
-  # get coords for targets
-  left_join(coords,
-            by = "eez_name") %>% 
-  rename(target = eez_name,
-         end_lon = longitude,
-         end_lat = latitude) %>% 
-  ungroup() %>% 
-  # Plot miscs
-  # mutate(
-  #   per_mid = ifelse(is.na(per_mid),0,per_mid)
-  # ) %>% 
-  drop_na() #%>% 
-  # filter(
-    # per_mid >= 20,
-    # variable == "mean_spp",
-  # )
-
-
-# Convert to data to spatial
-network_data_sf <- Test_Data %>%
-  select(start_lon, start_lat, end_lon, end_lat) %>% 
-  purrr::transpose() %>% 
-  purrr::map(~ matrix(flatten_dbl(.), nrow = 2, byrow = TRUE)) %>% 
-  purrr::map(st_linestring) %>%
-  st_sfc(crs = 4326) %>%
-  st_sf(geometry = .)%>%
-  bind_cols(Test_Data) %>%
-  select(everything(), geometry) %>% 
-  # Set circles ('cus the world is not flat!)
-  st_segmentize(units::set_units(100, km)) %>% 
-  mutate(geometry = (geometry + c(180,90)) %% c(360) - c(180,90)) %>% 
-  st_wrap_dateline(options = c("WRAPDATELINE=YES",  "DATELINEOFFSET=180"), quiet = TRUE) %>% 
-  sf::st_sf(crs = 4326)
-
-#  unpack the coordinates of each feature 
-coord_data <- as.data.frame( st_coordinates(st_cast(network_data_sf,"MULTILINESTRING")$geometry))
-
-c(network_data_sf$line_id, network_data_sf$coords) %<-% (
-  coord_data %>% 
-    rename(subline_id = L1) %>%   
-    nest(-L2)
-)
-
-# Create data path for line connections
-paths <- network_data_sf %>% 
-  sf::st_set_geometry(NULL) %>% 
-  unnest() %>% 
-  mutate_at(vars(X,Y), round,2)
-
-# Plot it!
-
-country <- c("Fiji","Solomon Isl.","Tuvalu")
-
-ggplot() +
-  geom_sf(
-    # data = subset(world_map,name %in% country),
-    data = World_map,
-    size = 0.1, fill = "gray90", col = "gray90") +
-  geom_sf(
-    # data = subset(World_eez_sf, eez_name %in% country),
-    data = World_eez_sf,
-    size = 0.1, fill = "white", col = "gray70") +
-  geom_point(data = Test_Data,
-             # data = subset(Test_Data, source %in% country & target %in% source),
-             aes(start_lon,
-                 start_lat,
-                 col = n_tax_emer
-                 ),
-             size = 0.1,
-             col = "grey50",
-             # shape = 21,
-             stroke = 1.5) +
-  geom_path(data = paths,
-            # data = subset(paths, source %in% country),
-            aes(X, Y,
-                group = interaction(line_id,subline_id),
-                col = n_tax_emer
-            ),
-            size = 0.3,
-            # arrow = arrow(length = unit(0.009, "npc")),
-            show.legend = NA) +
-  ggtheme_map() +
-  scale_colour_viridis(
-    name="Number of emerging stocks\nby 2050",
-    limits = c(0,40),
-    breaks = seq(0,40,10),
-    # option="magma",
-    direction = 1
-  ) +
-  ggsave("./Figures/figure_emerging_2050.png",
-         width = 10,
-         height = 6,
-         units = "in"
-  )
-
+  }
 
 ```
 
@@ -3708,6 +3591,175 @@ if(file.exists("~/Desktop/spp_df.csv") == FALSE){
 #     )
 #   )
 # )
+
+
+```
+
+###### With relation to neighbours
+
+```{r time_emergence_map,  eval = T, echo = T}
+
+
+##_----------------------- #
+# Checking on China and Indonesia
+# Probably due to dispute territories
+
+Neighbours <- my_path("D", extra_path = "Spatial/", name="Neighbours_eez_id.csv", read = TRUE) %>% 
+  clean_names()
+
+# 
+# Neighbours %>% 
+#   filter(eez_name == "China") %>% 
+#   pull(eez_neighbour) %>% 
+#   unique()
+
+##_----------------------- #
+
+
+# Get the center poligon of each EEZ for map source/target
+coords <- as.data.frame(st_centroid(World_eez_sf)) %>% 
+  ungroup() %>% 
+  select(eez_name,geometry) %>% 
+  separate(col = geometry, into = c("longitude", "latitude"), sep = "\\,") %>% 
+  # Manually fix issues
+  mutate(
+    longitude = ifelse(
+      eez_name == "Fiji", 178.065033,
+      ifelse(eez_name == "Tuvalu",177.6493,
+             ifelse( eez_name == "New Zealand",174.8860,
+                     ifelse( eez_name == "USA (Alaska, Subarctic)",-145.8860,longitude
+                     )
+             )
+      )
+    )
+  )
+
+# Remove "c()"
+coords$longitude <- gsub("\\(","",coords$longitude)
+coords$longitude <- gsub("c","",coords$longitude)
+coords$latitude <- gsub(")","",coords$latitude)
+
+coords <- coords %>% 
+  mutate_at(vars(longitude,latitude),as.numeric)
+
+# Prepare data from results
+Test_Data <- Eme_Res %>% 
+  filter(
+    n_ens == 10#,
+    # emerging_yr >= 2020
+  ) %>% 
+  group_by(eez_name,eez_neighbour,emerging_yr) %>% 
+  summarise(
+    n_tax = length(unique(taxon_key))
+  ) %>% 
+  filter(
+    emerging_yr <= 2050
+  ) %>%
+  group_by(eez_name,eez_neighbour) %>% 
+  summarise(
+    n_tax_emer = sum(n_tax)
+  ) %>% 
+  # get coords for sources
+  left_join(coords,
+            by = "eez_name") %>%
+  rename(source = eez_name,
+         start_lon = longitude,
+         start_lat = latitude,
+         eez_name=eez_neighbour) %>% 
+  # get coords for targets
+  left_join(coords,
+            by = "eez_name") %>% 
+  rename(target = eez_name,
+         end_lon = longitude,
+         end_lat = latitude) %>% 
+  ungroup() %>% 
+  # Plot miscs
+  # mutate(
+  #   per_mid = ifelse(is.na(per_mid),0,per_mid)
+  # ) %>% 
+  drop_na() #%>% 
+  # filter(
+    # per_mid >= 20,
+    # variable == "mean_spp",
+  # )
+
+
+# Convert to data to spatial
+network_data_sf <- Test_Data %>%
+  select(start_lon, start_lat, end_lon, end_lat) %>% 
+  purrr::transpose() %>% 
+  purrr::map(~ matrix(flatten_dbl(.), nrow = 2, byrow = TRUE)) %>% 
+  purrr::map(st_linestring) %>%
+  st_sfc(crs = 4326) %>%
+  st_sf(geometry = .)%>%
+  bind_cols(Test_Data) %>%
+  select(everything(), geometry) %>% 
+  # Set circles ('cus the world is not flat!)
+  st_segmentize(units::set_units(100, km)) %>% 
+  mutate(geometry = (geometry + c(180,90)) %% c(360) - c(180,90)) %>% 
+  st_wrap_dateline(options = c("WRAPDATELINE=YES",  "DATELINEOFFSET=180"), quiet = TRUE) %>% 
+  sf::st_sf(crs = 4326)
+
+#  unpack the coordinates of each feature 
+coord_data <- as.data.frame( st_coordinates(st_cast(network_data_sf,"MULTILINESTRING")$geometry))
+
+c(network_data_sf$line_id, network_data_sf$coords) %<-% (
+  coord_data %>% 
+    rename(subline_id = L1) %>%   
+    nest(-L2)
+)
+
+# Create data path for line connections
+paths <- network_data_sf %>% 
+  sf::st_set_geometry(NULL) %>% 
+  unnest() %>% 
+  mutate_at(vars(X,Y), round,2)
+
+# Plot it!
+
+country <- c("Fiji","Solomon Isl.","Tuvalu")
+
+ggplot() +
+  geom_sf(
+    # data = subset(world_map,name %in% country),
+    data = World_map,
+    size = 0.1, fill = "gray90", col = "gray90") +
+  geom_sf(
+    # data = subset(World_eez_sf, eez_name %in% country),
+    data = World_eez_sf,
+    size = 0.1, fill = "white", col = "gray70") +
+  geom_point(data = Test_Data,
+             # data = subset(Test_Data, source %in% country & target %in% source),
+             aes(start_lon,
+                 start_lat,
+                 col = n_tax_emer
+                 ),
+             size = 0.1,
+             col = "grey50",
+             # shape = 21,
+             stroke = 1.5) +
+  geom_path(data = paths,
+            # data = subset(paths, source %in% country),
+            aes(X, Y,
+                group = interaction(line_id,subline_id),
+                col = n_tax_emer
+            ),
+            size = 0.3,
+            # arrow = arrow(length = unit(0.009, "npc")),
+            show.legend = NA) +
+  ggtheme_map() +
+  scale_colour_viridis(
+    name="Number of emerging stocks\nby 2050",
+    limits = c(0,40),
+    breaks = seq(0,40,10),
+    # option="magma",
+    direction = 1
+  ) +
+  ggsave("./Figures/figure_emerging_2050.png",
+         width = 10,
+         height = 6,
+         units = "in"
+  )
 
 
 ```
