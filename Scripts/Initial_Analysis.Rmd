@@ -37,7 +37,8 @@ packages <- c(
   "gmt", # for estimating distances between points
   "viridis",
   "cowplot",
-  "rfishbase"
+  "rfishbase",
+  "stargazer" # For nice lm tables
 )
 
 my_lib(packages)
@@ -1570,8 +1571,6 @@ Fishing_names <- Matching_names %>%
   summarise(n=n()) %>% 
   select(-n)
 
-Paths <- paste(my_path("R",extra_path = "Emergence_2005"),Taxon_List_emer,"_emergence.txt",sep="")
-
 # eez_centroids
 Eez_centroids <- my_path("D", extra_path = "Spatial/", name="eez_centroids.csv", read = TRUE) %>% 
   rename(sf_eez_name = eez_name) %>% 
@@ -1582,8 +1581,10 @@ Eez_centroids <- my_path("D", extra_path = "Spatial/", name="eez_centroids.csv",
 Spp_depth <-fread(paste(my_path("D"),"SAU/SppTaxonName.csv", sep ="")) %>% 
   clean_names()
 
-# Time of Emergence of SST using methods here
-Toe_sst <-fread(paste(my_path("D"),"Climate/ToE_sst.csv", sep ="")) %>% 
+# Temperature Time of Emergence
+Toe_temp <- left_join(my_path("D","Climate", "ToE_sst.csv", read = T),
+                      my_path("D","Climate", "ToE_bottemp.csv", read = T)
+                      ) %>% 
   clean_names()
 
 # Biogeographic regions (from Rey 2020)
@@ -1597,22 +1598,21 @@ EEZ_CellID <- my_path("G", extra_path = "Spatial/DBEM", name="EEZ_CellID.xlsx", 
 colnames(EEZ_CellID) <- c("eezid","index")
 
 Eez_biogeo <- EEZ_CellID %>% 
+  # filter(eezid == 191) %>% 
   left_join(Biogeo_reg,
        by = "index") %>% 
   # Deal with NaNs in data
   mutate(biome = ifelse(biome == "NaN",0,biome)) %>% 
   filter(biome > 0) %>% 
   # Get frequency of biome per index
-  group_by(eezid,basin,biome) %>% 
-  summarise(nbiom=n(),
-            nbasin=n()) %>% 
-  # Select the more frequent biome per eez
-  group_by(eezid,basin) %>% 
-  top_n(1,nbiom) %>% 
   group_by(eezid,biome) %>% 
-  top_n(1,nbasin) %>% 
+  summarise(nbiom=n()) %>% 
+  # Select the more frequent biome per eez
+  group_by(eezid) %>% 
+  top_n(1,nbiom) %>% 
   ungroup() %>% 
-  select(-nbiom,-nbasin)
+  select(-nbiom) %>% 
+  distinct(eezid, .keep_all = T) # Croatia is 1/2. We arbritary allocated the first one
 
 # Species catch trend (from FishForVisa)
 
@@ -1620,7 +1620,7 @@ Catch_trend <- my_path("D","Species","Catch_trend.csv", read = T) %>%
   clean_names() %>% 
   filter(taxon_key %in% Taxon_list_emer) %>% 
   rename(sau_fishing_entity = territory) %>% 
-  left_join(fishing_names,
+  left_join(Fishing_names,
             by = "sau_fishing_entity") %>% 
   filter(status != "No Trend") %>% 
   mutate(category = ifelse(status %in% c("Developing","Rebuilding"),"Category A",
@@ -1658,6 +1658,8 @@ Prop_results <- my_path("R",name="proportion_change_2005.csv", read=T)
 # Load year of emergence results
 # --------------- #
 
+Paths <- paste(my_path("R",extra_path = "Emergence_2005"),Taxon_list_emer,"_emergence.txt",sep="")
+
 # Load all sp in one table
 Eme_Res <- bind_rows(lapply(Paths, fread)) %>% 
   filter(
@@ -1669,8 +1671,7 @@ Eme_Res <- bind_rows(lapply(Paths, fread)) %>%
   rename(sf_eez_name=eez_name) %>% 
   left_join(Matching_names,
             by=  "sf_eez_name") %>% 
-  clean_names() %>% 
-  rename(eezid = eez_id)
+  clean_names()
 
 # warnings() for empty data species
 
@@ -1790,14 +1791,14 @@ World_sf %>%
 # Prepare data from results
 Data <- Prop_results %>% 
   # get coords for sources
-  left_join(Eez_centroid_eck,
+  left_join(Eez_centroid,
             by = "eez_name") %>%
   rename(source = eez_name,
          start_lon = longitude,
          start_lat = latitude,
          eez_name=eez_neighbour) %>% 
   # get coords for targets
-  left_join(Eez_centroid_eck,
+  left_join(Eez_centroid,
             by = "eez_name") %>% 
   rename(target = eez_name,
          end_lon = longitude,
@@ -1820,19 +1821,17 @@ network_data_sf <- Data %>%
   purrr::transpose() %>% 
   purrr::map(~ matrix(flatten_dbl(.), nrow = 2, byrow = TRUE)) %>% 
   purrr::map(st_linestring) %>%
-  # st_sfc(crs = 4326) %>%
-  st_sfc(crs = "+proj=eck4") %>% # for tbular plot
+  st_sfc(crs = 4326) %>%
+  # st_sfc(crs = "+proj=eck4") %>% # for tbular plot
   st_sf(geometry = .)%>%
   bind_cols(Data) %>%
   select(everything(), geometry) %>% 
   # Set circles ('cus the world is not flat!)
   st_segmentize(units::set_units(100, km)) %>% 
   mutate(geometry = (geometry + c(180,90)) %% c(360) - c(180,90)) %>%
-  # mutate(geometry = (geometry + c(18000000,9000000)) %% c(360) - c(18000000,9000000)) %>%
   st_wrap_dateline(options = c("WRAPDATELINE=YES",  "DATELINEOFFSET=180"), quiet = TRUE) %>%
-  st_wrap_dateline(options = c("WRAPDATELINE=YES"), quiet = TRUE) %>%
-  # sf::st_sf(crs = 4326)
-  sf::st_sf(crs = "+proj=eck4") # for tbular plot
+  sf::st_sf(crs = 4326)
+  # sf::st_sf(crs = "+proj=eck4") # for tbular plot
 
 
 #  unpack the coordinates of each feature 
@@ -1889,45 +1888,47 @@ Prop_map <- ggplot() +
   geom_sf(data = subset(n_taxa_map, sovereignt != "Antarctica"),
           aes(fill = total_spp),
           size = 0.1,col = "white") +
-  geom_sf(data = World_eez_sf, size = 0.1, fill = "white", col = "gray30") +
-  geom_point(data = subset(Map_data, time_step == time & per_plot < 0),
-             aes(start_lon,
-                 start_lat,
-                 col = per_plot),
-             size = 0.05,
-             col = "gray30",
-             shape = 20,
-             stroke = 1.5) +
-  geom_path(data = subset(paths, time_step == time & per_plot > 0),
-            aes(X, Y,
-                group = interaction(line_id,subline_id),
-                col = per_plot
-            ),
-            size = 0.3,
-            arrow = arrow(length = unit(0.008, "npc"),
-                          ends = "first"),
-            show.legend = NA) +
+geom_sf(data = World_eez_sf, size = 0.1, fill = "white", col = "gray30") +
+geom_point(data = subset(Map_data, time_step == time & per_plot < 0),
+           aes(start_lon,
+               start_lat,
+               col = per_plot),
+           size = 0.05,
+           col = "gray80",
+           shape = 20,
+           stroke = 1.5) +
+geom_path(data = subset(paths, time_step == time & per_plot > 0),
+          aes(X,
+              Y,
+              group = interaction(line_id,subline_id),
+              col = per_plot
+          ),
+          size = 0.3,
+          lineend = "round",
+          arrow = arrow(length = unit(0.008, "npc"),
+                        ends = "first"),
+          show.legend = NA) +
   my_ggtheme_m() +
-  scale_colour_viridis(
-    name="Average Gain of Stock-Share Ratio (%)\nand Number of taxa (n)",
-    limits = c(0,max(Map_data$per_plot)),
-    breaks = seq(0,max(Map_data$per_plot),10),
-    # option="magma",
-    # direction = -1
-  ) +
-  scale_fill_viridis(
-    name="Average Gain of Stock-Share Ratio (%)\nand Number of taxa (n)",
-    limits = c(0,max(Map_data$per_plot)),
-    breaks = seq(0,max(Map_data$per_plot),10),
-    alpha = 0.8
-    # option="magma",
-    # direction = -1
-  ) +
-  ggsave("./Figures/fig2ax.png",
-  width = 12,
-  height = 8,
-  units = "in"
-  )
+scale_colour_viridis(
+  name="Average Gain of Stock-Share Ratio (%)\nand Number of taxa (n)",
+  limits = c(0,max(Map_data$per_plot)),
+  breaks = seq(0,max(Map_data$per_plot),10)#,
+  # option="magma",
+  # direction = -1
+) +
+scale_fill_viridis(
+  name="Average Gain of Stock-Share Ratio (%)\nand Number of taxa (n)",
+  limits = c(0,max(Map_data$per_plot)),
+  breaks = seq(0,max(Map_data$per_plot),10)#,
+  # alpha = 0.8
+  # option="magma",
+  # direction = -1
+) +
+ggsave("./Figures/fig2ax.png",
+       width = 12,
+       height = 8,
+       units = "in"
+)
 
 
 ## ------------------- ##
@@ -2870,27 +2871,63 @@ for(i in 1:2){
     # grey maps
     geom_sf(data = grey_land, aes(),fill = "grey50", color =  "white",size = 0.1) +
     geom_sf(data = grey_eez, aes(),fill = "grey50", color =  "white",size = 0.1) +
+    # Set Participation labels
     annotate("text", 
-             x =(c(-85.5,-30,25,81,136)+5),
-             y = -93.5,
+             x =-130,
+             y = -69,
+             label = "Participation (USD)", 
+             color="black", 
+             size=4, 
+             angle=0, 
+             fontface="bold",
+             hjust=0) +
+    annotate("text", 
+             x = c(-73,-34,5,45,83),
+             y = -69,
              # x =(c(-8500000,-3000000,2500000,7500000,12800000)),
              # y = -9050000,
              label = c(0,25,50,75,100), 
              color="black", 
-             size=3, 
+             size=4, 
              angle=0, 
              # fontface="bold",
              hjust=0) +
-    scale_fill_viridis(
+    # Set ToE labels
+    annotate("text", 
+             x =-130,
+             y = -85,
+             label = "Time of Emergence",
+             color="black", 
+             size=4, 
+             angle=0, 
+             fontface="bold",
+             hjust=0) +
+    annotate("text", 
+             x = c(-77,-37,3,42,82),
+             y = -85,
+             label = seq(2100,2000,-25), 
+             color="black", 
+             size=4, 
+             angle=0, 
+             # fontface="bold",
+             hjust=0) +
+    scale_fill_viridis("",
       limits = c(2000,2100),
       breaks = seq(2000,2100,25),
-      labels = seq(2100,2000,-25),
-      direction = -1
+      labels = c("","","","","")#,
+      # direction = -1
     ) +
     my_ggtheme_m() +
+    theme(
+      legend.box.margin = margin(t = -66, l = 250),
+      legend.text = element_blank(),
+      legend.key.width = unit(5, "line"),
+      axis.text = element_text(colour = "blue")
+    ) +
+    # guides(fill = guide_legend(nrow = 1))+
     ggsave(name_save,
            width = 12,
-           height = 10,
+           height = 6,
            units = "in"
     )
   
@@ -3112,7 +3149,7 @@ ggplot(Dem_pel) +
 
 ```
 
-### Can we explain the ToE?
+### Tab.1 Explain the ToE
 
 ```{r multiple_reg, eval = F, echo = F}
 
@@ -3131,41 +3168,38 @@ ggplot(Dem_pel) +
 #### Prepare data
 # -------------------------------- #
 
-Lm_data <- Eme_Res %>% 
-  filter(tresh == "Tresh_one") %>% 
+Lm_data <- Eme_Res %>% # 19728
+  filter(tresh == "Tresh_one") %>% # 11490
   left_join(Spp_depth) %>% 
   select(taxon_key,tresh,sf_eez_name,sau_fishing_entity,fishing_entity_id,emerging_yr,eezid,dem_pel) %>% 
-  left_join(Toe_sst,
+  left_join(Toe_temp,
             by = c("eezid","tresh")
             ) %>% 
   left_join(Catch_trend,
             by = c("taxon_key","sau_fishing_entity","fishing_entity_id")
-            ) %>% 
+            ) %>% # 11492
   left_join(Eez_biogeo,
             by = "eezid") %>% 
   left_join(Spp_env_pref,
             by = "taxon_key") %>% 
   left_join(Eez_centroids,
             by = "eezid") %>% 
-  mutate(latitude = abs(latitude)) %>% 
-  filter(tresh == "Tresh_one") %>% 
-  distinct()
+  mutate(latitude = abs(latitude))
 
 
 # -------------------------------- #
 #### Build models
 # -------------------------------- #
 
-
 # Model 1; all variables
-M_all_var <- lm(emerging_yr ~ sst_toe + status + biome + dem_pel + DemersPelag, data = Lm_data)
+M_all_var <- lm(emerging_yr ~ sst_toe + bot_toe + status + biome + dem_pel + DemersPelag, data = Lm_data)
 
 all_sum <- summary(M_all_var)
 all_aic <- AIC(M_all_var)
 all_r <-  all_sum$adj.r.squared
 
 # Model 2; non demPel
-M2 <- lm(emerging_yr ~ sst_toe + status + biome + dem_pel, data = Lm_data)
+M2 <- lm(emerging_yr ~ sst_toe + bot_toe + status + biome + dem_pel, data = Lm_data)
 
 M2_sum <- summary(M2)
 M2_aic <- AIC(M2)
@@ -3173,55 +3207,64 @@ M2_r <-  M2_sum$adj.r.squared
 
 
 # Model 3; non biome
-M3 <- lm(emerging_yr ~ sst_toe + status + dem_pel + DemersPelag, data = Lm_data)
+M3 <- lm(emerging_yr ~ sst_toe + bot_toe + status + dem_pel + DemersPelag, data = Lm_data)
 
 M3_sum <- summary(M3)
 M3_aic <- AIC(M3)
 M3_r <-  M3_sum$adj.r.squared
 
 # Model 4; non status
-M4 <- lm(emerging_yr ~ sst_toe + biome + dem_pel + DemersPelag, data = Lm_data)
+M4 <- lm(emerging_yr ~ sst_toe + bot_toe + biome + dem_pel + DemersPelag, data = Lm_data)
 
 M4_sum <- summary(M4)
 M4_aic <- AIC(M4)
 M4_r <-  M4_sum$adj.r.squared
 
 # Model 5; non sst
-M5 <- lm(emerging_yr ~ status + biome + dem_pel + DemersPelag, data = Lm_data)
+M5 <- lm(emerging_yr ~ status + bot_toe + biome + dem_pel + DemersPelag, data = Lm_data)
 
 M5_sum <- summary(M5)
 M5_aic <- AIC(M5)
 M5_r <-  M5_sum$adj.r.squared
 
 # Model 6; all + basin
-M6 <- lm(emerging_yr ~ sst_toe + status + biome + basin + dem_pel + DemersPelag, data = Lm_data)
+M6 <- lm(emerging_yr ~ sst_toe + bot_toe + status + biome + dem_pel + DemersPelag, data = Lm_data)
 
 M6_sum <- summary(M6)
 M6_aic <- AIC(M6)
 M6_r <-  M6_sum$adj.r.squared
 
 # Model 7; Categories instead of status
-M7 <- lm(emerging_yr ~ sst_toe + category + biome + dem_pel + DemersPelag, data = Lm_data)
+M7 <- lm(emerging_yr ~ sst_toe + bot_toe + category + biome + dem_pel + DemersPelag, data = Lm_data)
 
 M7_sum <- summary(M7)
 M7_aic <- AIC(M7)
 M7_r <-  M7_sum$adj.r.squared
 
 # Model 8; All variables + ccentroid lat
-M8 <- lm(emerging_yr ~ sst_toe + category + biome + dem_pel + DemersPelag + latitude, data = Lm_data)
+M8 <- lm(emerging_yr ~ sst_toe + bot_toe + category + biome + DemersPelag + latitude, data = Lm_data)
 
 M8_sum <- summary(M8)
 M8_aic <- AIC(M8)
 M8_r <-  M8_sum$adj.r.squared
 
 
+
 tibble(
-  "model" = c("all variables", "no demPel","no biome","no status","no sst","all + basin","Categories","lat centroids"),
+  "model" = paste("M",seq(1,8,1),sep=""),
   "AIC" = c(all_aic,M2_aic,M3_aic,M4_aic,M5_aic,M6_aic,M7_aic,M8_aic),
   "rsquared" = c(all_r,M2_r,M3_r,M4_r,M5_r,M6_r,M7_r,M8_r)
 )
 
-20282659
+
+# UNIDAS 20282659
+
+
+# The Winner is M8!
+
+
+
+stargazer(M8, title = "Results", align=TRUE)
 
 ```
 
