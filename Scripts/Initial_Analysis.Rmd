@@ -1755,7 +1755,7 @@ Eez_centroid_eck <- do.call(rbind, st_geometry(Eez_centroid_sf)) %>%
 
 ####  Prooportion Analysis
 
-##### Fig.Percentage Change Map
+##### Fig. Percentage Change Map
 
 ```{r fig_map_per, eval = F, echo =F}
 
@@ -1782,7 +1782,7 @@ World_sf %>%
 
 ```
 
-##### Fig. 2 and S1. (Netowrk)
+##### Fig. 1 and S1. (Netowrk)
 
 ```{r fig_map_Juan, eval = F, echo =F}
 # Figure made thanks to Juanito!
@@ -2746,7 +2746,7 @@ data_stock %>%
   
 ```
 
-##### Fig. 3 Mapping the time of emergence
+##### Fig. 2 Mapping the time of emergence
 
 ###### Just mean time
 
@@ -2762,7 +2762,7 @@ Eez_d_hist <- Eme_Res %>%
     n_taxa = length(unique(taxon_key))
     ) %>% 
   gather("metric","value",mean_yr:n_taxa) %>% 
-  filter(metric != "n_taxa") %>% 
+  # filter(metric != "n_taxa") %>% 
   mutate(
     reverse = abs(value-2100)  + 2000
   )
@@ -2984,9 +2984,80 @@ Eez_hist <- Eme_Res %>%
     base_width = 12
   )
 
-  }
+}
+
 
 ```
+
+##### Fig. 3. Bubble plot
+
+```{r, buble_plot, eval = F, echo = F}
+
+Buble_data <- Eez_d_hist %>% 
+  filter(metric == "mean_yr") %>% 
+  group_by(sau_fishing_entity,tresh) %>% 
+  summarise(mean_yr = mean(value)) %>% 
+  left_join(Eme_value_data,
+            by = c("sau_fishing_entity","tresh")) %>% 
+  filter(tresh == tresh_list[i],
+         variable == "value") %>% 
+  mutate(sum_value_mi = sum_value/1000000) %>%   # Million usd
+  left_join(Matching_names,
+            by = c("sau_fishing_entity","fishing_entity_id")) %>% 
+  distinct(sau_fishing_entity,.keep_all = TRUE) %>% 
+  filter(!is.na(un_geo_region)) %>% 
+  ungroup() %>% 
+  mutate(
+    sau_fishing_entity = ifelse(sum_value_mi >= 1000 & !sau_fishing_entity %in% c("Spain"), paste(sau_fishing_entity,"*",sep = ""),sau_fishing_entity)
+  )
+
+
+# Plot the bubbles!
+
+ggplot(Buble_data) +
+  geom_point(
+    aes(
+      x = mean_yr,
+      y = sum_value_mi,
+      size = n_taxa,
+      colour = un_geo_region
+    ),
+    alpha = 0.7
+  ) +
+  # scale_size(range = c(.1, 10), name="Fishing revenue (USD)")  +
+  geom_label_repel(data = subset(Buble_data, sum_value_mi >= 1000),
+                   aes(
+                     x = mean_yr,
+                     y = sum_value_mi,
+                     label = sau_fishing_entity
+                   ),
+                   arrow = arrow(length = unit(0.009, "npc"), 
+                                 type = "closed",
+                                 ends = "first"),
+                   force = 2,
+                   box.padding = 2,
+                   fill = "NA"
+                   
+  ) +
+  # scale_fill_viridis(discrete = F)
+  scale_color_viridis(name="Georaphic Region",
+                      discrete = T) +
+  scale_x_continuous("Average time of emergence",
+                     breaks = seq(2000,2080,20)
+  ) +
+  scale_y_continuous("Fishing revenue (million)",
+                     breaks = seq(1000,5000,1000),
+                     labels = scales::dollar
+  ) +
+  scale_size("Number of\nemerging taxa") +
+  ggsave("./Figures/bubble_plot.png",
+         width = 8,
+         height = 8,
+         units = "in"
+  )
+
+```
+
 
 ### Species level analysis
 
