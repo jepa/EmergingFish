@@ -36,7 +36,9 @@ packages <- c(
   "zeallot", # for Juanito's map
   "gmt", # for estimating distances between points
   "viridis",
-  "cowplot"
+  "cowplot",
+  "rfishbase",
+  "stargazer" # For nice lm tables
 )
 
 my_lib(packages)
@@ -68,12 +70,12 @@ Here we re-arrange existing data for the analysis. We have three steps:
 # EEZIDs_List <- my_path("G", extra_path = "Spatial/V_Lam", name="Updated_EEZList_17June2016.xlsx", read = TRUE) %>%
   # clean_names()
 
-EEZ_CellID <- my_path("G", extra_path = "Spatial/V_Lam", name="EEZ_CellID.xlsx", read = TRUE) %>%
+EEZ_CellID <- my_path("G", extra_path = "Spatial/DBEM", name="EEZ_CellID.xlsx", read = TRUE) %>%
   clean_names()
 colnames(EEZ_CellID) <- c("eezid","index")
 
 # SAU name relatioal table (Fish For Visa)
-sau_clean_names <- my_path("G", extra_path = "Spatial/SAU/", name="SAU_matching_names.csv", read = TRUE)
+sau_clean_names <- my_path("G", extra_path = "Spatial/SAU/", name="matching_names.csv", read = TRUE)
 
 Lon_Lat_DBEM <- my_path("G", extra_path = "Spatial", name="Lon_Lat_DBEM.txt", read = TRUE, header = FALSE)
 colnames(Lon_Lat_DBEM) <- c("index","lon","lat")
@@ -1535,25 +1537,96 @@ PropChange <- function(taxon_list,links="NA"){
 # General Data needed
 # --------------- #
 
-
 # Get taxon list
-Taxon_List_emer <- list.files(my_path("R",extra_path = "Emergence_2005"))
+Taxon_list_emer <- list.files(my_path("R",extra_path = "Emergence_2005"))
 
 # clean names for function
-Taxon_List_emer <- gsub("_.*","",Taxon_List_emer) 
+Taxon_list_emer <- gsub("_.*","",Taxon_list_emer) 
+
+# SAU exploited species list
+Exploited_spp_list <- my_path("G","SAU","exploited_species_list.csv",read = T) %>%
+  clean_names() %>% 
+  pull(taxon_name)
+
+# Get habitat preference from fishbase
+Spp_env_pref <- rbind(species(Exploited_spp_list, #species from rfishbase package
+                              fields = species_fields$habitat[4])
+                      ) %>% 
+  mutate(taxon_name = Exploited_spp_list) %>% 
+  left_join(my_path("G","SAU","exploited_species_list.csv", read = T) %>%
+              clean_names(),
+            by = "taxon_name")
 
 # Neighbour list and their respective id (see chunk 3)
 Neighbours <- my_path("D", extra_path = "Spatial/", name="Neighbours_eez_id.csv", read = TRUE)
 
-Paths <- paste(my_path("R",extra_path = "Emergence_2005"),Taxon_List_emer,"_emergence.txt",sep="")
-
 # Clean names to match data
-Matching_names <- my_path("G","Spatial/SAU", "matching_names.csv", read = T)
+Matching_names <- my_path("G","Spatial/SAU", "matching_names.csv", read = T) %>% 
+  rename(eezid = eez_id)
 
-# Species depth clasification
+Fishing_names <- Matching_names %>% 
+  group_by(sau_fishing_entity,fishing_entity_id) %>% 
+  summarise(n=n()) %>% 
+  select(-n)
 
+# eez_centroids
+Eez_centroids <- my_path("D", extra_path = "Spatial/", name="eez_centroids.csv", read = TRUE) %>% 
+  rename(sf_eez_name = eez_name) %>% 
+  left_join(Matching_names) %>% 
+  select(eezid,latitude,longitude)
+
+# Species depth clasification (SAU-fishbase)
 Spp_depth <-fread(paste(my_path("D"),"SAU/SppTaxonName.csv", sep ="")) %>% 
   clean_names()
+
+# Temperature Time of Emergence
+Toe_temp <- left_join(my_path("D","Climate", "ToE_sst.csv", read = T),
+                      my_path("D","Climate", "ToE_bottemp.csv", read = T)
+                      ) %>% 
+  clean_names()
+
+# Biogeographic regions (from Rey 2020)
+Biogeo_reg <-fread(paste(my_path("D"),"Climate/SPATIAL_PARTITION_OCEAN.csv", sep ="")) %>% 
+  clean_names() %>% 
+  rowid_to_column("index")
+
+# Get eez to index relational data
+EEZ_CellID <- my_path("G", extra_path = "Spatial/DBEM", name="EEZ_CellID.xlsx", read = TRUE) %>%
+  clean_names()
+colnames(EEZ_CellID) <- c("eezid","index")
+
+Eez_biogeo <- EEZ_CellID %>% 
+  # filter(eezid == 191) %>% 
+  left_join(Biogeo_reg,
+       by = "index") %>% 
+  # Deal with NaNs in data
+  mutate(biome = ifelse(biome == "NaN",0,biome)) %>% 
+  filter(biome > 0) %>% 
+  # Get frequency of biome per index
+  group_by(eezid,biome) %>% 
+  summarise(nbiom=n()) %>% 
+  # Select the more frequent biome per eez
+  group_by(eezid) %>% 
+  top_n(1,nbiom) %>% 
+  ungroup() %>% 
+  select(-nbiom) %>% 
+  distinct(eezid, .keep_all = T) # Croatia is 1/2. We arbritary allocated the first one
+
+# Species catch trend (from FishForVisa)
+
+Catch_trend <- my_path("D","Species","Catch_trend.csv", read = T) %>% 
+  clean_names() %>% 
+  filter(taxon_key %in% Taxon_list_emer) %>% 
+  rename(sau_fishing_entity = territory) %>% 
+  left_join(Fishing_names,
+            by = "sau_fishing_entity") %>% 
+  filter(status != "No Trend") %>% 
+  mutate(category = ifelse(status %in% c("Developing","Rebuilding"),"Category A",
+                         ifelse(status == "Max Exploited","Category B",
+                                ifelse(status %in% c("Over Exploited","Collapsed","Category C"),"Category C", "No Category")
+                         )
+         )
+  )
 
 
 # --------------- #
@@ -1582,6 +1655,8 @@ Prop_results <- my_path("R",name="proportion_change_2005.csv", read=T)
 # --------------- #
 # Load year of emergence results
 # --------------- #
+
+Paths <- paste(my_path("R",extra_path = "Emergence_2005"),Taxon_list_emer,"_emergence.txt",sep="")
 
 # Load all sp in one table
 Eme_Res <- bind_rows(lapply(Paths, fread)) %>% 
@@ -1714,14 +1789,14 @@ World_sf %>%
 # Prepare data from results
 Data <- Prop_results %>% 
   # get coords for sources
-  left_join(Eez_centroid_eck,
+  left_join(Eez_centroid,
             by = "eez_name") %>%
   rename(source = eez_name,
          start_lon = longitude,
          start_lat = latitude,
          eez_name=eez_neighbour) %>% 
   # get coords for targets
-  left_join(Eez_centroid_eck,
+  left_join(Eez_centroid,
             by = "eez_name") %>% 
   rename(target = eez_name,
          end_lon = longitude,
@@ -1744,19 +1819,17 @@ network_data_sf <- Data %>%
   purrr::transpose() %>% 
   purrr::map(~ matrix(flatten_dbl(.), nrow = 2, byrow = TRUE)) %>% 
   purrr::map(st_linestring) %>%
-  # st_sfc(crs = 4326) %>%
-  st_sfc(crs = "+proj=eck4") %>% # for tbular plot
+  st_sfc(crs = 4326) %>%
+  # st_sfc(crs = "+proj=eck4") %>% # for tbular plot
   st_sf(geometry = .)%>%
   bind_cols(Data) %>%
   select(everything(), geometry) %>% 
   # Set circles ('cus the world is not flat!)
   st_segmentize(units::set_units(100, km)) %>% 
   mutate(geometry = (geometry + c(180,90)) %% c(360) - c(180,90)) %>%
-  # mutate(geometry = (geometry + c(18000000,9000000)) %% c(360) - c(18000000,9000000)) %>%
   st_wrap_dateline(options = c("WRAPDATELINE=YES",  "DATELINEOFFSET=180"), quiet = TRUE) %>%
-  st_wrap_dateline(options = c("WRAPDATELINE=YES"), quiet = TRUE) %>%
-  # sf::st_sf(crs = 4326)
-  sf::st_sf(crs = "+proj=eck4") # for tbular plot
+  sf::st_sf(crs = 4326)
+  # sf::st_sf(crs = "+proj=eck4") # for tbular plot
 
 
 #  unpack the coordinates of each feature 
@@ -1813,45 +1886,47 @@ Prop_map <- ggplot() +
   geom_sf(data = subset(n_taxa_map, sovereignt != "Antarctica"),
           aes(fill = total_spp),
           size = 0.1,col = "white") +
-  geom_sf(data = World_eez_sf, size = 0.1, fill = "white", col = "gray30") +
-  geom_point(data = subset(Map_data, time_step == time & per_plot < 0),
-             aes(start_lon,
-                 start_lat,
-                 col = per_plot),
-             size = 0.05,
-             col = "gray30",
-             shape = 20,
-             stroke = 1.5) +
-  geom_path(data = subset(paths, time_step == time & per_plot > 0),
-            aes(X, Y,
-                group = interaction(line_id,subline_id),
-                col = per_plot
-            ),
-            size = 0.3,
-            arrow = arrow(length = unit(0.008, "npc"),
-                          ends = "first"),
-            show.legend = NA) +
+geom_sf(data = World_eez_sf, size = 0.1, fill = "white", col = "gray30") +
+geom_point(data = subset(Map_data, time_step == time & per_plot < 0),
+           aes(start_lon,
+               start_lat,
+               col = per_plot),
+           size = 0.05,
+           col = "gray80",
+           shape = 20,
+           stroke = 1.5) +
+geom_path(data = subset(paths, time_step == time & per_plot > 0),
+          aes(X,
+              Y,
+              group = interaction(line_id,subline_id),
+              col = per_plot
+          ),
+          size = 0.3,
+          lineend = "round",
+          arrow = arrow(length = unit(0.008, "npc"),
+                        ends = "first"),
+          show.legend = NA) +
   my_ggtheme_m() +
-  scale_colour_viridis(
-    name="Average Gain of Stock-Share Ratio (%)\nand Number of taxa (n)",
-    limits = c(0,max(Map_data$per_plot)),
-    breaks = seq(0,max(Map_data$per_plot),10),
-    # option="magma",
-    # direction = -1
-  ) +
-  scale_fill_viridis(
-    name="Average Gain of Stock-Share Ratio (%)\nand Number of taxa (n)",
-    limits = c(0,max(Map_data$per_plot)),
-    breaks = seq(0,max(Map_data$per_plot),10),
-    alpha = 0.8
-    # option="magma",
-    # direction = -1
-  ) +
-  ggsave("./Figures/fig2ax.png",
-  width = 12,
-  height = 8,
-  units = "in"
-  )
+scale_colour_viridis(
+  name="Average Gain of Stock-Share Ratio (%)\nand Number of taxa (n)",
+  limits = c(0,max(Map_data$per_plot)),
+  breaks = seq(0,max(Map_data$per_plot),10)#,
+  # option="magma",
+  # direction = -1
+) +
+scale_fill_viridis(
+  name="Average Gain of Stock-Share Ratio (%)\nand Number of taxa (n)",
+  limits = c(0,max(Map_data$per_plot)),
+  breaks = seq(0,max(Map_data$per_plot),10)#,
+  # alpha = 0.8
+  # option="magma",
+  # direction = -1
+) +
+ggsave("./Figures/fig2ax.png",
+       width = 12,
+       height = 8,
+       units = "in"
+)
 
 
 ## ------------------- ##
@@ -2677,7 +2752,7 @@ data_stock %>%
 
 # Per EEZs
 Eez_d_hist <- Eme_Res %>% 
-  group_by(eezid= eez_id ,sau_fishing_entity,tresh) %>% 
+  group_by(eezid ,sau_fishing_entity,tresh) %>% 
   # summarise(n_tax = length(unique(taxon_key))) %>% 
   summarise(
     mean_yr = mean(emerging_yr,na.rm=T),
@@ -2726,36 +2801,15 @@ fish_d_hist <- Eme_Res %>%
     ) %>% 
   filter(!is.na(sau_fishing_entity))
 
-### Random plot
-
-ggplot(subset(Eez_d_hist, tresh == "Tresh_one")) +
-  geom_density(
-    aes(
-      x = value,
-      fill = tresh
-    ),
-    bins = 10,
-    alpha = 0.8
-  ) +
-  facet_wrap(~metric,
-             scales = "free") +
-  scale_fill_viridis(discrete = T) +
-  my_ggtheme_p() +
-  ggsave("./Figures/hist_mean.png",
-         width = 6,
-         height = 6,
-         units = "in"
-  )
-
-
 World_map_nemer <- World_map %>%
   left_join(Value_map_data,
             by = c("sau_fishing_entity","fishing_entity_id")
-  )
-
+  ) %>% 
+  filter(!is.na(participation))
 
 grey_land <- World_map %>% 
-  filter(!fishing_entity_id %in% World_map_nemer$fishing_entity_id)
+  filter(!fishing_entity_id %in% World_map_nemer$fishing_entity_id) %>% 
+  filter(sovereignt != "Antarctica")
 
 grey_eez <- World_eez_sf %>% 
   filter(!eezid %in% Eez_d_hist$eezid)
@@ -2764,8 +2818,70 @@ grey_eez <- World_eez_sf %>%
 for(i in 1:2){
   
   tresh_list <- c("Tresh_one","Tresh_two")
-  name_save <- paste("./Figures/emer_map_rev_",tresh_list[i],".png",sep = "")
+  name_save <- paste("./Figures/emer_map_lat_",tresh_list[i],".png",sep = "")
   
+  ## --------------- ##
+  # Latitudinal plot
+  ## --------------- ##
+  
+  ### Random plot
+
+Eez_hist <- Eme_Res %>% 
+  group_by(eezid,eez_name = sf_eez_name) %>% 
+  left_join(Eez_centroid) %>% 
+  filter(tresh == tresh_list[i]) %>% 
+  group_by(latitude) %>% 
+  summarise(
+    number = n()
+  ) %>% 
+  group_by() %>% 
+  mutate(RMean = rollmean(x = number, 
+                          10, 
+                          align = "center", 
+                          fill = number
+  )
+  ) %>% 
+  mutate(lab="lab") %>% 
+  ggplot() +
+  geom_area(
+    aes(
+      x = latitude,
+      y = RMean,
+      fill = lab,
+      color = lab
+    )
+  ) +
+  coord_flip() +
+  scale_x_continuous("",
+    limits = c(-50,80),
+    breaks = c(-50,0,50,80)
+  ) +
+  scale_y_continuous(
+    "Emerging stocks",
+    limits = c(0, 124),
+    breaks = c(0,62,124)
+    
+  ) +
+  scale_fill_viridis(option="magma", discrete = T, begin = 0.7) +
+  scale_color_viridis(option="magma", discrete = T, begin = 0.7) +
+  theme_minimal() + 
+  theme(
+    panel.background = element_rect(fill = "white", colour = "white"),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank(),
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    axis.text.y = element_blank(),
+    axis.ticks.y = element_blank(),
+    axis.text = element_text(size = 12, colour="black"),
+    axis.title.x = element_text(size = 12, colour="black", face = "bold"),
+    legend.position = ""
+  );Eez_hist
+  
+  ## --------------- ##
+  # Map
+  ## --------------- ##
+
   World_map_part <- World_map_nemer %>% 
     filter(
       tresh ==  tresh_list[i], 
@@ -2794,201 +2910,79 @@ for(i in 1:2){
     # grey maps
     geom_sf(data = grey_land, aes(),fill = "grey50", color =  "white",size = 0.1) +
     geom_sf(data = grey_eez, aes(),fill = "grey50", color =  "white",size = 0.1) +
+    # Set Participation labels
     annotate("text", 
-             x =(c(-85.5,-30,25,81,136)+5),
-             y = -93.5,
+             x =-135,
+             y = -69,
+             label = "Participation (%)", 
+             color="black", 
+             size=4, 
+             angle=0, 
+             fontface="bold",
+             hjust=0) +
+    annotate("text", 
+             x = c(-76,-35,6,48,88),
+             y = -69,
              # x =(c(-8500000,-3000000,2500000,7500000,12800000)),
              # y = -9050000,
              label = c(0,25,50,75,100), 
              color="black", 
-             size=3, 
+             size=4, 
              angle=0, 
              # fontface="bold",
              hjust=0) +
-    scale_fill_viridis(
+    # Set ToE labels
+    annotate("text", 
+             x =-135,
+             y = -85,
+             label = "Time of Emergence",
+             color="black", 
+             size=4, 
+             angle=0, 
+             fontface="bold",
+             hjust=0) +
+    annotate("text", 
+             x = c(-79,-39,3,45,87),
+             y = -85,
+             label = seq(2100,2000,-25), 
+             color="black", 
+             size=4, 
+             angle=0, 
+             # fontface="bold",
+             hjust=0) +
+    scale_fill_viridis("",
       limits = c(2000,2100),
       breaks = seq(2000,2100,25),
-      labels = seq(2100,2000,-25),
-      direction = -1
+      labels = c("","","","","")#,
+      # direction = -1
     ) +
+    # geom_hline(yintercept = c(-50,0,50,80)) +
     my_ggtheme_m() +
-    ggsave(name_save,
-           width = 12,
-           height = 10,
-           units = "in"
+    theme(
+      legend.box.margin = margin(t = -64, l = 229),
+      legend.text = element_blank(),
+      legend.key.width = unit(5, "line")
     )
   
-}
-
-```
-
-
-###### With relation to neighbours
-
-```{r time_emergence_map,  eval = T, echo = T}
-
-
-##_----------------------- #
-# Checking on China and Indonesia
-# Probably due to dispute territories
-
-Neighbours <- my_path("D", extra_path = "Spatial/", name="Neighbours_eez_id.csv", read = TRUE) %>% 
-  clean_names()
-
-# 
-# Neighbours %>% 
-#   filter(eez_name == "China") %>% 
-#   pull(eez_neighbour) %>% 
-#   unique()
-
-##_----------------------- #
-
-
-# Get the center poligon of each EEZ for map source/target
-coords <- as.data.frame(st_centroid(World_eez_sf)) %>% 
-  ungroup() %>% 
-  select(eez_name,geometry) %>% 
-  separate(col = geometry, into = c("longitude", "latitude"), sep = "\\,") %>% 
-  # Manually fix issues
-  mutate(
-    longitude = ifelse(
-      eez_name == "Fiji", 178.065033,
-      ifelse(eez_name == "Tuvalu",177.6493,
-             ifelse( eez_name == "New Zealand",174.8860,
-                     ifelse( eez_name == "USA (Alaska, Subarctic)",-145.8860,longitude
-                     )
-             )
-      )
-    )
+  
+  ## --------------- ##
+  # Combine plots and save them
+  ## --------------- ##
+  
+  p <- ggdraw() +
+    # ToE Latitudinal plot
+    draw_plot(Eez_hist, x = 0.873, y = 0.13, width = 0.124, height = 0.77) +
+    # Time of Emergence Map
+    draw_plot(map, x = 0, y = 0, width = 0.95, height = 1)
+  
+  save_plot(
+    name_save,
+    p,
+    base_height = 6,
+    base_width = 12
   )
 
-# Remove "c()"
-coords$longitude <- gsub("\\(","",coords$longitude)
-coords$longitude <- gsub("c","",coords$longitude)
-coords$latitude <- gsub(")","",coords$latitude)
-
-coords <- coords %>% 
-  mutate_at(vars(longitude,latitude),as.numeric)
-
-# Prepare data from results
-Test_Data <- Eme_Res %>% 
-  filter(
-    n_ens == 10#,
-    # emerging_yr >= 2020
-  ) %>% 
-  group_by(eez_name,eez_neighbour,emerging_yr) %>% 
-  summarise(
-    n_tax = length(unique(taxon_key))
-  ) %>% 
-  filter(
-    emerging_yr <= 2050
-  ) %>%
-  group_by(eez_name,eez_neighbour) %>% 
-  summarise(
-    n_tax_emer = sum(n_tax)
-  ) %>% 
-  # get coords for sources
-  left_join(coords,
-            by = "eez_name") %>%
-  rename(source = eez_name,
-         start_lon = longitude,
-         start_lat = latitude,
-         eez_name=eez_neighbour) %>% 
-  # get coords for targets
-  left_join(coords,
-            by = "eez_name") %>% 
-  rename(target = eez_name,
-         end_lon = longitude,
-         end_lat = latitude) %>% 
-  ungroup() %>% 
-  # Plot miscs
-  # mutate(
-  #   per_mid = ifelse(is.na(per_mid),0,per_mid)
-  # ) %>% 
-  drop_na() #%>% 
-  # filter(
-    # per_mid >= 20,
-    # variable == "mean_spp",
-  # )
-
-
-# Convert to data to spatial
-network_data_sf <- Test_Data %>%
-  select(start_lon, start_lat, end_lon, end_lat) %>% 
-  purrr::transpose() %>% 
-  purrr::map(~ matrix(flatten_dbl(.), nrow = 2, byrow = TRUE)) %>% 
-  purrr::map(st_linestring) %>%
-  st_sfc(crs = 4326) %>%
-  st_sf(geometry = .)%>%
-  bind_cols(Test_Data) %>%
-  select(everything(), geometry) %>% 
-  # Set circles ('cus the world is not flat!)
-  st_segmentize(units::set_units(100, km)) %>% 
-  mutate(geometry = (geometry + c(180,90)) %% c(360) - c(180,90)) %>% 
-  st_wrap_dateline(options = c("WRAPDATELINE=YES",  "DATELINEOFFSET=180"), quiet = TRUE) %>% 
-  sf::st_sf(crs = 4326)
-
-#  unpack the coordinates of each feature 
-coord_data <- as.data.frame( st_coordinates(st_cast(network_data_sf,"MULTILINESTRING")$geometry))
-
-c(network_data_sf$line_id, network_data_sf$coords) %<-% (
-  coord_data %>% 
-    rename(subline_id = L1) %>%   
-    nest(-L2)
-)
-
-# Create data path for line connections
-paths <- network_data_sf %>% 
-  sf::st_set_geometry(NULL) %>% 
-  unnest() %>% 
-  mutate_at(vars(X,Y), round,2)
-
-# Plot it!
-
-country <- c("Fiji","Solomon Isl.","Tuvalu")
-
-ggplot() +
-  geom_sf(
-    # data = subset(world_map,name %in% country),
-    data = World_map,
-    size = 0.1, fill = "gray90", col = "gray90") +
-  geom_sf(
-    # data = subset(World_eez_sf, eez_name %in% country),
-    data = World_eez_sf,
-    size = 0.1, fill = "white", col = "gray70") +
-  geom_point(data = Test_Data,
-             # data = subset(Test_Data, source %in% country & target %in% source),
-             aes(start_lon,
-                 start_lat,
-                 col = n_tax_emer
-                 ),
-             size = 0.1,
-             col = "grey50",
-             # shape = 21,
-             stroke = 1.5) +
-  geom_path(data = paths,
-            # data = subset(paths, source %in% country),
-            aes(X, Y,
-                group = interaction(line_id,subline_id),
-                col = n_tax_emer
-            ),
-            size = 0.3,
-            # arrow = arrow(length = unit(0.009, "npc")),
-            show.legend = NA) +
-  ggtheme_map() +
-  scale_colour_viridis(
-    name="Number of emerging stocks\nby 2050",
-    limits = c(0,40),
-    breaks = seq(0,40,10),
-    # option="magma",
-    direction = 1
-  ) +
-  ggsave("./Figures/figure_emerging_2050.png",
-         width = 10,
-         height = 6,
-         units = "in"
-  )
-
+  }
 
 ```
 
@@ -3035,6 +3029,126 @@ ggplot(Dem_pel) +
   facet_wrap(~un_sub_region)
 
 ```
+
+### Tab.1 Explain the ToE
+
+```{r multiple_reg, eval = F, echo = F}
+
+# Possible explanatory variables
+
+## Habitat association (DemersPelag)
+## Dem Vs Pelagic (Dem_pel)
+## SST time of Emer (Toe_sst)
+## Stock Status [FishForVisa] (Catch_trend)
+## Biogeographic location (Biogeo_reg)
+
+
+# AIC value; model between predictive capacity and complexity (i.e., number of explanatory variables) is given by the model with lowest AIC value
+
+# -------------------------------- #
+#### Prepare data
+# -------------------------------- #
+
+Lm_data <- Eme_Res %>% # 19728
+  filter(tresh == "Tresh_one") %>% # 11490
+  left_join(Spp_depth) %>% 
+  select(taxon_key,tresh,sf_eez_name,sau_fishing_entity,fishing_entity_id,emerging_yr,eezid,dem_pel) %>% 
+  left_join(Toe_temp,
+            by = c("eezid","tresh")
+            ) %>% 
+  left_join(Catch_trend,
+            by = c("taxon_key","sau_fishing_entity","fishing_entity_id")
+            ) %>% # 11492
+  left_join(Eez_biogeo,
+            by = "eezid") %>% 
+  left_join(Spp_env_pref,
+            by = "taxon_key") %>% 
+  left_join(Eez_centroids,
+            by = "eezid") %>% 
+  mutate(latitude = abs(latitude))
+
+
+# -------------------------------- #
+#### Build models
+# -------------------------------- #
+
+# Model 1; all variables
+M_all_var <- lm(emerging_yr ~ sst_toe + bot_toe + status + biome + dem_pel + DemersPelag, data = Lm_data)
+
+all_sum <- summary(M_all_var)
+all_aic <- AIC(M_all_var)
+all_r <-  all_sum$adj.r.squared
+
+# Model 2; non demPel
+M2 <- lm(emerging_yr ~ sst_toe + bot_toe + status + biome + dem_pel, data = Lm_data)
+
+M2_sum <- summary(M2)
+M2_aic <- AIC(M2)
+M2_r <-  M2_sum$adj.r.squared
+
+
+# Model 3; non biome
+M3 <- lm(emerging_yr ~ sst_toe + bot_toe + status + dem_pel + DemersPelag, data = Lm_data)
+
+M3_sum <- summary(M3)
+M3_aic <- AIC(M3)
+M3_r <-  M3_sum$adj.r.squared
+
+# Model 4; non status
+M4 <- lm(emerging_yr ~ sst_toe + bot_toe + biome + dem_pel + DemersPelag, data = Lm_data)
+
+M4_sum <- summary(M4)
+M4_aic <- AIC(M4)
+M4_r <-  M4_sum$adj.r.squared
+
+# Model 5; non sst
+M5 <- lm(emerging_yr ~ status + bot_toe + biome + dem_pel + DemersPelag, data = Lm_data)
+
+M5_sum <- summary(M5)
+M5_aic <- AIC(M5)
+M5_r <-  M5_sum$adj.r.squared
+
+# Model 6; all + basin
+M6 <- lm(emerging_yr ~ sst_toe + bot_toe + status + biome + dem_pel + DemersPelag, data = Lm_data)
+
+M6_sum <- summary(M6)
+M6_aic <- AIC(M6)
+M6_r <-  M6_sum$adj.r.squared
+
+# Model 7; Categories instead of status
+M7 <- lm(emerging_yr ~ sst_toe + bot_toe + category + biome + dem_pel + DemersPelag, data = Lm_data)
+
+M7_sum <- summary(M7)
+M7_aic <- AIC(M7)
+M7_r <-  M7_sum$adj.r.squared
+
+# Model 8; All variables + ccentroid lat
+M8 <- lm(emerging_yr ~ sst_toe + bot_toe + category + biome + DemersPelag + latitude, data = Lm_data)
+
+M8_sum <- summary(M8)
+M8_aic <- AIC(M8)
+M8_r <-  M8_sum$adj.r.squared
+
+
+
+tibble(
+  "model" = paste("M",seq(1,8,1),sep=""),
+  "AIC" = c(all_aic,M2_aic,M3_aic,M4_aic,M5_aic,M6_aic,M7_aic,M8_aic),
+  "rsquared" = c(all_r,M2_r,M3_r,M4_r,M5_r,M6_r,M7_r,M8_r)
+)
+
+
+# UNIDAS 20282659
+
+
+# The Winner is M8!
+
+
+
+stargazer(M8, title = "Results", align=TRUE)
+
+```
+
 
 ## Troubleshooting
 
@@ -3475,6 +3589,175 @@ if(file.exists("~/Desktop/spp_df.csv") == FALSE){
 #     )
 #   )
 # )
+
+
+```
+
+###### With relation to neighbours
+
+```{r time_emergence_map,  eval = T, echo = T}
+
+
+##_----------------------- #
+# Checking on China and Indonesia
+# Probably due to dispute territories
+
+Neighbours <- my_path("D", extra_path = "Spatial/", name="Neighbours_eez_id.csv", read = TRUE) %>% 
+  clean_names()
+
+# 
+# Neighbours %>% 
+#   filter(eez_name == "China") %>% 
+#   pull(eez_neighbour) %>% 
+#   unique()
+
+##_----------------------- #
+
+
+# Get the center poligon of each EEZ for map source/target
+coords <- as.data.frame(st_centroid(World_eez_sf)) %>% 
+  ungroup() %>% 
+  select(eez_name,geometry) %>% 
+  separate(col = geometry, into = c("longitude", "latitude"), sep = "\\,") %>% 
+  # Manually fix issues
+  mutate(
+    longitude = ifelse(
+      eez_name == "Fiji", 178.065033,
+      ifelse(eez_name == "Tuvalu",177.6493,
+             ifelse( eez_name == "New Zealand",174.8860,
+                     ifelse( eez_name == "USA (Alaska, Subarctic)",-145.8860,longitude
+                     )
+             )
+      )
+    )
+  )
+
+# Remove "c()"
+coords$longitude <- gsub("\\(","",coords$longitude)
+coords$longitude <- gsub("c","",coords$longitude)
+coords$latitude <- gsub(")","",coords$latitude)
+
+coords <- coords %>% 
+  mutate_at(vars(longitude,latitude),as.numeric)
+
+# Prepare data from results
+Test_Data <- Eme_Res %>% 
+  filter(
+    n_ens == 10#,
+    # emerging_yr >= 2020
+  ) %>% 
+  group_by(eez_name,eez_neighbour,emerging_yr) %>% 
+  summarise(
+    n_tax = length(unique(taxon_key))
+  ) %>% 
+  filter(
+    emerging_yr <= 2050
+  ) %>%
+  group_by(eez_name,eez_neighbour) %>% 
+  summarise(
+    n_tax_emer = sum(n_tax)
+  ) %>% 
+  # get coords for sources
+  left_join(coords,
+            by = "eez_name") %>%
+  rename(source = eez_name,
+         start_lon = longitude,
+         start_lat = latitude,
+         eez_name=eez_neighbour) %>% 
+  # get coords for targets
+  left_join(coords,
+            by = "eez_name") %>% 
+  rename(target = eez_name,
+         end_lon = longitude,
+         end_lat = latitude) %>% 
+  ungroup() %>% 
+  # Plot miscs
+  # mutate(
+  #   per_mid = ifelse(is.na(per_mid),0,per_mid)
+  # ) %>% 
+  drop_na() #%>% 
+  # filter(
+    # per_mid >= 20,
+    # variable == "mean_spp",
+  # )
+
+
+# Convert to data to spatial
+network_data_sf <- Test_Data %>%
+  select(start_lon, start_lat, end_lon, end_lat) %>% 
+  purrr::transpose() %>% 
+  purrr::map(~ matrix(flatten_dbl(.), nrow = 2, byrow = TRUE)) %>% 
+  purrr::map(st_linestring) %>%
+  st_sfc(crs = 4326) %>%
+  st_sf(geometry = .)%>%
+  bind_cols(Test_Data) %>%
+  select(everything(), geometry) %>% 
+  # Set circles ('cus the world is not flat!)
+  st_segmentize(units::set_units(100, km)) %>% 
+  mutate(geometry = (geometry + c(180,90)) %% c(360) - c(180,90)) %>% 
+  st_wrap_dateline(options = c("WRAPDATELINE=YES",  "DATELINEOFFSET=180"), quiet = TRUE) %>% 
+  sf::st_sf(crs = 4326)
+
+#  unpack the coordinates of each feature 
+coord_data <- as.data.frame( st_coordinates(st_cast(network_data_sf,"MULTILINESTRING")$geometry))
+
+c(network_data_sf$line_id, network_data_sf$coords) %<-% (
+  coord_data %>% 
+    rename(subline_id = L1) %>%   
+    nest(-L2)
+)
+
+# Create data path for line connections
+paths <- network_data_sf %>% 
+  sf::st_set_geometry(NULL) %>% 
+  unnest() %>% 
+  mutate_at(vars(X,Y), round,2)
+
+# Plot it!
+
+country <- c("Fiji","Solomon Isl.","Tuvalu")
+
+ggplot() +
+  geom_sf(
+    # data = subset(world_map,name %in% country),
+    data = World_map,
+    size = 0.1, fill = "gray90", col = "gray90") +
+  geom_sf(
+    # data = subset(World_eez_sf, eez_name %in% country),
+    data = World_eez_sf,
+    size = 0.1, fill = "white", col = "gray70") +
+  geom_point(data = Test_Data,
+             # data = subset(Test_Data, source %in% country & target %in% source),
+             aes(start_lon,
+                 start_lat,
+                 col = n_tax_emer
+                 ),
+             size = 0.1,
+             col = "grey50",
+             # shape = 21,
+             stroke = 1.5) +
+  geom_path(data = paths,
+            # data = subset(paths, source %in% country),
+            aes(X, Y,
+                group = interaction(line_id,subline_id),
+                col = n_tax_emer
+            ),
+            size = 0.3,
+            # arrow = arrow(length = unit(0.009, "npc")),
+            show.legend = NA) +
+  ggtheme_map() +
+  scale_colour_viridis(
+    name="Number of emerging stocks\nby 2050",
+    limits = c(0,40),
+    breaks = seq(0,40,10),
+    # option="magma",
+    direction = 1
+  ) +
+  ggsave("./Figures/figure_emerging_2050.png",
+         width = 10,
+         height = 6,
+         units = "in"
+  )
 
 
 ```
