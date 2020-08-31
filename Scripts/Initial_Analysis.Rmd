@@ -2993,6 +2993,7 @@ Eez_hist <- Eme_Res %>%
 
 ```{r, buble_plot, eval = F, echo = F}
 
+
 Buble_data <- Eez_d_hist %>% 
   filter(metric == "mean_yr") %>% 
   group_by(sau_fishing_entity,tresh) %>% 
@@ -3003,25 +3004,33 @@ Buble_data <- Eez_d_hist %>%
          variable == "value") %>% 
   mutate(
     weight_toe = sum_value/mean_yr,
-    sum_value_mi = sum_value/1000000000,
-         logvalue = log10(sum_value)
-         ) %>%   # Billion usd
+    sum_value_bi = sum_value/1000000000) %>%   # Billion usd
   left_join(Matching_names,
             by = c("sau_fishing_entity","fishing_entity_id")) %>% 
   distinct(sau_fishing_entity,.keep_all = TRUE) %>% 
   filter(!is.na(un_geo_region)) %>% 
   ungroup() %>% 
   mutate(
-    sau_fishing_entity = ifelse(sum_value_mi >= 1 & !sau_fishing_entity %in% c("Spain"), paste(sau_fishing_entity,"*",sep = ""),sau_fishing_entity)
+    sau_fishing_entity = ifelse(sum_value_bi >= 1 & !sau_fishing_entity %in% c("Spain"), paste(sau_fishing_entity,"*",sep = ""),sau_fishing_entity)
   )
+
+### Fucntion for estimating percentile
+
+quibble <- function(x, q = p) {
+        tibble(x = quantile(x, q), q = q)
+}
+
+Percentile_value <- Buble_data %>% 
+  group_by() %>%  # for whole distribution
+        do(quibble(.$sum_value_bi, 0.75))
 
 
 # Labels Data
 
 Labels_data <- tibble(
-  x = c(2020,2040,2070),
-  y = c(0.3,0.3,9.1),
-  label = c("Early emergence", "Late emergence","Fisheries over the 75 percentile")
+  x = c(2020,2040,2007),
+  y = c(3.2,3.2,Percentile_value$x+.1),
+  label = c("Early emergence", "Late emergence","Fisheries > 75th percentile")
 )
 
 
@@ -3031,27 +3040,29 @@ ggplot(Buble_data) +
   geom_point(
     aes(
       x = mean_yr,
-      # y = sum_value_mi,
-      y = logvalue,
+      y = sum_value_bi,
       size = n_taxa,
       colour = un_geo_region
     ),
     alpha = 0.7
   ) +
+  # Divisory lines
   geom_vline(xintercept = 2030, color = "grey90", size = 0.5) +
-  geom_hline(yintercept = 9, color = "grey90", size = 0.5)  +
-  geom_label_repel(data = subset(Buble_data, sum_value_mi >= 1),
+  geom_hline(data = Percentile_value,
+             aes(yintercept = x),
+             color = "grey90"
+             )  +
+  geom_label_repel(data = subset(Buble_data, sum_value_bi >= 1),
                    aes(
                      x = mean_yr,
-                     # y = sum_value_mi,
-                     y = logvalue,
+                     y = sum_value_bi,
                      label = sau_fishing_entity
                    ),
                    arrow = arrow(length = unit(0.009, "npc"),
                                  type = "closed",
                                  ends = "first"),
-                   force = 3,
-                   box.padding = 2,
+                   force = 2,
+                   box.padding = 1,
                    fill = "NA"
 
   ) +
@@ -3064,16 +3075,16 @@ ggplot(Buble_data) +
     size = 3,
     color = "grey30"
   ) +
-  # scale_fill_viridis(discrete = F)
   scale_color_viridis(name="Region",
                       discrete = T) +
   scale_x_continuous("Average time of emergence",
                      limits = c(2000,2080),
                      breaks = seq(2000,2080,10)
   ) +
-  scale_y_continuous("Fishing revenue (log10)",
-                     limits = c(3,12),
-                     breaks = seq(3,12,3),
+  scale_y_continuous("Fishing revenue (billion USD)",
+                     trans = "log10",
+                     # limits = c(3,12),
+                     # breaks = seq(3,12,3),
                      expand = c(0,0)
   ) +
   scale_size("Number of\nemerging taxa") +
@@ -3083,7 +3094,7 @@ ggplot(Buble_data) +
          units = "in"
   )
 
-```
+ ```
 
 
 ### Species level analysis
