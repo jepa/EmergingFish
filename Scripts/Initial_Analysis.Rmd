@@ -38,7 +38,8 @@ packages <- c(
   "viridis",
   "cowplot",
   "rfishbase",
-  "stargazer" # For nice lm tables
+  "stargazer", # For nice lm tables
+  "tidytext" # for boxplot order
 )
 
 my_lib(packages)
@@ -1753,33 +1754,6 @@ Eez_centroid_eck <- do.call(rbind, st_geometry(Eez_centroid_sf)) %>%
 
 ####  Prooportion Analysis
 
-##### Fig. Percentage Change Map
-
-```{r fig_map_per, eval = F, echo =F}
-
-World_sf %>% 
-  left_join(results,
-            by = "eez_name") %>% 
-  filter(variable %in% c("mean_spp")#,
-         # eez_name %in% c("Peru","Chile","Ecuador","Argentina")
-         ) %>% 
-  ggplot() +
-  geom_sf(
-    aes(
-      fill = per_mid
-    )
-  ) + 
-  geom_sf(data=country10_sf) +
-  scale_fill_gradient2("Average Change in\nStock-Share Ratio (%)\nBy Mid Century") +
-  ggtheme_map() +
-  ggsave("per_mid.png",
-         width = 10,
-         height = 6,
-         units = "in"
-  )
-
-```
-
 ##### Fig. 1 and S1. (Netowrk)
 
 ```{r fig_map_Juan, eval = F, echo =F}
@@ -2242,509 +2216,131 @@ ggplot() +
 
 ####  Year of Eergence Analysis
 
-##### Histogram of Data
 
-```{r histo,  eval = T, echo = T}
-
-# First time a Species becomes emergent
-Eme_Res %>% 
-  filter(
-    n_ens == 10#,
-    # tresh == "tresh_one"
-  ) %>% 
-  group_by(tresh,taxon_key,emerging_yr) %>% 
-  summarise(
-    n_trans = length(unique(sf_eez_name))
-  ) %>% 
-  group_by(tresh,taxon_key) %>% 
-  summarise(
-    ntrans = min(emerging_yr)
-  ) %>% 
-  group_by(tresh,ntrans) %>% 
-  summarise(
-    n_taxa = length(unique(taxon_key))
-  ) %>% 
-  arrange(-n_taxa) %>% 
-  # View()
-  # group_by(tresh) %>% 
-  # summarise(sum(n_taxa))
-  ggplot() +
-  geom_line(
-    aes(
-      x = ntrans,
-      y = n_taxa,
-      color = tresh
-    )
-  )
-
-
-# EEZ, first time an EEZ has a emergent stock
-Eme_Res %>% 
-  filter(
-    n_ens == 10#,
-    # tresh == "tresh_one"
-  ) %>% 
-  group_by(tresh,sf_eez_name,emerging_yr) %>% 
-  summarise(
-    n_trans = length(unique(taxon_key))
-  ) %>% 
-  group_by(tresh,sf_eez_name) %>% 
-  summarise(
-    ntrans = min(emerging_yr)
-  ) %>% 
-  group_by(tresh,ntrans) %>% 
-  summarise(
-    n_taxa = length(unique(sf_eez_name))
-  ) %>% 
-  arrange(-n_taxa) %>% 
-  View()
-  # group_by(tresh) %>%
-  # summarise(sum(n_taxa))
-  # ggplot() +
-  # geom_line(
-  #   aes(
-  #     x = ntrans,
-  #     y = n_taxa,
-  #     color = tresh
-  #   )
-  # )
-  
-
-
-# Numer of EEZs where stocks will emerge
-stock_d_hist <- Eme_Res %>% 
-  distinct(taxon_key,neighbour_id,tresh, .keep_all = TRUE) %>%
-  group_by(emerging_yr,taxon_key,tresh) %>%
-  summarise(n_tax = length(unique(sf_eez_name))) %>%
-  # summarise(n()) %>% 
-  mutate(
-    level = "EEZs per Spp"
-  )  %>% 
-  ungroup() %>% 
-  select(-taxon_key)
-
-
-# Per EEZs
-eez_d_hist <- Eme_Res %>% 
-  distinct(taxon_key,neighbour_id,tresh, .keep_all = TRUE) %>%
-  group_by(emerging_yr,sf_eez_name,tresh,neighbour_id) %>%  
-  # summarise(n_tax = length(unique(taxon_key))) %>% 
-  summarise(n()) %>% 
-  mutate(
-    level = "Spp per EEZ"
-  ) %>% 
-  ungroup() %>% 
-  select(-sf_eez_name)
-
-stock_d_hist %>% 
-  bind_rows(eez_d_hist) %>% 
-  filter(tresh != "NA") %>% 
-  ggplot() +
-  geom_density(
-    aes(
-      x = emerging_yr,
-      fill = level
-    ),
-    stat = "count",
-    alpha= 0.8,
-    size=0.5,
-  ) +
-  scale_y_continuous("Frequency",
-                     # breaks = seq(0,300,50),
-                     # limits = c(0,300)
-  ) +
-  scale_x_continuous("Year of emergence",
-                     # breaks = seq(2006,2100,25),
-                     # limits = c(2000,2100)
-  ) +
-  my_ggtheme_p() +
-  scale_fill_viridis(discrete = T) +
-  facet_wrap(~tresh) +
-  ggsave("./Figures/hist_freq.png",
-         width = 6,
-         height = 6,
-         units = "in"
-  )
-
-```
-
-##### Accumulative plots
+##### Fig. 2. Accumulative plots
 
 ```{r Time_lapse_plot,  eval = T, echo = T}
 
 # Per Stock
 stock_d <-  Eme_Res %>% 
   left_join(Neighbours) %>% 
-    # distinct(taxon_key,neighbour_id, .keep_all = TRUE) %>% 
-    group_by(taxon_key,tresh) %>% 
-    summarise(
-      taxon_emer = min(emerging_yr)
-    ) %>% 
-    group_by(taxon_emer,tresh) %>% 
+  # distinct(taxon_key,neighbour_id, .keep_all = TRUE) %>% 
+  group_by(taxon_key,tresh) %>% 
+  summarise(
+    taxon_emer = min(emerging_yr)
+  ) %>% 
+  group_by(taxon_emer,tresh) %>% 
   summarise(
     n_tax = n()
   ) %>% 
   group_by(tresh) %>% 
   mutate(
     com_sum = cumsum(n_tax),
-    level = "Stock"
+    level = "stock"
   )
 
-  #  EEZ data
+#  EEZ data
 eez_d <-  Eme_Res %>% 
   left_join(Neighbours) %>% 
   filter(n_ens == 10) %>% 
-    # distinct(eez_name,neighbour_id, .keep_all = TRUE) %>% 
-    group_by(sf_eez_name,tresh) %>% 
-    summarise(
-      taxon_emer = min(emerging_yr)
-    ) %>% 
-    group_by(taxon_emer,tresh) %>% 
+  # distinct(eez_name,neighbour_id, .keep_all = TRUE) %>% 
+  group_by(sf_eez_name,tresh) %>% 
+  summarise(
+    taxon_emer = min(emerging_yr)
+  ) %>% 
+  group_by(taxon_emer,tresh) %>% 
   summarise(
     n_tax = n()
   ) %>% 
   group_by(tresh) %>% 
   mutate(
     com_sum = cumsum(n_tax),
-    level = "EEZ"
+    level = "eez"
   )
-  
+
 # Plot Data
 plot_data <- stock_d %>% 
   bind_rows(eez_d) %>% 
   filter(tresh != "NA") %>% 
   mutate(
-    total = ifelse(level == "Stock",length(unique(Eme_Res$taxon_key)),length(unique(Eme_Res$eez_name))),
+    total = ifelse(level == "stock",length(unique(Eme_Res$taxon_key)),length(unique(Eme_Res$sf_eez_name))),
     per = com_sum/total*100
-  ) ;plot_data
-
-  # filter(emerging_yr >= 2020) %>% 
-  ggplot() +
-    geom_area(data = subset(plot_data, level == "Stock"),
-              aes(
-                x = as.numeric(taxon_emer),
-                y = com_sum,
-                fill = level
-              ),
-              alpha= 0.8,
-              size=0.5,
-              colour="black"
-    )  +
-    geom_area(data = subset(plot_data, level == "EEZ"),
-              aes(
-                x = taxon_emer,
-                y = com_sum,
-                fill = level
-              ),
-              alpha= 0.8,
-              size=0.5,
-              colour="black"
-    ) +
-    facet_wrap(~tresh) + 
-    # Comment out for option A (Change plot name!!)
-  #   geom_hline(yintercept = length(unique(Eme_Res$eez_name)), color = "grey",linetype = "dashed") +
-  # geom_text(aes(label="Total number of EEZs", x = 2010, y = length(unique(Eme_Res$eez_name))+10), color = "grey70",size =3) +
-  #   geom_hline(yintercept = length(unique(Eme_Res$taxon_key)), color = "grey",linetype = "dashed") +
-  # geom_text(aes(label="Total number of Taxa", x = 2010, y = length(unique(Eme_Res$taxon_key))+10), color = "grey70",size =3) +
-    scale_y_continuous("Cumulatuve Curve",
-                       breaks = seq(0,600,50),
-                       limits = c(0,600)
-    ) +
-    scale_x_continuous("Year of emergence",
-                       breaks = seq(2005,2100,10),
-                       limits = c(2005,2100)
-    ) +
-    my_ggtheme_p() +
-    scale_fill_viridis(discrete = T) +
-  ggsave("./Figures/figure_accumulative_curve_ab.png",
-         width = 6,
-         height = 6,
-         units = "in"
-  )
-  
-  
-  ### Percentage accumulation
-  
-  # filter(emerging_yr >= 2020) %>% 
-  ggplot() +
-    geom_area(data = subset(plot_data, level == "Stock"),
-              aes(
-                x = as.numeric(taxon_emer),
-                y = per,
-                fill = level
-              ),
-              alpha= 0.8,
-              size=0.5,
-              colour="black"
-    )  +
-    geom_area(data = subset(plot_data, level == "EEZ"),
-              aes(
-                x = taxon_emer,
-                y = per,
-                fill = level
-              ),
-              alpha= 0.8,
-              size=0.5,
-              colour="black"
-    ) +
-    scale_y_continuous("Cumulatuve Curve",
-                       breaks = seq(0,100,25),
-                       limits = c(0,100)
-    ) +
-    scale_x_continuous("Year of emergence",
-                       breaks = seq(2005,2100,15),
-                       limits = c(2005,2100)
-    ) +
-    my_ggtheme_p() +
-    scale_fill_viridis(discrete = T) +
-    facet_wrap(~tresh) + 
-  ggsave("./Figures/Fig4.png",
-         width = 8,
-         height = 8,
-         units = "in"
-  )
-  
-```
-
-##### Scatter plots
-
-```{r Scatter_plot,  eval = T, echo = T}
-
- data_stock <- Eme_Res %>% 
-  filter(
-    n_ens == 10,
-    emerging_yr >= 2020
   ) %>% 
-  group_by(emerging_yr,eez_name) %>% 
-  summarise(
-    tax_n = length(unique(taxon_key))
-    ) %>% 
-  group_by(emerging_yr) %>% 
-  summarise(emerging_tax = sum(tax_n))
-
-data_eez <- Eme_Res %>% 
-  filter(
-    n_ens == 10,
-    emerging_yr >= 2020
-  ) %>% 
-  group_by(emerging_yr,taxon_key) %>% 
-  summarise(
-    eez_n = length(unique(eez_name))
-    ) %>% 
-    group_by(emerging_yr) %>% 
-  summarise(emerging_eez = sum(eez_n))
+  gather("metric","value",com_sum,per) %>% 
+  filter(tresh == "Tresh_one") %>% 
+  mutate(
+    my_facet = ifelse(metric == "per","Percentage (%)","Cumulative sum"),
+    label = ifelse(total == 478,"Total number of stocks","Total number of EEZs")
+  );plot_data
 
 
-data_stock %>% 
-  left_join(data_eez,
-            by = "emerging_yr") %>% 
-  ggplot() +
-  geom_point(
-    aes(
-      x = emerging_eez,
-      y = emerging_tax,
-      fill = emerging_yr,
-      colour = emerging_yr
-    )
-  )
-  
-```
+#### Both plots for tresh one
 
-
-##### Temperature gradient
-
-##### Fun `GetEnvData`
-
-```{r get_env_data, eval = T, echo = T}
-
-getEnvVar=function(yr,ModelRCP,RCP,Variable){
-  
-  if(ModelRCP == "IPSL"){
-    ModelRCP = "IPSL-CM5A-MR"
-    Filepath <- paste("/Volumes/DATA/DATA/Environmental data/Model Climate data/CMIP5/txt CMIP5/Reformatted",ModelRCP,RCP,"",sep="/")
-  }
-  
-  
-  if(ModelRCP == "MPI"){
-    ModelRCP = "MPI-ESM-MR"
-    Filepath <- paste("/Volumes/DATA/DATA/Environmental data/Model Climate data/CMIP5/txt CMIP5/Reformatted",ModelRCP,RCP,"",sep="/")
-  }
-  
-  if(ModelRCP == "GFDL"){
-    
-    if(RCP == "rcp26"){
-      ModelRCP <- "GFDL26"
-    }else{
-      ModelRCP <- "GFDL85"
-    }
-    Filepath <- paste("Z:/JULIANO_NEYMAR/PristineSeasData/Climate",ModelRCP,"",sep="/")
-  }
-  
-  
-  if(Variable == "Ice"){
-    
-    Bottom <- paste("IceExt_",yr,".txt",sep="")
-    
-  }
-  
-  if(Variable == "Temperature"){
-    
-    Bottom = paste("SST_",yr,".txt",sep="")
-    
-  }
-  
-  if(Variable == "Salinity"){
-    # Bottom
-    Bottom = paste("Salinity_btm_",yr,".txt",sep="")
-    
-  }
-  
-  Read_me <- paste(Filepath,Bottom,sep="")[1]
-  Bottom_Data <- read.csv(Read_me,header=F)
-  
-  # Retrun
-  
-  getTemp <- Bottom_Data 
-}
-
-Years <-seq(1951,2100,1)
-
-for(y in 1:length(Years)){
-        Data <- getEnvVar(yr = Years[y],
-                          Model = "GFDL",
-                          Variable = "Temperature",
-                          RCP = "rcp85"
-        )
-        
-        if(y == 1){
-          
-          F_BData <- Data[1]
-          colnames(F_BData) <- Years[1]
-      
-        }else{
-          
-          F_BData <- cbind(F_BData,Data[1])
-          colnames(F_BData)[y] <- Years[y]
-        }
-}
-
-
-F_BData <- F_BData %>% 
-          rowid_to_column("index") %>% 
-  gather("year","temp",-index) %>% 
-   mutate(temp = ifelse(temp == -9999,NA,temp)) %>% 
-  group_by(year) %>% 
-  summarise(
-    mean_temp = mean(temp,na.rm=T)
-  ) %>% 
-  write_csv(.,
-            "SST_data.csv")
-
-```
-
-
-```{r temp_plot, eval = T, echo = T}
-
-### NEED TO RUN TIME LAPSE CHUNK FIRST TO GET ACCUMULATIVE DATA
-
-# Get sst_data
-sst_data <- my_path("D",T,"Climate","SST_data.csv",read = T)
-
-sst_hist <- sst_data %>% 
-  filter(year < 2000) %>% 
-  group_by() %>% 
-  summarise(hist_sst =mean(mean_temp)) %>% 
-  pull()
-
-sst_change <- sst_data %>%
-  filter(year > 2020) %>% 
-  mutate(chng = round(mean_temp-sst_hist,2))
-
-
-  
-  # Plot Data
-stock_d %>% 
-  bind_rows(eez_d) %>% 
-  filter(taxon_emer >= 2020) %>% 
-  rename(year = taxon_emer) %>% 
-  left_join(sst_change) %>% 
-  ggplot() +
-  geom_line(
-    aes(
-      x = chng,
-      y = com_sum,
-      colour = level
-    )
+ggplot() +
+  geom_area(data = subset(plot_data, level == "stock"),
+            aes(
+              x = as.numeric(taxon_emer),
+              y = value,
+              fill = level
+            ),
+            alpha= 0.8,
+            size=0.5,
+            colour="black"
+  )  +
+  geom_area(data = subset(plot_data, level == "eez"),
+            aes(
+              x = as.numeric(taxon_emer),
+              y = value,
+              fill = level
+            ),
+            alpha= 0.8,
+            size=0.5,
+            colour="black"
+  )  +
+  geom_line(data = subset(plot_data, metric == "com_sum"),
+            aes(
+              x = as.numeric(taxon_emer),
+              y = total,
+              fill = level
+            ),
+            colour="grey30",
+  )  +
+  geom_text(data = subset(plot_data, metric == "com_sum"),
+            aes(
+              x = 2037,
+              y = total+5,
+              label = label
+            ),
+            size = 3,
+            colour="grey30",
+            hjust=0.6,
+  )  +
+  facet_wrap(~my_facet,
+             scales = "free") + 
+  scale_y_continuous("",expand = expand_scale(mult = c(0, .05))) +
+  scale_x_continuous("Time of emergence",
+                     breaks = seq(2000,2100,25),
+                     limits = c(2005,2100),
+                     expand = c(0, 0)
   ) +
-  geom_hline(yintercept = length(unique(Eme_Res$eez_name)), color = "grey",linetype = "dashed") +
-  geom_text(aes(label="Total number of EEZs", x = 0.5, y = length(unique(Eme_Res$eez_name))+10), color = "grey70",size =3) +
-    scale_y_continuous("Cumulatuve Curve",
-                       breaks = seq(0,450,50),
-                       limits = c(0,500)
-    ) +
-    scale_x_continuous("Change in SST (C)",
-                       breaks = seq(0,2,0.2),
-                       limits = c(0.3,2.3)
-    ) +
-    my_ggtheme_p() +
-    scale_colour_viridis(discrete = T) +
-  ggsave("./Figures/figure_temp.png",
-         width = 6,
-         height = 6,
+  my_ggtheme_p() +
+  theme(
+    legend.position = "right"
+  ) +
+  guides(fill=guide_legend(title= "Level")) +
+  scale_fill_viridis(discrete = T,
+                     labels = c("EEZs","Stocks")
+  ) +
+  ggsave("./Figures/cumu_per_freq.png",
+         width = 7,
+         height = 7,
          units = "in"
   )
-  
+
 ```
 
 
-```{r Scatter_plot,  eval = T, echo = T}
-
-
-
-
- data_stock <- Eme_Res %>% 
-  filter(
-    n_ens == 10,
-    emerging_yr >= 2020
-  ) %>% 
-  group_by(emerging_yr,eez_name) %>% 
-  summarise(
-    tax_n = length(unique(taxon_key))
-    ) %>% 
-  group_by(emerging_yr) %>% 
-  summarise(emerging_tax = sum(tax_n))
-
-data_eez <- Eme_Res %>% 
-  filter(
-    n_ens == 10,
-    emerging_yr >= 2020
-  ) %>% 
-  group_by(emerging_yr,taxon_key) %>% 
-  summarise(
-    eez_n = length(unique(eez_name))
-    ) %>% 
-    group_by(emerging_yr) %>% 
-  summarise(emerging_eez = sum(eez_n))
-
-
-data_stock %>% 
-  left_join(data_eez,
-            by = "emerging_yr") %>% 
-  rename(year = emerging_yr) %>% 
-  left_join(sst_data) %>% 
-  ggplot() +
-  geom_point(
-    aes(
-      x = mean_temp,
-      y = emerging_eez,
-      fill = year,
-      colour = year
-    )
-  )
-  
-```
-
-##### Fig. 2 Mapping the time of emergence
+##### Fig. 3 Mapping the time of emergence
 
 ###### Just mean time
 
@@ -2987,7 +2583,7 @@ Eez_hist <- Eme_Res %>%
 
 ```
 
-##### Fig. 3. Bubble plot
+##### Fig. 4. Bubble plot
 
 ```{r, buble_plot, eval = F, echo = F}
 
@@ -2998,19 +2594,20 @@ Buble_data <- Eez_d_hist %>%
   summarise(mean_yr = mean(value)) %>% 
   left_join(Eme_value_data,
             by = c("sau_fishing_entity","tresh")) %>% 
-  filter(tresh == tresh_list[i],
+  filter(tresh == "Tresh_one",
          variable == "value") %>% 
   mutate(
     weight_toe = sum_value/mean_yr,
-    sum_value_bi = sum_value/1000000000) %>%   # Billion usd
+    sum_value_bi = sum_value/1000000000,
+    log_value = log10(sum_value_bi)
+    ) %>%   # Billion usd
   left_join(Matching_names,
             by = c("sau_fishing_entity","fishing_entity_id")) %>% 
   distinct(sau_fishing_entity,.keep_all = TRUE) %>% 
   filter(!is.na(un_geo_region)) %>% 
   ungroup() %>% 
   mutate(
-    sau_fishing_entity = ifelse(sum_value_bi >= 1 & !sau_fishing_entity %in% c("Spain"), paste(sau_fishing_entity,"*",sep = ""),sau_fishing_entity)
-  )
+    sau_fishing_entity = ifelse(sum_value_bi >= 1 & !sau_fishing_entity %in% c("Spain"), paste(sau_fishing_entity,"*",sep = ""),sau_fishing_entity))
 
 ### Fucntion for estimating percentile
 
@@ -3020,25 +2617,24 @@ quibble <- function(x, q = p) {
 
 Percentile_value <- Buble_data %>% 
   group_by() %>%  # for whole distribution
-        do(quibble(.$sum_value_bi, 0.75))
+        do(quibble(.$log_value, 0.75))
 
 
 # Labels Data
 
 Labels_data <- tibble(
   x = c(2020,2040,2007),
-  y = c(3.2,3.2,Percentile_value$x+.1),
+  y = c(-5.8,-5.8,Percentile_value$x+.1),
   label = c("Early emergence", "Late emergence","Fisheries > 75th percentile")
 )
 
 
 # Plot the bubbles!
-
 ggplot(Buble_data) +
   geom_point(
     aes(
       x = mean_yr,
-      y = sum_value_bi,
+      y = log_value,
       size = n_taxa,
       colour = un_geo_region
     ),
@@ -3049,11 +2645,11 @@ ggplot(Buble_data) +
   geom_hline(data = Percentile_value,
              aes(yintercept = x),
              color = "grey90"
-             )  +
+  )  +
   geom_label_repel(data = subset(Buble_data, sum_value_bi >= 1),
                    aes(
                      x = mean_yr,
-                     y = sum_value_bi,
+                     y = log_value,
                      label = sau_fishing_entity
                    ),
                    arrow = arrow(length = unit(0.009, "npc"),
@@ -3062,16 +2658,16 @@ ggplot(Buble_data) +
                    force = 2,
                    box.padding = 1,
                    fill = "NA"
-
+                   
   ) +
   geom_text(data = Labels_data,
-    aes(
-      x = x,
-      y = y,
-      label = label
-    ),
-    size = 3,
-    color = "grey30"
+            aes(
+              x = x,
+              y = y,
+              label = label
+            ),
+            size = 3,
+            color = "grey30"
   ) +
   scale_color_viridis(name="Region",
                       discrete = T) +
@@ -3079,10 +2675,9 @@ ggplot(Buble_data) +
                      limits = c(2000,2080),
                      breaks = seq(2000,2080,10)
   ) +
-  scale_y_continuous("Fishing revenue (billion USD)",
-                     trans = "log10",
-                     # limits = c(3,12),
-                     # breaks = seq(3,12,3),
+  scale_y_continuous("Fishing revenue (log10)",
+                     limits = c(-6,2),
+                     breaks = seq(-6,2,2),
                      expand = c(0,0)
   ) +
   scale_size("Number of\nemerging taxa") +
@@ -3092,50 +2687,114 @@ ggplot(Buble_data) +
          units = "in"
   )
 
- ```
-
+```
 
 ### Species level analysis
 
-#### Demersal Vs Pelagic
+#### Fig. 5 Demersal Vs Pelagic
 
 ```{r deme_pela, eval = F, echo =F}
 
 Dem_pel <- Eme_Res %>% 
   filter(tresh == "Tresh_one",
          !is.na(un_sub_region)) %>% 
-  left_join(Spp_depth) 
+  left_join(Spp_env_pref) %>% 
+  mutate(DemersPelag = ifelse(is.na(DemersPelag),"other",
+                              ifelse(DemersPelag %in% c("bathypelagic","benthopelagic"), "bathy-bentho-pelagic",paste(DemersPelag)
+                              )
+  ),
+    un_sub_region = ifelse(str_detect(un_sub_region,"Latin"),"Ltn. Ame. and the Car.",paste(un_sub_region)))
 
+## Averages 
 
-Dem_pel_mean <- Dem_pel %>% 
-  group_by(dem_pel) %>% 
-  summarise(mean  = mean(emerging_yr)) 
+Average_data <- Dem_pel %>% 
+  group_by(un_sub_region) %>% 
+  summarise(mean_toe = mean(emerging_yr,na.rm=T)) %>% 
+  mutate(regional_average="average")
+  
 
-
+# Dem Pelagic boxplot
 ggplot(Dem_pel) +
+  geom_hline(data = Average_data,
+             aes(
+               yintercept = mean_toe,
+               colour = regional_average
+             ),
+             linetype = "dashed"
+             ) +
   geom_boxplot(
     aes(
-      x = reorder(dem_pel,emerging_yr),
+      x = reorder_within(DemersPelag,emerging_yr,un_sub_region),
       y = emerging_yr,
-      fill = un_sub_region
-    )
+      fill = DemersPelag
+    ),
+    alpha = 0.8
   ) +
-  geom_line(data = Dem_pel_mean,
-    aes(
-      x = dem_pel,
-      y = mean
-    )
-)
+  facet_wrap(~un_sub_region,scales = "free") +
+  scale_fill_viridis("Habitat preference",
+                     discrete = T) +
+  scale_color_grey("Regional average") +
+  xlab("") +
+  ylab("Time of emergence") +
+  my_ggtheme_p() +
+  theme(
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    legend.position = "right"
+  ) +
+  scale_x_reordered() +
+  ggsave("./Figures/regional_hab_boxplot.png",
+         width = 14,
+         height = 8,
+         units = "in"
+  )
+```
+
+### Statistics
+
+## Regional differences
+
+```{r multiple_reg, eval = F, echo = F}
+
+reg_diff_data <- Eme_Res %>% 
+  filter(tresh == "Tresh_one",
+         !is.na(un_sub_region)
+         )
+
+Reg_aov <- aov(emerging_yr~un_sub_region, data = reg_diff_data)
+Reg_aov
+
+summary(Reg_aov)
+
+TukeyHSD(Reg_aov) %>% 
+  tidy() %>% 
+   filter(adj.p.value < 0.05) %>%
+  View()
 
 
-ggplot(Dem_pel) +
-  geom_boxplot(
-    aes(
-      x = reorder(dem_pel,emerging_yr),
-      y = emerging_yr
-    )
-  ) +
-  facet_wrap(~un_sub_region)
+```
+
+## Habitat preference differences
+
+```{r multiple_reg, eval = F, echo = F}
+
+hab_diff_data <- Eme_Res %>% 
+  filter(tresh == "Tresh_one",
+         !is.na(un_sub_region)
+         ) %>% 
+  left_join(Spp_env_pref,
+            by = "taxon_key") 
+
+Hab_aov <- aov(emerging_yr~DemersPelag, data = hab_diff_data)
+Hab_aov
+
+summary(Hab_aov)
+
+TukeyHSD(Hab_aov) %>% 
+  tidy() %>% 
+   filter(adj.p.value < 0.05) %>%
+  View()
+
 
 ```
 
@@ -3232,7 +2891,7 @@ M7_aic <- AIC(M7)
 M7_r <-  M7_sum$adj.r.squared
 
 # Model 8; All variables + ccentroid lat
-M8 <- lm(emerging_yr ~ sst_toe + bot_toe + category + biome + DemersPelag + latitude, data = Lm_data)
+M8 <- lm(emerging_yr ~ sst_toe + bot_toe + category + as.factor(biome) + DemersPelag + latitude, data = Lm_data)
 
 M8_sum <- summary(M8)
 M8_aic <- AIC(M8)
@@ -3869,4 +3528,415 @@ ggplot() +
   )
 
 
+```
+
+### Non selected Results
+
+```{r, olda_acumulative}
+
+# filter(emerging_yr >= 2020) %>% 
+  ggplot() +
+    geom_area(data = subset(plot_data, level == "stock"),
+              aes(
+                x = as.numeric(taxon_emer),
+                y = com_sum,
+                fill = level
+              ),
+              alpha= 0.8,
+              size=0.5,
+              colour="black"
+    )  +
+    geom_area(data = subset(plot_data, level == "eez"),
+              aes(
+                x = taxon_emer,
+                y = com_sum,
+                fill = level
+              ),
+              alpha= 0.8,
+              size=0.5,
+              colour="black"
+    ) +
+    facet_wrap(~tresh) + 
+    # Comment out for option A (Change plot name!!)
+  #   geom_hline(yintercept = length(unique(Eme_Res$eez_name)), color = "grey",linetype = "dashed") +
+  # geom_text(aes(label="Total number of EEZs", x = 2010, y = length(unique(Eme_Res$eez_name))+10), color = "grey70",size =3) +
+  #   geom_hline(yintercept = length(unique(Eme_Res$taxon_key)), color = "grey",linetype = "dashed") +
+  # geom_text(aes(label="Total number of Taxa", x = 2010, y = length(unique(Eme_Res$taxon_key))+10), color = "grey70",size =3) +
+    scale_y_continuous("Cumulatuve Curve",
+                       breaks = seq(0,600,50),
+                       limits = c(0,600)
+    ) +
+    scale_x_continuous("Year of emergence",
+                       breaks = seq(2005,2100,10),
+                       limits = c(2005,2100)
+    ) +
+    my_ggtheme_p() +
+    scale_fill_viridis(discrete = T) +
+  ggsave("./Figures/figure_accumulative_curve_ab.png",
+         width = 6,
+         height = 6,
+         units = "in" 
+  )
+  
+  
+  ### Percentage accumulation
+
+  ggplot() +
+    geom_area(data = subset(plot_data, level == "stock"),
+              aes(
+                x = as.numeric(taxon_emer),
+                y = per,
+                fill = level
+              ),
+              alpha= 0.8,
+              size=0.5,
+              colour="black"
+    )  +
+    geom_area(data = subset(plot_data, level == "eez"),
+              aes(
+                x = taxon_emer,
+                y = per,
+                fill = level
+              ),
+              alpha= 0.8,
+              size=0.5,
+              colour="black"
+    ) +
+    scale_y_continuous("Cumulatuve Curve",
+                       breaks = seq(0,100,25),
+                       limits = c(0,100)
+    ) +
+    scale_x_continuous("Year of emergence",
+                       breaks = seq(2005,2100,15),
+                       limits = c(2005,2100)
+    ) +
+    my_ggtheme_p() +
+    scale_fill_viridis(discrete = T) +
+    # facet_wrap(~tresh) + 
+  ggsave("./Figures/Fig4.png",
+         width = 8,
+         height = 8,
+         units = "in"
+  )
+  
+
+```
+
+
+
+```{r histo,  eval = T, echo = T}
+
+# First time a Species becomes emergent
+Eme_Res %>% 
+  filter(
+    n_ens == 10#,
+    # tresh == "tresh_one"
+  ) %>% 
+  group_by(tresh,taxon_key,emerging_yr) %>% 
+  summarise(
+    n_trans = length(unique(sf_eez_name))
+  ) %>% 
+  group_by(tresh,taxon_key) %>% 
+  summarise(
+    ntrans = min(emerging_yr)
+  ) %>% 
+  group_by(tresh,ntrans) %>% 
+  summarise(
+    n_taxa = length(unique(taxon_key))
+  ) %>% 
+  arrange(-n_taxa) %>% 
+  # View()
+  # group_by(tresh) %>% 
+  # summarise(sum(n_taxa))
+  ggplot() +
+  geom_line(
+    aes(
+      x = ntrans,
+      y = n_taxa,
+      color = tresh
+    )
+  )
+
+
+# EEZ, first time an EEZ has a emergent stock
+Eme_Res %>% 
+  filter(
+    n_ens == 10#,
+    # tresh == "tresh_one"
+  ) %>% 
+  group_by(tresh,sf_eez_name,emerging_yr) %>% 
+  summarise(
+    n_trans = length(unique(taxon_key))
+  ) %>% 
+  group_by(tresh,sf_eez_name) %>% 
+  summarise(
+    ntrans = mean(emerging_yr)
+  ) %>% 
+  group_by(tresh,ntrans) %>% 
+  summarise(
+    n_taxa = length(unique(sf_eez_name))
+  ) %>% 
+  arrange(-n_taxa) %>% 
+  View()
+  # group_by(tresh) %>%
+  # summarise(sum(n_taxa))
+  # ggplot() +
+  # geom_line(
+  #   aes(
+  #     x = ntrans,
+  #     y = n_taxa,
+  #     color = tresh
+  #   )
+  # )
+  
+
+# Numer of EEZs where stocks will emerge
+stock_d_hist <- Eme_Res %>% 
+  distinct(taxon_key,neighbour_id,tresh, .keep_all = TRUE) %>%
+  group_by(emerging_yr,taxon_key,tresh) %>%
+  summarise(n_tax = length(unique(sf_eez_name))) %>%
+  # summarise(n()) %>% 
+  mutate(
+    level = "EEZs per Spp"
+  )  %>% 
+  ungroup() %>% 
+  select(-taxon_key)
+
+
+# Per EEZs
+eez_d_hist <- Eme_Res %>% 
+  distinct(taxon_key,neighbour_id,tresh, .keep_all = TRUE) %>%
+  group_by(emerging_yr,sf_eez_name,tresh,neighbour_id) %>%  
+  # summarise(n_tax = length(unique(taxon_key))) %>% 
+  summarise(n()) %>% 
+  mutate(
+    level = "Spp per EEZ"
+  ) %>% 
+  ungroup() %>% 
+  select(-sf_eez_name)
+
+stock_d_hist %>% 
+  bind_rows(eez_d_hist) %>% 
+  filter(tresh != "NA") %>% 
+  ggplot() +
+  geom_density(
+    aes(
+      x = emerging_yr,
+      fill = level
+    ),
+    stat = "count",
+    alpha= 0.8,
+    size=0.5,
+  ) +
+  scale_y_continuous("Frequency",
+                     # breaks = seq(0,300,50),
+                     # limits = c(0,300)
+  ) +
+  scale_x_continuous("Year of emergence",
+                     # breaks = seq(2006,2100,25),
+                     # limits = c(2000,2100)
+  ) +
+  my_ggtheme_p() +
+  scale_fill_viridis(discrete = T) +
+  facet_wrap(~tresh) +
+  ggsave("./Figures/hist_freq.png",
+         width = 6,
+         height = 6,
+         units = "in"
+  )
+
+```
+
+
+##### Temperature gradient
+
+##### Fun `GetEnvData`
+
+```{r get_env_data, eval = T, echo = T}
+
+getEnvVar=function(yr,ModelRCP,RCP,Variable){
+  
+  if(ModelRCP == "IPSL"){
+    ModelRCP = "IPSL-CM5A-MR"
+    Filepath <- paste("/Volumes/DATA/DATA/Environmental data/Model Climate data/CMIP5/txt CMIP5/Reformatted",ModelRCP,RCP,"",sep="/")
+  }
+  
+  
+  if(ModelRCP == "MPI"){
+    ModelRCP = "MPI-ESM-MR"
+    Filepath <- paste("/Volumes/DATA/DATA/Environmental data/Model Climate data/CMIP5/txt CMIP5/Reformatted",ModelRCP,RCP,"",sep="/")
+  }
+  
+  if(ModelRCP == "GFDL"){
+    
+    if(RCP == "rcp26"){
+      ModelRCP <- "GFDL26"
+    }else{
+      ModelRCP <- "GFDL85"
+    }
+    Filepath <- paste("Z:/JULIANO_NEYMAR/PristineSeasData/Climate",ModelRCP,"",sep="/")
+  }
+  
+  
+  if(Variable == "Ice"){
+    
+    Bottom <- paste("IceExt_",yr,".txt",sep="")
+    
+  }
+  
+  if(Variable == "Temperature"){
+    
+    Bottom = paste("SST_",yr,".txt",sep="")
+    
+  }
+  
+  if(Variable == "Salinity"){
+    # Bottom
+    Bottom = paste("Salinity_btm_",yr,".txt",sep="")
+    
+  }
+  
+  Read_me <- paste(Filepath,Bottom,sep="")[1]
+  Bottom_Data <- read.csv(Read_me,header=F)
+  
+  # Retrun
+  
+  getTemp <- Bottom_Data 
+}
+
+Years <-seq(1951,2100,1)
+
+for(y in 1:length(Years)){
+        Data <- getEnvVar(yr = Years[y],
+                          Model = "GFDL",
+                          Variable = "Temperature",
+                          RCP = "rcp85"
+        )
+        
+        if(y == 1){
+          
+          F_BData <- Data[1]
+          colnames(F_BData) <- Years[1]
+      
+        }else{
+          
+          F_BData <- cbind(F_BData,Data[1])
+          colnames(F_BData)[y] <- Years[y]
+        }
+}
+
+
+F_BData <- F_BData %>% 
+          rowid_to_column("index") %>% 
+  gather("year","temp",-index) %>% 
+   mutate(temp = ifelse(temp == -9999,NA,temp)) %>% 
+  group_by(year) %>% 
+  summarise(
+    mean_temp = mean(temp,na.rm=T)
+  ) %>% 
+  write_csv(.,
+            "SST_data.csv")
+
+```
+
+
+```{r temp_plot, eval = T, echo = T}
+
+### NEED TO RUN TIME LAPSE CHUNK FIRST TO GET ACCUMULATIVE DATA
+
+# Get sst_data
+sst_data <- my_path("D",T,"Climate","SST_data.csv",read = T)
+
+sst_hist <- sst_data %>% 
+  filter(year < 2000) %>% 
+  group_by() %>% 
+  summarise(hist_sst =mean(mean_temp)) %>% 
+  pull()
+
+sst_change <- sst_data %>%
+  filter(year > 2020) %>% 
+  mutate(chng = round(mean_temp-sst_hist,2))
+
+
+  
+  # Plot Data
+stock_d %>% 
+  bind_rows(eez_d) %>% 
+  filter(taxon_emer >= 2020) %>% 
+  rename(year = taxon_emer) %>% 
+  left_join(sst_change) %>% 
+  ggplot() +
+  geom_line(
+    aes(
+      x = chng,
+      y = com_sum,
+      colour = level
+    )
+  ) +
+  geom_hline(yintercept = length(unique(Eme_Res$eez_name)), color = "grey",linetype = "dashed") +
+  geom_text(aes(label="Total number of EEZs", x = 0.5, y = length(unique(Eme_Res$eez_name))+10), color = "grey70",size =3) +
+    scale_y_continuous("Cumulatuve Curve",
+                       breaks = seq(0,450,50),
+                       limits = c(0,500)
+    ) +
+    scale_x_continuous("Change in SST (C)",
+                       breaks = seq(0,2,0.2),
+                       limits = c(0.3,2.3)
+    ) +
+    my_ggtheme_p() +
+    scale_colour_viridis(discrete = T) +
+  ggsave("./Figures/figure_temp.png",
+         width = 6,
+         height = 6,
+         units = "in"
+  )
+  
+```
+
+
+```{r Scatter_plot,  eval = T, echo = T}
+
+
+
+
+ data_stock <- Eme_Res %>% 
+  filter(
+    n_ens == 10,
+    emerging_yr >= 2020
+  ) %>% 
+  group_by(emerging_yr,eez_name) %>% 
+  summarise(
+    tax_n = length(unique(taxon_key))
+    ) %>% 
+  group_by(emerging_yr) %>% 
+  summarise(emerging_tax = sum(tax_n))
+
+data_eez <- Eme_Res %>% 
+  filter(
+    n_ens == 10,
+    emerging_yr >= 2020
+  ) %>% 
+  group_by(emerging_yr,taxon_key) %>% 
+  summarise(
+    eez_n = length(unique(eez_name))
+    ) %>% 
+    group_by(emerging_yr) %>% 
+  summarise(emerging_eez = sum(eez_n))
+
+
+data_stock %>% 
+  left_join(data_eez,
+            by = "emerging_yr") %>% 
+  rename(year = emerging_yr) %>% 
+  left_join(sst_data) %>% 
+  ggplot() +
+  geom_point(
+    aes(
+      x = mean_temp,
+      y = emerging_eez,
+      fill = year,
+      colour = year
+    )
+  )
+  
 ```

@@ -92,7 +92,7 @@ We coupled the DBEM with the Geophysical Fluid Dynamics Laboratory Earth system 
 
 ## Data analysis
 
-The Food and Agricultural Organization (FAO) of the UN define transboundary stocks as those that freely swim across the EEZ of neighbouring nations [@REFFAO]. Accordingly, we included in this analysis 633 marine exploited transboundary species representing 80% of the catch taken from the world's EEZs [@Palacios-Abrantes:xxxx]. We consider each species as a single stock unit within an EEZ due to lack of more detailed information [@Teh:2015gd; @Palacios-Abrantes:xxxx]. We defined the boundaries of the world EEZs (e.g., Mexico Pacific EEZ and Mexico Atlantic EEZ) using the Sea Around Us shapefile (updated 1 July 2015, available from http://www.seaaroundus.org) **noting that it subdivides the EEZs of 198 coastal states into 280 regions (e.g., Mexico's EEZ is divided in Mexico Pacific and Mexico Atlantic) including islands territories**, and determined the intersections between polygons using the R package *sf* [@PackagesfSimpleF:2018vp]. 
+The Food and Agricultural Organization (FAO) of the UN define transboundary stocks as those that freely swim across the EEZ of neighbouring nations [@REFFAO]. Accordingly, we included in this analysis 633 marine exploited transboundary species representing 80% of the catch taken from the world's EEZs [@Palacios-Abrantes:xxxx]. We consider each species as a single stock unit within an EEZ due to lack of more detailed information [@Teh:2015gd; @Palacios-Abrantes:xxxx]. We defined the boundaries of the world EEZs (e.g., Mexico Pacific EEZ and Mexico Atlantic EEZ) using the Sea Around Us shapefile (updated 1 July 2015, available from http://www.seaaroundus.org) noting that it subdivides the EEZs of 198 coastal states into 280 regions (e.g., Mexico's EEZ is divided in Mexico Pacific and Mexico Atlantic) including islands territories, and determined the intersections between polygons using the R package *sf* (**Supplements Fig 1 (SuppM)**) [@PackagesfSimpleF:2018vp]. 
 
 ### Changes in Stocks Share Ratio
 
@@ -100,7 +100,7 @@ In game theory, a threat point is known as the minimum payoff that a player is w
 
 ### Time of Emergence Index
 
-Knowing the time (e.g. year) in whitch SSR is going to diverge from a historical variablillty can be key for policy to prepare to such change. In here we call this event time of emergence and defined it as the moment in time when the future variation in SSR becomes larger than the historical trend variabillity [@Roggers:2015jq]. We employed the ten GFDL ensable members described above, and developed an index of transboundary range shift, fisheries and climate change (*TI*). The index is based on the variation of a species distribution centroid in realtion to the centroid of the neighbouring EEZs it ocuppys. Each species centroid was determined by the average latitude and longitude of the grid cells containing the top 10% abundance percentile of each year. The EEZ centroid was estimated using the *st* package of *R* statistical software. For each ensamble member, neighbouring EEZ and species, we computed the distance between centroids assuming a perfect sphere and ignoring elevation differences:
+Knowing the time (e.g. year) in whitch SSR is going to diverge from a historical variablillty can be key for policy to prepare to such change. In here we call this event time of emergence and defined it as the moment in time when the future variation in SSR becomes larger than the historical trend variabillity [@Roggers:2015jq]. We employed the ten GFDL ensable members described above, and developed an index of transboundary range shift, fisheries and climate change (*TI*). The index is based on the variation of a species distribution centroid in realtion to the centroid of the neighbouring EEZs it ocuppys. Each species centroid was determined by the average latitude and longitude of the grid cells containing the top 10% abundance percentile of each year. The EEZ centroid was estimated using the *st* package of *R* statistical software (**Supplements Fig 1 (SuppM)**). For each ensamble member, neighbouring EEZ and species, we computed the distance between centroids assuming a perfect sphere and ignoring elevation differences:
 
 $$D_{ens} = acos(sin(lat_{eez})*sin(lat_{spp}) + cos(lat_{eez})*cos(lat_{spp})*cos(lon_{eez}-lon_{spp}))$$
 where $lat_{eez}$ and $lat_{spp}$ are the latitudes of the EEZ and specie centroid, respectiveley and $lon_{eez}$ and $lon_{spp}$ are the respectevly longitudes.
@@ -113,7 +113,7 @@ where $D_A$ and $D_B$ represent the distance between EEZ and distribution centro
 
 $$SNR = TREND/NOISE$$
 
-where *TREND* is the yearly mean *TI* ($\mu$) of all ten ensemble members and *NOISE* is the standar deviation of the TREND ($\sigma$) between 1951 and 2005. Note that in some cases not all ensemble members show the presence of a species in a certain EEZ throughout the study's time frame. We presented the results only for those cases where all 10 ensemble members had results for each year between 1951 and 2100 (n = 150). We determine a $\mu \pm \sigma$ (confidence interval of 68%) to show the first year when the "signal" of the transboundary index overpasses the historic "noise". Since this was an arbritary decission, we have included a more conservative estimation ($\mu \pm 2*\sigma$ for a 95% confidence interval).
+where *TREND* is the yearly mean *TI* ($\mu$) of all ten ensemble members and *NOISE* is the standar deviation of the TREND ($\sigma$) between 1951 and 2005. Note that in some cases not all ensemble members show the presence of a species in a certain EEZ throughout the study's time frame. We presented the results only for those cases where all 10 ensemble members had results for each year between 1951 and 2100 (n = 150). We determine a $\mu \pm \sigma$ (confidence interval of 68%) to show the first year when the "signal" of the transboundary index overpasses the historic "noise". Since this was an arbritary decission, we have included a more conservative estimation ($\mu \pm 2*\sigma$ for a 95% confidence interval). The SNR for both bottom and surface sea temperature was also estimated following the previos equation.
 
 
 <!-- In cases where the species is distributed in more than 2 neighbouring EEZs (e.g. *xxx*), the index is as follows: -->
@@ -121,9 +121,9 @@ where *TREND* is the yearly mean *TI* ($\mu$) of all ten ensemble members and *N
 <!-- $$I =(\frac{D_{A,y}}{sd(D_{A,h})} - \frac{D_{B,y}}{sd(D_{B,h})}) |  \\  +(\frac{D_{A,y}}{sd(D_{A,h})} - \frac{D_{C,y}}{sd(D_{B,h})}) | \\  +(\frac{D_{A,y}}{sd(D_{A,h})} - \frac{D_{Cy}}{sd(D_{B,h})})/N$$ -->
 
 
-In other words, for two neighbouring EEZs sharing a stock, if the centroid shifts towards EEZ A ($D_A$ decreases) but away from EEZ A B ($D_B$ increases), EEZ A may catch a bigger share over B and the risk of dispute increases (see *TI* equation). Consequently, if the centroid shifts are within historical variability (*SNR* < 1), risk of dispute between EEZ A and B is lower, finally, if the centroid shifts are beyond historical variability (*SNR* > 1), the risk of dispute is higher. Thus, risk is positively related to the frequency of centroid shifts beyond historical variability (Fig. 1). 
+In other words, for two neighbouring EEZs sharing a stock, if the centroid shifts towards EEZ A ($D_A$ decreases) but away from EEZ A B ($D_B$ increases), EEZ A may catch a bigger share over B and the risk of dispute increases (see *TI* equation). Consequently, if the centroid shifts are within historical variability (*SNR* < 1), risk of dispute between EEZ A and B is lower, finally, if the centroid shifts are beyond historical variability (*SNR* > 1), the risk of dispute is higher. Thus, risk is positively related to the frequency of centroid shifts beyond historical variability.
 
-![Fig 1. Theorical representation of transboundary Index. (A) Case with two neighbouring EEZs. (B) Case with three neigbouring EEZs. Grey dotted boxes represent each EEZ boundaries, t1 and t2 represent time periods one and two, respectiveley, and green and red lines represent an increase and decrease in D, respectiveley](~/GitHub/TransEmergence/Figures/Fig1.png)
+We performed a multiple linear regression analysis to a series to explain the ToE of each species in each EEZ. Specifically, each species within an EEZ was classified based on the habitat preference [@REF] and catch trend [@FishForVisa]. Moreover, each EEZ was classified based on the continental [@REFUN] and biome [@Gabs] location. Finally, we also include the ToE of both bottom and sea surface temperature. We hypothesize that all of these factors would have significant influence in the time of emergence of transboundary stocks. Finally, we ran a series of ANOVAS to test continental and habitat preference ToE differences betwwn transboundary species.
 
 All analyses were run using the statistical software *R version 3.5.2 (2018-12-20; Eggshell Igloo)* with the packages *data.table* [@Packagedatatable:2019uh], *janitor* [@PackagejanitorSim:2018ur], *wesanderson* [@Packagewesanderson:2018vn], *rfishbase* [@PackagerfishbaseR:2019th], *R.matlab* [@PackageRmatlabRe:2018un], *sf* [@PackagesfSimpleF:2018vp], *sp* [@PackagespClasses:2019tn], *tidiverse* [@PackagetidyverseE:2017vq], *tidytext* [@PackagetidytextTe:2019vk], *gmt* [@gmt] and *zoo* [@PackagezooSInfr:2019tm]. All code is available at https://github.com/jepa/TransEmergence
 
@@ -137,7 +137,7 @@ prop_r <- read_csv("/Volumes/HALL2000/Data/TransEmergence/Results/proportion_cha
 ```
   
 
-## Changes in Stock Share Ratio
+## Changes in Stock Share Ratio (SSR)
 
 ```{r Load_Results, eval = TRUE,  echo = FALSE, include = FALSE}
 
@@ -170,21 +170,33 @@ average_mid <- prop_r %>%
          )
 ```
 
-We estimate the changes from today (1951-2005) to the early (2020-2040) and mid $21^{st}$ century (2040-2060) in transboundary Stock Share Ratio between neighbouring countries. Our results suggest that `r n_eez_per`% (n = `r n_eez`) of the world EEZs will see a change in SSR by 2030 (Fig. 1A). While most EEZs will see and average species change lower than 20%, a few EEZs are expected to have 50% change in SSR (Fig. 1A). For example. Guatemala' SSR of *species* shared with Mexico is projected to go from 12% to 26% while Honduras SSR of *species* shared with the Nicaragua in the Pacific coast is projected to decline from 50% to 14%. Regions where EEZs are particularly small and/or have multiple borders (e.g. The Caribeean) will see a complex dynamic of changes in SSR (Fig. 2B). Towards the mid $21^st$ century, changes in SSR per EEZ will no be substantial (**Supplements Fig 1 (map)**) but are still are expected to increase in intensity (**Supplements Fig 2 (histogram)**).
+We estimated changes in the Stock Share Ratio of transboundary species shared by neighbouring EEZs by early (2020-2040) and mid $21^{st}$ century (2040-2060), relative to present (1951-2005). Our results suggest that `r n_eez_per`% (n = `r n_eez`) of the world EEZs will see a change in SSR by 2030 (Fig. 1A). While most EEZs will experience an average change > 20%, a few EEZs are expected to have larger changes in SSR (Fig. 1A). For example, Guatemala' average SSR of *species* shared with Mexico is projected to go from 12% to 26% while Honduras SSR of *species* shared with the Nicaragua in the Pacific coast is projected to decline from 50% to 14%. The number of stocks per EEZ that will see a change in SSR by early $21^{st}$ century is relativelly low (*XX%*), however, some regions like West Africa and the Mediterranean will see changes in over 50 species. These regions, where EEZs are relativelly small and have multiple borders will see a complex dynamic of changes in SSR with no clear patterns (Fig. 2B). Towards the mid $21^st$ century, changes in SSR per EEZ will no be substantial (**Supplements Fig 1 (map)**) relative to early century, but are expected to increase in intensity (**Supplements Fig 2 (histogram)**).
 
 
-```{r SSR_gain_map, eval = F,  echo = F, fig.width=9, fig.height=12, fig.cap =  "Average gain of transboundary stock share ratio (lines) and number of shifting stocks (polygon) by 2030 (2021-2040) relative to 1951-2005. Arrows go from the losing EEZ (point) to the winner. (arrowhead)"}
+```{r SSR_gain_map, eval = F,  echo = F, fig.width=9, fig.height=12, fig.cap =  "Average gain of transboundary stock share ratio (lines) and number of shifting stocks (polygon) by 2030 (2021-2040) relative to 1951-2005. Arrows go from the losing EEZ (point) to the winner (arrowhead). Pannel B zooms in to specific areas"}
 
-img <- readPNG("../Figures/Fig1.png")
+img <- readPNG("../Figures/Fig2.png")
 grid.raster(img)
 
 ```
 
-![Average gain of transboundary stock share ratio (lines) and number of shifting stocks (polygon) by 2030 (2021-2040) relative to 1951-2005. Arrows go from the losing EEZ (point) to the winner. (arrowhead)](../Figures/Fig2.png)
+![Average gain of transboundary stock share ratio (lines) and number of shifting stocks (polygon) by 2030 (2021-2040) relative to 1951-2005. Arrows go from the losing EEZ (point) to the winner (arrowhead). Pannel B zooms in to specific areas ](../Figures/Fig1.png)
 
-## Time of Emergence
+## Time of Emergence (ToE)
 
-We estimated the time of emergence between neighbouring EEZs for 633 transbboundary stocks. On average, most of the world EEZ's time of emergence will be 2030 $\pm$ 25 yers (Fig S3-A), however, all EEZs have already seen changes for at least one species (Fig S3-B).
+We estimated the time of emergence between neighbouring EEZs for 633 transbboundary stocks. Since 2006, 87% of the world EEZs have already seen at least one emerging stock and 60% of the transboundary species analyzed have emerged in at least one neighbouring EEZ (e.g. Peruvean anchoveta emerged in 2010 between Chile and Peru). The cumulative sum of emerging stocks will have a steeper increase untill 2040 where the increment wil be slightly less intense. Similarly, for the number of EEZs, the increment curve seem to flattern by 2020. By 2081, all of the EEZs analyzed here will have at least one emerging stock while 2097 will be the year where all 633 stocks have emerged in at least one neighbouring EEZ (Fig. 2). 
+
+
+```{r SSR_gain_map, eval = F,  echo = F, fig.width=9, fig.height=12, fig.cap =  "Cumulative increase in time of emergence by EEZ and stock"}
+
+img <- readPNG("../Figures/Fig2.png")
+grid.raster(img)
+
+```
+
+![Cumulative increase in time of emergence by EEZ and stock](../Figures/Fig2.png)
+
+On average, most of the world EEZ's will see a stock ToE by 2030 with a higher frfequency of number of emerging stocks between latitudes 0$^o$ and 50$^o$N (Fig 2). In most cases, the current participation of the emerging stocks in a country's total fishing revenue is less than 50%, however, in some cases it represents 85% of total fishing revenue (Peru) or more, like the case of island territories such as Marshall Islands (92%) or Tokelau- New Zealand (100%). In few cases like Brazil's EEZ and Alaska's polar EEZ, no stock will emerge.
 
 ```{r Toe_map, eval = F,  echo = F, fig.width=9, fig.height=12, fig.cap =  ""}
 
@@ -195,5 +207,34 @@ grid.raster(img)
 
 ![(Average time of emergence (ToE) per Exclusive Economic Zone (EEZ polygon) and participation of emerging stocks in total EEZ fishing revenue (land polygon). Darker tones represent low participation and late ToE; lighter colors represent large participation and earlier ToE. Density plot on right shows the number of emerging stocks across EEZ centroids (10^o running mean))](../Figures/Fig3.png)
 
+The regional patterns of ToE suggest that most stocks will emerge by early 21st with many stocks in the Americas and Oceania already emerging. For the larger fisheries of the world in terms of revenue representig 75 percentile, ony the USA will see an average ToE before 2030 while fisheries in all other top fishing countries will be emerging within the following 10 years.
+
+```{r Toe_map, eval = F,  echo = F, fig.width=9, fig.height=12, fig.cap =  ""}
+
+img <- readPNG("../Figures/Fig4.png")
+grid.raster(img)
+
+```
+
+![(Average time of emergence (ToE) per fishing entity. Fishing revenue in logarithmic sacle. Showing names for the top 75th percentile). Countries marked with a asterisk have at least one border](../Figures/Fig4.png)
+
+The mean ToE of transbounudary species varied significantly according to the geographic region of the neighbouring EEZs (one-way ANOVA, *DF*(15,5478) = 18.64, *p* < 0.001, $\alpha$ = 0.05) (Fig. 5). Specifically, for species in EEZs of Easter Asia and Wetern Europe who have the latest average ToE across all habitat types (2041) and Polynesia who has the earliest everage ToE across all habitats (2018). Other regions like Wester Europe (regional average 2035) and Latin America and the Caribbean (regional average 2021) also significantly differe from other regions (*See Table Sup X for full statistics*). When looking specifically at habitat association, we also found significant differences on ToE (one-way ANOVA; *DF*(7,5041) = 12.68, *p* < 0.001, $\alpha$ = 0.05). Specifically, the ToE of pelagic-oceanic species is significantly different (*p* < 0.001) to that of bathydemersal, benthopelagic, demersal, and pelagic-neritic while the ToE of reef associated species is significantly different (*p* < 0.001) than bathydemersal, bethopelagic and demersal species (*See Table Sup XX for full statistics*).
+
+```{r Toe_map, eval = F,  echo = F, fig.width=9, fig.height=12, fig.cap =  ""}
+
+img <- readPNG("../Figures/Fig5.png")
+grid.raster(img)
+
+```
+
+![Regional time of emergence per habitat preference. Regions acording to the United Nations and habitat preference to FishBase. Whiskers represent 1.5* interquartile range. Box represents interquartile range as distance between first and third quartiles. Line represents median, and black points represent outliers (outside of 1.5*IQR.)](../Figures/Fig5.png)
+
+We hypothesize that species environmental preferences (e.g. presence in sertain biomes and habitat), climate change effects on water temperature, human drivers (e.g. catch rate), and latitudinal gradient would have significant influence in the time of emergence of transboundary stocks (Table 1). Results from the multiple linear regression analysis show a significant relation between ToE of transbounuadry stocks and latitudinal gradient (*p* > 0.001), **biome2** (*p* = 0.006) and speicies habitat association (Table 1).
+
+
 
 # Discussion
+
+The combination of the time of emergence and the revenue participation of the species could shed a light in the importance of the time of emergence in terms of management. For example, we identified that in Peru 12 species will emerge by 2038 in average, representing 92% of the countriy's fishing value. Morevoer, our results show that Peruvean anchoveta, the second largest fishery of the world [@SOFIA] and the main fishery in Peru [@REF] have already emerged (2010), with its stock share ratio benefititng Chile (Fig. 1).
+
+Form all siginificantly differnt variables, only latitudinal gradient postpone the ToE suggesting that the ToE will happen first at equatorian latitudes and later towards the poles.
