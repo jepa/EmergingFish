@@ -1114,94 +1114,72 @@ stopCluster(cl)
 
 ```{r get_env_data, eval = T, echo = T}
 
-
-getEnvVar=function(yr,ensemble,Variable){
+getEnvVar=function(yr,ensemble,variable){
   
-  filepath <- paste("Z:/DATA/Environmental data/GFDL_CMIP5_Large_Ensemble/ens",ensemble,"",sep="/")
+  filepath <- paste("/Volumes/DATA/DATA/Environmental data/GFDL_CMIP5_Large_Ensemble/All var/ens",ensemble,"/",sep="")
   
-  if(Variable == "sst"){
-    sst = paste("SST_",yr,".txt",sep="")
-    read_me_sst <- paste(filepath,sst,sep="")[1]
-    data <- read.csv(read_me_sst,header=F)  
+    file = paste(variable,"_",yr,".txt",sep="")
+    read_me <- paste(filepath,file,sep="")
     
-  }
+    data <- bind_cols(lapply(read_me,FUN= data.table::fread, na.strings = "NA",header=F)
+      ) %>% 
+      mutate(index = seq(1,259200,1))
+    
+    colnames(data) <- c(as.character(ensemble),"index")
+    
+      
+    data <- data %>% 
+      gather("ensemble","variable",1:length(ensemble)) %>%  # fix it has to be untill 10
+      mutate(variable = ifelse(variable == -9999.00000,NA,variable)) # Fixing NAs connotation
   
-  
-  if(Variable == "botom"){
-    botom = paste("botom_",yr,".txt",sep="")
-    read_me_botom <- paste(filepath,botom,sep="")[1]
-    data <- read.csv(read_me_botom,header=F)
-  }
   
   # Retrun
   
   getTemp <- data %>% 
-    mutate(ensemble = ensemble)
+    mutate(ensemble = ensemble,
+           year = yr)
+  
+  return(getTemp)
 }
-
-
 
 ```
 
 ```{r temp_emergence, eval = F, echo = F}
 
 
-TempEmer <- function(Hist_y = 2005){ # The LAST year of Historical data
+TempEmer <- function(yrs, hist_y = 2005, variable, ensemble){ # The LAST year of Historical data
   
-  
-  # Historical mean and sd of distance
-  historical <- Centroids_id %>%
-    filter(year <= Hist_y) %>% 
-    ungroup() %>%
-    group_by(taxon_key,ensemble,eez_name,neighbour_id) %>%
-    summarise_at(vars("distance"),
-                 c(hd_temp_mean=mean,
-                   hd_temp_sd=sd,
-                   n_yrs =~n())
-                 )
-  
-    # Future results
-  future <- Centroids_id %>% 
-    filter(year > Hist_y)
-  
-   # Get unique eezs
-  Unique_EEZs <- unique(EEZ_ids$eez_name)
-  
-  # Transboundary Index
-  Trans_index <- Centroids_id %>% 
-    left_join(historical,
-              by = c("taxon_key","eez_name","ensemble","neighbour_id")
-    ) %>%
-    # Re arrenging table for mutate
-    gather("variable","value",distance:hd_temp_sd) %>%
-    ungroup() %>% 
-    mutate(value = ifelse(is.na(value),0,value)) %>% 
-    mutate(
-      names = ifelse(eez_name ==Unique_EEZs[1],paste("Country_A",variable,sep="_"),paste("Country_B",variable,sep="_")
+  # Load environmental data
+  sst_data <- bind_rows(
+    lapply(
+      yrs,
+      getEnvVar, 
+      ensemble = ensemble, 
+      variable = variable
     )
-    ) %>%
-    select(-eez_name,-variable) %>%
-    spread(names,value) %>% 
-    # mutate index
-    mutate(
-      trans_index = (Country_A_distance/Country_A_hd_temp_sd - Country_B_distance/Country_B_hd_temp_sd)^2
-    # )
+  ) %>% 
+    left_join(index_code,
+              by = "index") %>%  # join with EEZ indexes
+    select(-lat,-lon,-eez_name) %>% 
+    filter(!is.na(eezid)) %>% 
+    # Get average temperature per eez
+    group_by(ensemble,eezid,year) %>%
+    summarise_at(vars("variable"),
+                 c(hd_eez_mean=mean),
+                 na.rm=T
     ) %>% 
-    # Ten years average of results
-    group_by(taxon_key,ensemble,neighbour_id) %>% 
-    mutate(RMean = rollmean(x = trans_index, 
+    # estimate 10 years running mean
+    group_by(ensemble,eezid) %>% 
+    mutate(Rmean = rollmean(x = hd_eez_mean, 
                             10, 
                             align = "right", 
-                            fill = trans_index,
-                            na.rm=T)
-    ) %>% 
-    # filter(year > 1960) %>%
-    select(taxon_key,neighbour_id,year,ensemble,trans_index,RMean)
+                            fill = hd_eez_mean)
+    )
   
   # Average of 10 years mean of ensemble members results
-  mean_sd_index <- Trans_index %>% 
-    group_by(taxon_key,year,neighbour_id) %>% 
-    summarise_at(vars("RMean"),
+  mean_sd_index <- sst_data %>% 
+    group_by(eezid,year) %>% 
+    summarise_at(vars("Rmean"),
                  c(trend=mean,
                    ensemble_sd=sd,
                    n_ens = ~n()
@@ -1209,137 +1187,157 @@ TempEmer <- function(Hist_y = 2005){ # The LAST year of Historical data
     ),
     na.rm=T
     )
-    
-    # Valid ensembles
-  # Only perform analysis on ensembles containing all years between 1951 and 2040
-    n_years <- mean_sd_index %>% 
-      group_by(n_ens) %>% 
-      summarise(
-        n_year = n()
-      ) %>% 
-      filter(
-        n_year == 149
-      )
-    
-    mean_sd_index <- mean_sd_index %>% 
-      filter(n_ens %in% n_years$n_ens)
   
-  # Estimate noice from ensemble members
-  historic_sd <- Trans_index %>% 
-    filter(year <= Hist_y) %>% 
-    group_by(taxon_key,neighbour_id,ensemble) %>% #Average historic data per year first
-    summarise_at(vars("trans_index"),
-                 c(trend= mean),
-                 na.rm=T
-                 ) %>% 
-    group_by(taxon_key,neighbour_id) %>% #Capture ensemble variation
-    summarise_at(vars("trend"),
+  # Historic data
+  historical <- sst_data %>%
+    filter(year <= hist_y) %>%
+    ungroup() %>%
+    # get EEZ time average
+    group_by(ensemble,eezid) %>%
+    summarise_at(vars("Rmean"),
+                 c(hd_temp_mean=mean),
+                 na.rm= T
+    ) %>% 
+    # get ensemble member mean and noice
+    group_by(eezid) %>% 
+    summarise_at(vars("hd_temp_mean"),
                  c(hist_mean=mean,
-                   noise=sd,
-                   n_ens = ~n())
-                 )
-  
-  
-  # For testing
-  if(Plot == T & length(historic_sd$hist_mean) > 1){
-  # Plot the result, bruh
-  
-  # Step to determine if data exists
-  Plot_Test <- nrow(subset(mean_sd_index, trend > (historic_sd$hist_mean+historic_sd$noise) | trend < (historic_sd$hist_mean-historic_sd$noise)))>0
-  
-  ggplot() +
-    geom_line(data = mean_sd_index,
-              aes(
-                x = year,
-                y = trend
-              )
-    ) +
-    geom_ribbon(data = mean_sd_index,
-                aes(x=year,
-                    ymin=historic_sd$hist_mean-historic_sd$noise,
-                    ymax=historic_sd$hist_mean+historic_sd$noise),
-                alpha = 0.5,
-                fill = "grey50"
-    ) +
-    geom_ribbon(data = mean_sd_index,
-                aes(x=year,
-                    ymin=historic_sd$hist_mean-(historic_sd$noise*2),
-                    ymax=historic_sd$hist_mean+(historic_sd$noise)*2)
-                ,
-                alpha = 0.5,
-                fill = "grey30"
-    ) +
-    geom_line(data = mean_sd_index,
-              aes(
-                x = year,
-                y = historic_sd$hist_mean
-              ),
-              colour = "grey50"
-    ) +
-    # Conditional, will only plot circles if the data exists
-    {if(Plot_Test)geom_point(data = subset(mean_sd_index, trend > (historic_sd$hist_mean+historic_sd$noise) | trend < (historic_sd$hist_mean-historic_sd$noise)),
-               aes(
-                 x = year,
-                 y = trend,
-                 colour = "red",
-               ),
-               shape = 1,
-               size = 3
+                   noise = sd),
+                 na.rm = T
     )
-      } +
-    geom_vline(xintercept = Hist_y,colour="blue",alpha = 0.5) +
-    scale_x_continuous(breaks = seq(1950,2100,5)) +
-    theme_classic()
   
-    tk <- unique(mean_sd_index$taxon_key)
   
-    ggsave(paste(tk,Id,"plot_example.jpg",sep="_"),
-       plot = last_plot(),
-       width = 10,
-       height = 8,
-       units = "in",
-       path = my_path("R")
-       )
   
-  }
+  # ----------------------- #
+  # Plot for data viz
+  # ----------------------- #
   
-  # If no historic data then emergin year is the first year of data
-  if(nrow(historic_sd) == 0){
+  # samp <- sample(mean_sd_index$eezid,30,replace = F)
+  
+  # mean_sd_index <- mean_sd_index %>% 
+    # filter(eezid %in% samp)
+  
+  
+
+    # plot_data <- mean_sd_index %>% 
+  # left_join(historical,
+  #           by = "eezid")
     
-    Final_Result <- mean_sd_index %>%
-      group_by(taxon_key,neighbour_id,n_ens) %>%
-      summarise(emerging_yr= min(year)) %>%
-      left_join(EEZ_ids,
-                by = "neighbour_id") %>%
-      ungroup() %>%
-      select(taxon_key,eez_name,eez_neighbour,n_ens,emerging_yr) %>% 
-      mutate(tresh= NA)
+  
+  # ggplot() +
+  #   geom_line(data = plot_data,
+  #             aes(
+  #               x = year,
+  #               y = trend
+  #             )
+  #   ) +
+  #   geom_ribbon(data = plot_data,
+  #               aes(x=year,
+  #                   ymin=hist_mean-noise,
+  #                   ymax=hist_mean+noise
+  #                   ),
+  #               alpha = 0.5
+  #   ) +
+  #   geom_line(data = plot_data,
+  #             aes(
+  #               x = year,
+  #               y = hist_mean
+  #               ),
+  #             linetype = "dashed"
+  #   ) +
+  #   facet_wrap(~eezid,
+  #              scales = "free") +
+  #   # Conditional, will only plot circles if the data exists
+  #   geom_point(data = subset(plot_data, trend > (hist_mean+noise) | trend < (hist_mean-noise)),
+  #              aes(
+  #                x = year,
+  #                y = trend,
+  #                colour = "red",
+  #              ),
+  #              shape = 1,
+  #              size = 3
+  #   ) +
+  #   geom_vline(xintercept = hist_y,colour="black",alpha = 0.5) +
+  #   scale_x_continuous(breaks = seq(1950,2100,5)) +
+  #   theme_classic()
+  
+  
+  # Future results
+  future <- sst_data %>% 
+    filter(year > hist_y) %>% 
+    # get ensemble member mean and noice
+    group_by(eezid,year) %>% 
+    summarise_at(vars("Rmean"),
+                 c(trend=mean,
+                   f_noise = sd)
+    ) %>% 
+    group_by(eezid) 
+  
+  
+  Final_Result <- future %>%
+    left_join(historical,
+              by = "eezid") %>% 
+    mutate(
+      tresh_one = ifelse(trend > (hist_mean+noise) | trend < (hist_mean-noise),"One",NA),
+      tresh_two = ifelse(trend > (hist_mean+(2*noise)) | trend < (hist_mean-(2*noise)),"Two",NA)
+    ) %>%
+    gather("tresh","YesNo",tresh_one,tresh_two) %>% 
+    filter(!is.na(YesNo)) %>% 
+    group_by(eezid,tresh) %>% 
+    summarise(emerging_yr = min(year))
   
   return(Final_Result)
-    
-  }else{
-  
-    Final_Result <- mean_sd_index %>%
-      filter(year > Hist_y) %>%
-      mutate(
-        tresh_one = ifelse(trend > (historic_sd$hist_mean+historic_sd$noise) | trend < (historic_sd$hist_mean-historic_sd$noise),"One",NA),
-        tresh_two = ifelse(trend > (historic_sd$hist_mean+(2*historic_sd$noise)) | trend < (historic_sd$hist_mean-(2*historic_sd$noise)),"Two",NA)
-      ) %>%
-      gather("tresh","YesNo",tresh_one,tresh_two) %>% 
-      filter(!is.na(YesNo)) %>% 
-      group_by(taxon_key,neighbour_id,n_ens,tresh) %>%
-      summarise(emerging_yr= min(year)) %>%
-      left_join(EEZ_ids,
-                by = "neighbour_id") %>%
-      ungroup() %>%
-      select(taxon_key,eez_name,eez_neighbour,n_ens,emerging_yr,tresh)
-  
-  return(Final_Result)
-  }
 }
-  
+ 
+gc()
 
 
+sst <- TempEmer(
+  yrs = seq(1951,2070,1),
+  hist_y = 2005,
+  variable = "SST",
+  ensemble = seq(102,111,1)
+)
+
+write_csv(sst,
+          "ToE_sst.csv")
+
+botTemp <- TempEmer(
+  yrs = seq(1951,2070,1),
+  hist_y = 2005,
+  variable = "botTemp",
+  ensemble = seq(102,111,1)
+)
+
+write_csv(botTemp,
+          "ToE_bottemp.csv")
+
+test <- sst %>% 
+  filter(tresh == "tresh_one")
+
+hist(test$emerging_yr)
+
+gc()
+
+test_map <- World_eez_sf %>% 
+  left_join(test,
+            by = "eezid") %>% 
+  ggplot() +
+  geom_sf(
+    aes(
+      fill = emerging_yr
+    )
+  )+ scale_fill_viridis(
+    limits = c(2000,2070),
+    breaks = seq(2000,2070,10)#,
+    # direction = -1
+  ) +
+  my_ggtheme_m() +
+  ggsave("botTemp_ToE.png",
+         width = 12,
+         height = 10,
+         units = "in"
+  )
 
 ```
 
