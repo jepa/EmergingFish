@@ -1,10 +1,15 @@
 ---
-title: "Matching the Time of Emergence of Transboundary Fish Stocks to Lead Time for Policy Response Under Climate Change"
-subtitle: "Climate-ready transboundary fisheries management under Climate Change"
-author: "Authors: Juliano Palacios-Abrantes*^1^, Thomas Frölicher^2^, U. Rashid Sumaila^1^,  Vicky Lam^1^, David VanderZwaag^3^, and William W.L. Cheung^1^"
-date: "Affiliations: ^1^Institute for the Oceans and Fisheries, University of British Columbia, Vancouver, Canada. ^2^Climate and Environmental Physics, Physics Institute, University of Bern. ^3^Schulich School of Law, Dalhousie University"
-# output: pdf_document
-output: word_document
+title: Matching the Time of Emergence of Transboundary Fish Stocks to Lead Time for
+  Policy Response Under Climate Change
+author: 'Authors: Juliano Palacios-Abrantes*^1^, Thomas Frölicher^2^, U. Rashid Sumaila^1^,  Vicky
+  Lam^1^, David VanderZwaag^3^, and William W.L. Cheung^1^'
+date: 'Affiliations: ^1^Institute for the Oceans and Fisheries, University of British
+  Columbia, Vancouver, Canada. ^2^Climate and Environmental Physics, Physics Institute,
+  University of Bern. ^3^Schulich School of Law, Dalhousie University'
+output:
+  word_document: default
+  pdf_document: default
+subtitle: Climate-ready transboundary fisheries management under Climate Change
 ---
 
 ```{r setup, eval = T, echo = F, warning = F, message = F, results = 'hide'}
@@ -139,7 +144,7 @@ prop_r <- read_csv("/Volumes/HALL2000/Data/TransEmergence/Results/proportion_cha
 
 ## Changes in Stock Share Ratio (SSR)
 
-```{r Load_Results, eval = TRUE,  echo = FALSE, include = FALSE}
+```{r analysis_results, eval = T,  echo = FALSE, include = FALSE}
 
 # Early century
 n_eez <- prop_r %>%
@@ -170,7 +175,7 @@ average_mid <- prop_r %>%
          )
 ```
 
-We estimated changes in the Stock Share Ratio of transboundary species shared by neighboring EEZs by early (2020-2040) and mid $21^{st}$ century (2040-2060), relative to present (1951-2005). Our results suggest that `r n_eez_per`% (n = `r n_eez`) of the world EEZs will see a change in SSR by 2030 (Fig. 1A). While most EEZs will experience an average change > 20%, a few EEZs are expected to have larger changes in SSR (Fig. 1A). For example, Guatemala' average SSR of *species* shared with Mexico is projected to go from 12% to 26% while Honduras SSR of *species* shared with the Nicaragua in the Pacific coast is projected to decline from 50% to 14%. The number of stocks per EEZ that will see a change in SSR by early $21^{st}$ century is relatively low (*XX%*), however, some regions like West Africa and the Mediterranean will see changes in over 50 species. These regions, where EEZs are relatively small and have multiple borders will see a complex dynamic of changes in SSR with no clear patterns (Fig. 2B). Towards the mid $21^st$ century, changes in SSR per EEZ will no be substantial (**Supplements Fig 1 (map)**) relative to early century, but are expected to increase in intensity (**Supplements Fig 2 (histogram)**).
+We estimated changes in the Stock Share Ratio of transboundary species shared by neighboring EEZs by early (2020-2040) and the mid $21^{st}$ century (2040-2060), relative to present (1951-2005). Our results suggest that `r n_eez_per`% (n = `r n_eez`) of the world EEZs will see a change in SSR by 2030 (Fig. 1A). While most EEZs will experience an average change lower than 25%, a few EEZs are expected to have larger changes in SSR relative to early century. Such change is expected to slightly increase in intensity towards the  mid $21^{st}$ century (**Supplements Fig 1 (histogram)**). For example, Guatemala's SSR of *Panulirus gracilis* shared with Mexico is projected to go from 12% to 26%. The number of stocks per EEZ that will see a change in SSR by early $21^{st}$ century is relatively low (median of 13 spp per EEZ), however, some regions like West Africa and the Mediterranean will see changes in over 50 species (e.g. Senegal, 94). These regions, where EEZs are relatively small and have multiple borders will see a complex dynamic of changes in SSR with no clear patterns (Fig. 1B). Towards the mid $21^st$ century, changes in SSR per EEZ will no be substantial (**Supplements Fig 1 (map)**) relative to early century, but are expected to increase in intensity (**Supplements Fig 1 (histogram)**).
 
 
 ```{r SSR_gain_map, eval = F,  echo = F, fig.width=9, fig.height=12, fig.cap =  "Average gain of transboundary stock share ratio (lines) and number of shifting stocks (polygon) by 2030 (2021-2040) relative to 1951-2005. Arrows go from the losing EEZ (point) to the winner (arrowhead). Pannel B zooms in to specific areas"}
@@ -182,12 +187,12 @@ grid.raster(img)
 
 ![Average gain of transboundary stock share ratio (lines) and number of shifting stocks (polygon) by 2030 (2021-2040) relative to 1951-2005. Arrows go from the losing EEZ (point) to the winner (arrowhead). Pannel B zooms in to specific areas ](../Figures/Fig1.png)
 
-## Time of Emergence (ToE)
+## Time of Emergence
 
-We estimated the time of emergence between neighboring EEZs for 633 transboundary stocks. Since 2006, 87% of the world EEZs have already seen at least one emerging stock and 60% of the transboundary species analyzed have emerged in at least one neighboring EEZ (e.g. Peruvean anchoveta emerged in 2010 between Chile and Peru). The cumulative sum of emerging stocks will have a steeper increase until 2040 where the increment will be slightly less intense. Similarly, for the number of EEZs, the increment curve seem to flatten by 2020. By 2081, all of the EEZs analyzed here will have at least one emerging stock while 2097 will be the year where all 633 stocks have emerged in at least one neighboring EEZ (Fig. 2). 
+We estimated the ToE between neighboring EEZs for 633 transboundary stocks, that is, the first year where the future stock's distrtibution overpasses the historical variation. Since 2006, 87% of the world EEZs have already seen at least one emerging stock and 60% of the transboundary species analyzed have emerged in at least a set of neighboring EEZ (e.g. *Engraulis ringens* shared by Chile and Peru emerged in 2010). The cumulative sum of emerging stocks will have a steeper increase until 2040 where the increment will be slightly less intense (Fig. 2). Similarly, for the number of EEZs, the increment curve seem to flatten by 2020. By 2081, all of the EEZs analyzed here will have at least one emerging stock while 2097 will be the year where all 633 stocks have emerged in at least one neighboring EEZ (Fig. 2). 
 
 
-```{r SSR_gain_map, eval = F,  echo = F, fig.width=9, fig.height=12, fig.cap =  "Cumulative increase in time of emergence by EEZ and stock"}
+```{r freq_map, eval = F,  echo = F, fig.width=9, fig.height=12, fig.cap =  "Cumulative increase in time of emergence by EEZ and stock"}
 
 img <- readPNG("../Figures/Fig2.png")
 grid.raster(img)
@@ -196,7 +201,7 @@ grid.raster(img)
 
 ![Cumulative increase in time of emergence by EEZ and stock](../Figures/Fig2.png)
 
-On average, most of the world EEZ's will see a stock ToE by 2030 with a higher frequency of number of emerging stocks between latitudes 0$^o$ and 50$^o$N (Fig 2). In most cases, the current participation of the emerging stocks in a country's total fishing revenue is less than 50%, however, in some cases it represents 85% of total fishing revenue (Peru) or more, like the case of island territories such as Marshall Islands (92%) or Tokelau- New Zealand (100%). In few cases like Brazil's EEZ and Alaska's polar EEZ, no stock will emerge.
+On average, most of the world EEZ's will see a stock emerge by 2030 with a few EEZs having a relative late average ToE (e.g. Honduras average ToE is 2071) and 54 EEZs having already emergered (e.g. average ToE >= 2020). A higher number of emerging stocks will happen between latitudes 0$^o$ and 50$^o$N corresponding to regions of relatively small EEZs with multiple borders (e.g. The Carribeean and the Medditerranean) (Fig 2). In most cases, the current participation of the emerging stocks in a country's total fishing revenue is less than 50%. However, in some cases emerging stocks represent 85% of total fishing revenue (e.g. Peru) or more (e.g. Marshall Islands, 92%). Only in very few cases like Brazil and Alaska's polar EEZ, presented no emerging stock between 2006 and 2100. 
 
 ```{r Toe_map, eval = F,  echo = F, fig.width=9, fig.height=12, fig.cap =  ""}
 
@@ -207,9 +212,9 @@ grid.raster(img)
 
 ![(Average time of emergence (ToE) per Exclusive Economic Zone (EEZ polygon) and participation of emerging stocks in total EEZ fishing revenue (land polygon). Darker tones represent low participation and late ToE; lighter colors represent large participation and earlier ToE. Density plot on right shows the number of emerging stocks across EEZ centroids (10^o running mean))](../Figures/Fig3.png)
 
-The regional patterns of ToE suggest that most stocks will emerge by early 21st with many stocks in the Americas and Oceania already emerging. For the larger fisheries of the world in terms of revenue representing 75 percentile, only the USA will see an average ToE before 2030 while fisheries in all other top fishing countries will be emerging within the following 10 years.
+Most of the main fishing countries in terms of revenue from transbounudary fisheries (e.g. the top $75^{th}$ percentile) will have an average ToE across all species after 2030 (n = 28). The remaining twelve countries will have an average ToE before 2030, this includes the United States who is the $4^{th}$ place it total reveneue (Fig. 4). These 47 countries are also among those with the largest number of emerging taxa. Regionally speaking, most of African, Asian and European EEZs will see a latter ToE, while the Americas and Oceania will see an early ToE (Fig. 4). From the top ten countries with more revenue from transboundary species, nine of them share a border. Most of these countries (e.g. Spain and China) will also have a large number of emering stocks, however, some others like Peru and Norway will have a small number of emerging taxa that represents high revenue fisheries.
 
-```{r Toe_map, eval = F,  echo = F, fig.width=9, fig.height=12, fig.cap =  ""}
+```{r bubble_plot, eval = F,  echo = F, fig.width=9, fig.height=12, fig.cap =  ""}
 
 img <- readPNG("../Figures/Fig4.png")
 grid.raster(img)
@@ -218,9 +223,9 @@ grid.raster(img)
 
 ![(Average time of emergence (ToE) per fishing entity. Fishing revenue in logarithmic sacle. Showing names for the top 75th percentile). Countries marked with a asterisk have at least one border](../Figures/Fig4.png)
 
-The mean ToE of transboundary species varied significantly according to the geographic region of the neighboring EEZs (Kruskal-Wallis, $X^2$ = 287.23, *DF* = 93, *p* < 0.001) (Fig. 5). Post-hoc tests revealed that EEZs in Easter Asia who have the latest average ToE across all habitat types (2041), and Latin America and the Caribbean and Polynesia who have the earliest average ToE across all habitats (2021 and 2018, respectively), significantly differ with almost all other regions. Other regions also significantly differ from each other but in a less frequent manner (*See Table Sup X for full statistics*). When looking specifically at habitat association, we also found significant differences on ToE (Kruskal-Wallis, $X^2$ = 286.48, *DF* = 93, *p* < 0.001). Specifically, the ToE of species with preferences for pelagic-oceanic and reef habitats is significantly different than other for other habitat preferences (*See Table Sup XX for full statistics*).
+We compared species ToE within EEZs by geogrpahic region and by species habitat preference. The mean ToE of transboundary species varied significantly according to the geographic region of the neighboring EEZs (Kruskal-Wallis, $X^2$ = 287.23, *DF* = 93, *p* < 0.001) (Fig. 5). Post-hoc tests revealed that EEZs in Easter Asia who have the latest average ToE across all habitat types (2041), and Latin America and the Caribbean and Polynesia who have the earliest average ToE across all habitats (2021 and 2018, respectively), significantly differ with almost all other regions. Other regions also significantly differ from each other but in a less frequent manner (*See Table Sup X for full statistics*). When looking specifically at habitat association, we found significant differences on ToE of different habitat types (Kruskal-Wallis, $X^2$ = 286.48, *DF* = 93, *p* < 0.001). Specifically, the ToE of species with preferences for pelagic-oceanic and reef habitats was significantly different than other for other habitat preferences (*See Table Sup XX for full statistics*).
 
-```{r Toe_map, eval = F,  echo = F, fig.width=9, fig.height=12, fig.cap =  ""}
+```{r Boxplot, eval = F,  echo = F, fig.width=9, fig.height=12, fig.cap =  ""}
 
 img <- readPNG("../Figures/Fig5.png")
 grid.raster(img)
@@ -229,21 +234,20 @@ grid.raster(img)
 
 ![Regional time of emergence per habitat preference. Regions acording to the United Nations and habitat preference to FishBase. Whiskers represent 1.5* interquartile range. Box represents interquartile range as distance between first and third quartiles. Line represents median, and black points represent outliers (outside of 1.5*IQR.)](../Figures/Fig5.png)
 
-We hypothesize that species environmental preferences (e.g. presence in certain biomes and habitat preference), climate change effects on water temperature (e.g. ToE of SST), human drivers (e.g. catch rate), and latitudinal gradient would have significant influence in the ToE of transboundary stocks (*Table Sup 3*). Results from the multiple linear regression analysis show a significant relation between ToE of transboundary stocks and latitudinal gradient (*p* > 0.001), tropical (*p* = 0.013) and temperate (*p* = 0.002) biomes, EEZs in the Americas (*p* > 0.001), Asia (*p* > 0.001) and Oceania (*p* = 0.002), and some habitats (Table 1).
+We hypothesized that species environmental preferences (e.g. presence in certain biomes and habitat preferences), climate change effects on water temperature (e.g. ToE of SST), human drivers (e.g. catch rate), and latitudinal gradient would have significant influence in the ToE of transboundary stocks (*Table Sup 3*). Results from the multiple linear regression analysis show a significant relation between ToE of transboundary stocks and latitudinal gradient (*p* > 0.001), tropical (*p* = 0.013) and temperate (*p* = 0.002) biomes, EEZs in the Americas (*p* > 0.001), Asia (*p* > 0.001) and Oceania (*p* = 0.002), and some habitats (*p* > 0.001) (Table 1).
 
-Table 2. Multiple regression results for time of emergence of transboundary stocks. Only showing significant variables. The model significantly predicts time of emergence (F[18,6155] = 20.68, p < 0.001, R2 = 0.05).
+Table 1. Multiple regression results for time of emergence of transboundary stocks. Only showing significant variables. The model significantly predicts time of emergence (F[18,6155] = 20.68, p < 0.001, R2 = 0.05).
 
-```{r table1, eval = T,  echo = F"}
+```{r table1, eval = T,  echo = F}
 
 read_csv("../Tables/mlr_result.csv") %>% 
-  knirt::kable()
-
+  knitr::kable()
 
 ```
 
 
-# Discussion
+<!-- # Discussion -->
 
-The combination of the time of emergence and the revenue participation of the species could shed a light in the importance of the time of emergence in terms of management. For example, we identified that in Peru 12 species will emerge by 2038 in average, representing 92% of the country's fishing value. Moreover, our results show that Peruvean anchoveta, the second largest fishery of the world [@SOFIA] and the main fishery in Peru [@REF] have already emerged (2010), with its stock share ratio benefiting Chile (Fig. 1).
+<!-- The combination of the time of emergence and the revenue participation of the species could shed a light in the importance of the time of emergence in terms of management. For example, we identified that in Peru 12 species will emerge by 2038 in average, representing 92% of the country's fishing value. Moreover, our results show that Peruvean anchoveta, the second largest fishery of the world [@SOFIA] and the main fishery in Peru [@REF] have already emerged (2010), with its stock share ratio benefiting Chile (Fig. 1). -->
 
-Form all significantly different variables, only latitudinal gradient postpone the ToE suggesting that the ToE will happen first at equatorial latitudes and later towards the poles.
+<!-- Form all significantly different variables, only latitudinal gradient postpone the ToE suggesting that the ToE will happen first at equatorial latitudes and later towards the poles. -->
