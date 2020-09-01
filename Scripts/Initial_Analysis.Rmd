@@ -1596,19 +1596,6 @@ Biogeo_reg <-fread(paste(my_path("D"),"Climate/SPATIAL_PARTITION_OCEAN.csv", sep
 Biogeo_reg <- suppressWarnings(Biogeo_reg[order(Biogeo_reg$lat, rev(Biogeo_reg$lon),decreasing=TRUE), ]) %>% 
   mutate(index = seq(1,259200,1)) %>% 
   mutate(
-    # biome = ifelse(biome2 == 1, "c_tropical",
-    #                ifelse(biome2 == 2,"c_temperate",
-    #                       ifelse(biome2 == 3, "c_polar",
-    #                              ifelse(biome2 == 4, "o_tropical",
-    #                                     ifelse(biome2 == 5, "o_temperate",
-    #                                            ifelse(biome2 == 6, "o_polar",
-    #                                                   biome2
-    #                                            )
-    #                                     )
-    #                              ) 
-    #                       )
-    #                )
-    # ),
     biome = ifelse(biome2 %in% c(1,4), "tropical",
                    ifelse(biome2  %in% c(2,5),"temperate",
                           ifelse(biome2  %in% c(3,6), "polar",
@@ -3044,7 +3031,7 @@ M9_sum %>%
   tidy() %>% 
   # filter(p.value < 0.05) %>% 
   # mutate(p.value = ifelse(p.value < 0.001,0.001,round(p.value,3))) %>% 
-  # stargazer(title = "Multiple regression results for time of emergence of Transboundary stocks. Only showing explanatory variables. The model significantly predicts time of emergencec (F(31,5270) = 15.38, p < 0.001, R2 = 0.06).",
+  # stargazer(title = "Multiple regression results for time of emergence of Transboundary stocks. Only showing explanatory variables. The model significantly predicts time of emergencec (F(18,6155) = 20.68, p < 0.001, R2 = 0.05).",
             # align=TRUE)
   # knitr::kable() %>% 
   write_csv(.,
