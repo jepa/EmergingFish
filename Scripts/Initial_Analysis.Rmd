@@ -39,7 +39,9 @@ packages <- c(
   "cowplot",
   "rfishbase",
   "stargazer", # For nice lm tables
-  "tidytext" # for boxplot order
+  "tidytext", # for boxplot order
+  "moments", # for skewness and kurto
+  "pgirmess" # for non parametric post hoc test
 )
 
 my_lib(packages)
@@ -1588,8 +1590,56 @@ Toe_temp <- left_join(my_path("D","Climate", "ToE_sst.csv", read = T),
 
 # Biogeographic regions (from Rey 2020)
 Biogeo_reg <-fread(paste(my_path("D"),"Climate/SPATIAL_PARTITION_OCEAN.csv", sep ="")) %>% 
-  clean_names() %>% 
-  rowid_to_column("index")
+  clean_names()
+  
+# Fix coordinate system and re-name biomes
+Biogeo_reg <- suppressWarnings(Biogeo_reg[order(Biogeo_reg$lat, rev(Biogeo_reg$lon),decreasing=TRUE), ]) %>% 
+  mutate(index = seq(1,259200,1)) %>% 
+  mutate(
+    # biome = ifelse(biome2 == 1, "c_tropical",
+    #                ifelse(biome2 == 2,"c_temperate",
+    #                       ifelse(biome2 == 3, "c_polar",
+    #                              ifelse(biome2 == 4, "o_tropical",
+    #                                     ifelse(biome2 == 5, "o_temperate",
+    #                                            ifelse(biome2 == 6, "o_polar",
+    #                                                   biome2
+    #                                            )
+    #                                     )
+    #                              ) 
+    #                       )
+    #                )
+    # ),
+    biome = ifelse(biome2 %in% c(1,4), "tropical",
+                   ifelse(biome2  %in% c(2,5),"temperate",
+                          ifelse(biome2  %in% c(3,6), "polar",
+                                 biome2)
+                   )
+    )
+    ) %>% 
+  filter(biome2 != "NaN")
+
+
+
+# biome2 1 = Coastal tropical 
+# biome2 2 = Coastal sub-tropical
+# biome2 3 = Coastal polar
+# biome2 4 = Oceanic tropical
+# biome2 5 = Oceanic sub-tropical
+# biome2 6 = Oceanic polar
+
+# Biogeo_reg %>%
+  # gather("biome_type","value",biome:biome2) %>%
+# ggplot() +
+# geom_tile(
+#   aes(
+#     x = lon,
+#     y = lat,
+#     fill = biome
+#   )
+# )
+#   facet_wrap(~biome_type,
+#              ncol=1)
+
 
 # Get eez to index relational data
 EEZ_CellID <- my_path("G", extra_path = "Spatial/DBEM", name="EEZ_CellID.xlsx", read = TRUE) %>%
@@ -1597,7 +1647,7 @@ EEZ_CellID <- my_path("G", extra_path = "Spatial/DBEM", name="EEZ_CellID.xlsx", 
 colnames(EEZ_CellID) <- c("eezid","index")
 
 Eez_biogeo <- EEZ_CellID %>% 
-  # filter(eezid == 191) %>% 
+  # filter(eezid == 8) %>%
   left_join(Biogeo_reg,
        by = "index") %>% 
   # Deal with NaNs in data
@@ -2222,7 +2272,7 @@ ggplot() +
 ```{r Time_lapse_plot,  eval = T, echo = T}
 
 # Per Stock
-stock_d <-  Eme_Res %>% 
+stock_da <-  Eme_Res %>% 
   left_join(Neighbours) %>% 
   # distinct(taxon_key,neighbour_id, .keep_all = TRUE) %>% 
   group_by(taxon_key,tresh) %>% 
@@ -2691,7 +2741,7 @@ ggplot(Buble_data) +
 
 ### Species level analysis
 
-#### Fig. 5 Demersal Vs Pelagic
+#### Fig. 5 Boxplot
 
 ```{r deme_pela, eval = F, echo =F}
 
@@ -2752,16 +2802,60 @@ ggplot(Dem_pel) +
 
 ### Statistics
 
+#### Test for normallity
+
+```{r, normality_test, eval = F, echo = F}
+# Test for normality
+
+Stats_data <- Eme_Res %>% 
+  filter(tresh == "Tresh_one",
+         n_ens == 10)
+  
+
+# ------------------- #
+# Test normal asumptions 
+# ------------------- #
+
+hist(Stats_data$emerging_yr) # Positevely skewed
+qqnorm(Stats_data$emerging_yr) # not normally distributed
+skewness(Stats_data$emerging_yr) #1.02
+kurtosis(Stats_data$emerging_yr) #2.82
+
+# ------------------- #
+
+# (NOT NORMAL DISTRIRBUTION)
+
+```
+
 ## Regional differences
 
 ```{r multiple_reg, eval = F, echo = F}
 
-reg_diff_data <- Eme_Res %>% 
+Reg_diff_data <- Eme_Res %>% 
   filter(tresh == "Tresh_one",
          !is.na(un_sub_region)
          )
 
-Reg_aov <- aov(emerging_yr~un_sub_region, data = reg_diff_data)
+# ------------------- #
+# Run non-parametric Krustal
+# ------------------- #
+
+Reg_kw <- kruskal.test(un_sub_region~emerging_yr, data = Reg_diff_data)
+
+Reg_kw
+# Kruskal-Wallis rank sum test
+# 
+# data:  un_sub_region by emerging_yr
+# Kruskal-Wallis chi-squared = 287.23, df = 93, p-value < 2.2e-16
+
+kruskalmc(emerging_yr~un_sub_region, data = Reg_diff_data)
+
+# Multiple differences but Eastern Asia, Lat. Ame. Car. and Polinesia are the nes who differe the most (e.g. differe with more revions).
+
+# ------------------- #
+# Just to double check ANOVA results (give the same)
+# ------------------- #
+Reg_aov <- aov(emerging_yr~un_sub_region, data = Reg_diff_data)
 Reg_aov
 
 summary(Reg_aov)
@@ -2778,12 +2872,32 @@ TukeyHSD(Reg_aov) %>%
 
 ```{r multiple_reg, eval = F, echo = F}
 
-hab_diff_data <- Eme_Res %>% 
+Hab_diff_data <- Eme_Res %>% 
   filter(tresh == "Tresh_one",
          !is.na(un_sub_region)
          ) %>% 
   left_join(Spp_env_pref,
             by = "taxon_key") 
+
+# ------------------- #
+# Run non-parametric Krustal
+# ------------------- #
+
+Hab_kw <- kruskal.test(DemersPelag~emerging_yr, data = Hab_diff_data)
+
+Hab_kw
+# Kruskal-Wallis rank sum test
+
+# data:  DemersPelag by emerging_yr
+# Kruskal-Wallis chi-squared = 286.48, df = 93, p-value < 2.2e-16
+
+kruskalmc(emerging_yr~DemersPelag, data = Hab_diff_data)
+
+# Multiple differences but main differences for pelagic-ocenaic and reefs
+
+# ------------------- #
+# Just to double check ANOVA results (give the same)
+# ------------------- #
 
 Hab_aov <- aov(emerging_yr~DemersPelag, data = hab_diff_data)
 Hab_aov
@@ -2798,7 +2912,7 @@ TukeyHSD(Hab_aov) %>%
 
 ```
 
-### Tab.1 Explain the ToE
+## Table.1 Multy linear model
 
 ```{r multiple_reg, eval = F, echo = F}
 
@@ -2820,7 +2934,7 @@ TukeyHSD(Hab_aov) %>%
 Lm_data <- Eme_Res %>% # 19728
   filter(tresh == "Tresh_one") %>% # 11490
   left_join(Spp_depth) %>% 
-  select(taxon_key,tresh,sf_eez_name,sau_fishing_entity,fishing_entity_id,emerging_yr,eezid,dem_pel) %>% 
+  select(taxon_key,tresh,sf_eez_name,sau_fishing_entity,fishing_entity_id,emerging_yr,eezid,dem_pel,un_region= un_geo_region) %>% 
   left_join(Toe_temp,
             by = c("eezid","tresh")
             ) %>% 
@@ -2841,11 +2955,11 @@ Lm_data <- Eme_Res %>% # 19728
 # -------------------------------- #
 
 # Model 1; all variables
-M_all_var <- lm(emerging_yr ~ sst_toe + bot_toe + status + biome + dem_pel + DemersPelag, data = Lm_data)
+M1 <- lm(emerging_yr ~ sst_toe + bot_toe + status + biome + dem_pel + DemersPelag, data = Lm_data)
 
-all_sum <- summary(M_all_var)
-all_aic <- AIC(M_all_var)
-all_r <-  all_sum$adj.r.squared
+M1_sum <- summary(M1)
+M1_aic <- AIC(M1)
+M1_r <-  M1_sum$adj.r.squared
 
 # Model 2; non demPel
 M2 <- lm(emerging_yr ~ sst_toe + bot_toe + status + biome + dem_pel, data = Lm_data)
@@ -2897,28 +3011,60 @@ M8_sum <- summary(M8)
 M8_aic <- AIC(M8)
 M8_r <-  M8_sum$adj.r.squared
 
+# Model 9; Include UN regions
+M9 <- lm(emerging_yr ~ sst_toe + bot_toe + category + biome + DemersPelag + latitude + un_region, data = Lm_data)
+
+M9_sum <- summary(M9)
+M9_aic <- AIC(M9)
+M9_r <-  M9_sum$adj.r.squared
+
 
 
 tibble(
-  "model" = paste("M",seq(1,8,1),sep=""),
-  "AIC" = c(all_aic,M2_aic,M3_aic,M4_aic,M5_aic,M6_aic,M7_aic,M8_aic),
-  "rsquared" = c(all_r,M2_r,M3_r,M4_r,M5_r,M6_r,M7_r,M8_r)
+  "model" = paste("M",seq(1,9,1),sep=""),
+  "AIC" = c(M1_aic,M2_aic,M3_aic,M4_aic,M5_aic,M6_aic,M7_aic,M8_aic, M9_aic),
+  "rsquared" = c(M1_r,M2_r,M3_r,M4_r,M5_r,M6_r,M7_r,M8_r,M9_r)
 )
 
+# The Winner is M9    49283.   0.0765
 
-# UNIDAS 20282659
+#Table for paper
+M9_sum %>% 
+  tidy() %>% 
+  filter(p.value < 0.05) %>% 
+  mutate(p.value = ifelse(p.value < 0.001,0.001,round(p.value,3))) %>% 
+  # stargazer(title = "Multiple regression results for time of emergence of Transboundary stocks. Only showing explanatory variables. The model significantly predicts time of emergencec (F(31,5270) = 15.38, p < 0.001, R2 = 0.06).",
+            # align=TRUE)
+  # knitr::kable() %>% 
+  write_csv(.,
+            "./Tables/mlr_result.csv")
 
-
-# The Winner is M8!
-
-
-
-stargazer(M8, title = "Results", align=TRUE)
-
+#Table for supplements
+M9_sum %>% 
+  tidy() %>% 
+  # filter(p.value < 0.05) %>% 
+  # mutate(p.value = ifelse(p.value < 0.001,0.001,round(p.value,3))) %>% 
+  # stargazer(title = "Multiple regression results for time of emergence of Transboundary stocks. Only showing explanatory variables. The model significantly predicts time of emergencec (F(31,5270) = 15.38, p < 0.001, R2 = 0.06).",
+            # align=TRUE)
+  # knitr::kable() %>% 
+  write_csv(.,
+            "./Tables/mlr_result_sup.csv")
 ```
 
 
-## Troubleshooting
+# END PAPER
+
+
+
+
+
+
+
+
+
+
+
+# Troubleshooting
 
 ### Weird connections from Australia
 
