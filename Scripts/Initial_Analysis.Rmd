@@ -1787,7 +1787,32 @@ Eez_centroid_eck <- do.call(rbind, st_geometry(Eez_centroid_sf)) %>%
   bind_cols(Eez_centroid) %>% 
   select(eez_name,longitude = lon,latitude = lat)
 
+
+
+
+Main_data <- Eme_Res %>% # 19728
+  filter(tresh == "Tresh_one") %>% # 11490
+  left_join(Spp_depth) %>% 
+  select(taxon_key,tresh,sf_eez_name,sau_fishing_entity,fishing_entity_id,emerging_yr,eezid,dem_pel,un_region= un_geo_region) %>% 
+  left_join(Toe_temp,
+            by = c("eezid","tresh")
+            ) %>% 
+  left_join(Catch_trend,
+            by = c("taxon_key","sau_fishing_entity","fishing_entity_id")
+            ) %>% # 11492
+  left_join(Eez_biogeo,
+            by = "eezid") %>% 
+  left_join(Spp_env_pref,
+            by = "taxon_key") %>% 
+  left_join(Eez_centroids,
+            by = "eezid") %>% 
+  mutate(latitude = abs(latitude))
+
+
 ```
+
+
+
 
 ####  Prooportion Analysis
 
@@ -1796,6 +1821,17 @@ Eez_centroid_eck <- do.call(rbind, st_geometry(Eez_centroid_sf)) %>%
 ```{r fig_map_Juan, eval = F, echo =F}
 # Figure made thanks to Juanito!
 # http://jsmayorga.com/post/mapping-the-global-network-of-transnational-fisheries/
+
+### Median number
+
+Prop_results %>% 
+  filter(variable == "n_spp") %>% 
+  group_by() %>% 
+  summarise(
+    median(early,na.rm=T),
+    sd(early,na.rm=T)
+  )
+
 
 # Prepare data from results
 Data <- Prop_results %>% 
@@ -1885,8 +1921,8 @@ n_taxa_map <- World_map %>%
 
 gc()# clean ram
 
-# time <- "per_mid_plot"
-time <- "per_early"
+time <- "per_mid"
+# time <- "per_early"
 
 ## ------------------- ##
 # Global Plot
@@ -1933,7 +1969,7 @@ scale_fill_viridis(
   # option="magma",
   # direction = -1
 ) +
-ggsave("./Figures/fig2ax.png",
+ggsave("./Figures/fig_sup_1.png",
        width = 12,
        height = 8,
        units = "in"
@@ -2624,7 +2660,6 @@ Eez_hist <- Eme_Res %>%
 
 ```{r, buble_plot, eval = F, echo = F}
 
-
 Buble_data <- Eez_d_hist %>% 
   filter(metric == "mean_yr") %>% 
   group_by(sau_fishing_entity,tresh) %>% 
@@ -2655,6 +2690,12 @@ quibble <- function(x, q = p) {
 Percentile_value <- Buble_data %>% 
   group_by() %>%  # for whole distribution
         do(quibble(.$log_value, 0.75))
+
+
+## Top fishing nations
+Buble_data %>% 
+  filter(log_value > Percentile_value$x) %>% 
+  View()
 
 
 # Labels Data
@@ -2914,27 +2955,6 @@ TukeyHSD(Hab_aov) %>%
 
 # AIC value; model between predictive capacity and complexity (i.e., number of explanatory variables) is given by the model with lowest AIC value
 
-# -------------------------------- #
-#### Prepare data
-# -------------------------------- #
-
-Lm_data <- Eme_Res %>% # 19728
-  filter(tresh == "Tresh_one") %>% # 11490
-  left_join(Spp_depth) %>% 
-  select(taxon_key,tresh,sf_eez_name,sau_fishing_entity,fishing_entity_id,emerging_yr,eezid,dem_pel,un_region= un_geo_region) %>% 
-  left_join(Toe_temp,
-            by = c("eezid","tresh")
-            ) %>% 
-  left_join(Catch_trend,
-            by = c("taxon_key","sau_fishing_entity","fishing_entity_id")
-            ) %>% # 11492
-  left_join(Eez_biogeo,
-            by = "eezid") %>% 
-  left_join(Spp_env_pref,
-            by = "taxon_key") %>% 
-  left_join(Eez_centroids,
-            by = "eezid") %>% 
-  mutate(latitude = abs(latitude))
 
 
 # -------------------------------- #
