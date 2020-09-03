@@ -1426,15 +1426,35 @@ This results only shows the average percentage change in proportion of all speec
 This function estimates the total change in MCP proportion of each species for each EEZ. It looses the connection with neighbours as you only know for x species houw much is the proportion changing.
 
 ```{r fun_SummaryProp, eval = F, echo =F}
+taxon_key <- 600006	
 
 SummaryProp <- function(taxon_key,links="NA"){
   
   # Reads taxon data
-  proportion_data <- fread(paste(my_path("R",extra_path = "Proportion_2005/"),"proportion_",taxon_key,".csv", sep=""))
+  proportion_data <- fread(paste(my_path("R",extra_path = "Proportion_2005/"),"proportion_",taxon_key,".csv", sep="")) %>% 
+    filter(!is.na(eez_neighbour))
+  
+  # Identify SSR treshold for natural spatial variability of the stock
+  proportion_tresh <- proportion_data %>% 
+    filter(time_step == "historical") %>% 
+    mutate(
+      top_tresh = ensemble_mean+ensemble_sd,
+      low_tresh = ensemble_mean-ensemble_sd
+    ) %>% 
+    select(taxon_key:eez_neighbour,top_tresh:low_tresh) %>% 
+    left_join(proportion_data) %>% 
+    # Only keeps change if surpasses treshold
+    mutate(
+      over_tresh = ifelse(ensemble_mean > top_tresh | ensemble_mean < low_tresh,"keep",
+                          ifelse(time_step == "historical","keep","drop")
+      )
+    ) %>% 
+    filter(over_tresh == "keep") %>% 
+    select(-top_tresh,-low_tresh)
   
   if(links == "y"){
     # summarizes by country and neighbour
-    country_summary <- proportion_data %>% 
+    country_summary <- proportion_tresh %>% 
       group_by(taxon_key,eez_name,eez_neighbour,time_step) %>% 
       summarise(
         mean_spp = mean(ensemble_mean, na.rm = T) # average spp change from all countries sharing
@@ -1443,8 +1463,8 @@ SummaryProp <- function(taxon_key,links="NA"){
     
   }else{
     # summarizes by country
-    country_summary <- proportion_data %>% 
-      group_by(taxon_key,eez_name,time_step) %>% 
+    country_summary <- proportion_tresh %>% 
+      group_by(taxon_key,eez_name,eez_neighbour,time_step) %>% 
       summarise(
         mean_spp = mean(ensemble_mean,na.rm=T) # average spp change from all countries sharing
       ) %>% 
@@ -1459,7 +1479,9 @@ SummaryProp <- function(taxon_key,links="NA"){
 
 #### Fun `EEZProp`
 
-The next step is to summarize all species per eez so our results shows average change of all species within an EEZ towards a neighbour
+The next step is to summarize all species per eez so our results shows average change of all species within an EEZ towards a neighbour. 
+
+**Note: Contains step to filter out changes less than +-1 s.d.**
 
 ```{r fun_EEZProp, eval = F, echo = F}
 
@@ -1485,8 +1507,8 @@ EEZProp <- function(taxon_list,links="NA"){
  }else{
  
    eez_summary <- spp %>% 
-   group_by(eez_name,time_step) %>% 
-   summarise(
+     group_by(eez_name,time_step) %>% 
+     summarise(
        n_spp = n(),
        min_eez = min(mean_spp, na.rm=T),
        max_eez = max(mean_spp, na.rm=T),
@@ -1509,6 +1531,7 @@ EEZProp <- function(taxon_list,links="NA"){
 Finally, we estimate the average proportion change of all species within each eez
 
 ```{r fun_PropChange, eval = F, echo =F}
+taxon_list <- unique(Transboundary_spp$taxon_key)[1:15]
 
 PropChange <- function(taxon_list,links="NA"){
 
@@ -1831,6 +1854,8 @@ Prop_results %>%
     median(early,na.rm=T),
     sd(early,na.rm=T)
   )
+
+
 
 
 # Prepare data from results
