@@ -1426,7 +1426,6 @@ This results only shows the average percentage change in proportion of all speec
 This function estimates the total change in MCP proportion of each species for each EEZ. It looses the connection with neighbours as you only know for x species houw much is the proportion changing.
 
 ```{r fun_SummaryProp, eval = F, echo =F}
-taxon_key <- 600006	
 
 SummaryProp <- function(taxon_key,links="NA"){
   
@@ -1486,42 +1485,58 @@ The next step is to summarize all species per eez so our results shows average c
 ```{r fun_EEZProp, eval = F, echo = F}
 
 EEZProp <- function(taxon_list,links="NA"){
-
- spp <- bind_rows(
-   lapply(taxon_list,SummaryProp,links)
-   )
- 
- if(links == "y"){
-   
-   eez_summary <- spp %>% 
-     group_by(eez_name,eez_neighbour,time_step) %>% 
-     summarise(
-       n_spp = n(),
-       min_eez = min(mean_spp, na.rm=T),
-       max_eez = max(mean_spp, na.rm=T),
-       sd_eez = sd(mean_spp, na.rm=T), # for some weird reason it wont work if the order is fliped
-       mean_eez = mean(mean_spp,na.rm=T)
-     ) %>% 
-     select(eez_name:max_eez,mean_eez,sd_eez)
-   
- }else{
- 
-   eez_summary <- spp %>% 
-     group_by(eez_name,time_step) %>% 
-     summarise(
-       n_spp = n(),
-       min_eez = min(mean_spp, na.rm=T),
-       max_eez = max(mean_spp, na.rm=T),
-       sd_eez = sd(mean_spp, na.rm=T), # for some weird reason it wont work if the order is fliped
-       mean_eez = mean(mean_spp,na.rm=T)
-     ) %>% 
-     select(eez_name:max_eez,mean_eez,sd_eez)
- 
- 
- }
- 
- return(eez_summary)
-
+  
+  spp <- bind_rows(
+    lapply(taxon_list,SummaryProp,links)
+  )
+  
+  
+  if(links == "y"){
+    
+    # Number of SSR stocks
+    n_ssr <- spp %>% 
+      group_by(eez_name,time_step) %>% 
+      summarise(
+        n_spp = length(unique(taxon_key))
+      ) %>% 
+      spread(time_step,n_spp) %>% 
+      mutate_at(vars(early,mid),
+                .funs = ~(./historical)*100
+      ) %>% 
+      select(-historical) %>%
+      gather("time_step","n_per",early:mid)
+    
+    # Min, max and median change per eez_name and neighbour
+    eez_summary <- spp %>% 
+      group_by(eez_name,eez_neighbour,time_step) %>% 
+      summarise(
+        min_eez = min(mean_spp, na.rm=T),
+        max_eez = max(mean_spp, na.rm=T),
+        sd_eez = sd(mean_spp, na.rm=T), # for some weird reason it wont work if the order is fliped
+        mean_eez = median(mean_spp,na.rm=T)
+        ) %>% 
+      select(eez_name:max_eez,mean_eez,sd_eez) %>% 
+      left_join(n_ssr)
+        
+  }else{
+    
+    eez_summary <- spp %>% 
+      group_by(eez_name,time_step) %>% 
+      summarise(
+        n_spp = length(unique(taxon_key)),
+        # n_spp = n(),
+        min_eez = min(mean_spp, na.rm=T),
+        max_eez = max(mean_spp, na.rm=T),
+        sd_eez = sd(mean_spp, na.rm=T), # for some weird reason it wont work if the order is fliped
+        mean_eez = mean(mean_spp,na.rm=T)
+        ) %>% 
+      select(eez_name:max_eez,mean_eez,sd_eez)
+        
+        
+  }
+  
+  return(eez_summary)
+  
 }
 
 ```
@@ -1531,24 +1546,23 @@ EEZProp <- function(taxon_list,links="NA"){
 Finally, we estimate the average proportion change of all species within each eez
 
 ```{r fun_PropChange, eval = F, echo =F}
-taxon_list <- unique(Transboundary_spp$taxon_key)[1:15]
 
 PropChange <- function(taxon_list,links="NA"){
-
- eez <- EEZProp(taxon_list,links)
- 
- proportion_change <- eez %>% 
-   gather("variable","value",n_spp:sd_eez) %>% 
-   spread(time_step,value) %>% 
-   mutate_at(vars(
-     "per_early" = early,
-     "per_mid" = mid
-     ),
-            funs(round((((.-historical)/historical))*100,2))
-   )
- 
- return(proportion_change)
-
+  
+  eez <- EEZProp(taxon_list,links)
+  
+  proportion_change <- eez %>% 
+    gather("variable","value",min_eez:n_per) %>% 
+    spread(time_step,value) %>% 
+    mutate_at(vars(
+      "per_early" = early,
+      "per_mid" = mid
+    ),
+    funs(round((((.-historical)/historical))*100,2))
+    )
+  
+  return(proportion_change)
+  
 }
 
 ```
@@ -1585,6 +1599,12 @@ Spp_env_pref <- rbind(species(Exploited_spp_list, #species from rfishbase packag
 
 # Neighbour list and their respective id (see chunk 3)
 Neighbours <- my_path("D", extra_path = "Spatial/", name="Neighbours_eez_id.csv", read = TRUE)
+
+Neighbours_n <- Neighbours %>% 
+  group_by(eez_name) %>% 
+  summarise(
+    n = length(unique(eez_neighbour))
+  )
 
 # Clean names to match data
 Matching_names <- my_path("G","Spatial/SAU", "matching_names.csv", read = T) %>% 
@@ -1693,18 +1713,26 @@ Catch_trend <- my_path("D","Species","Catch_trend.csv", read = T) %>%
 # --------------- #
 # Load Proportion results
 # --------------- #
+# Get taxon list
+Taxon_list <- list.files(my_path("R",extra_path = "Proportion_2005"))
+
+# clean names for function
+Taxon_list <- gsub(".*_","",Taxon_list) 
+
+# clean names for function
+Taxon_list <- gsub(".csv","",Taxon_list) 
 
 
 # Read proportion results
-# prop_results <- PropChange(Taxon_List_emer, links="y") %>% 
-  # filter(!is.na(eez_neighbour)) %>% 
-  # mutate(per_mid_plot =ifelse(per_mid >= 50, 50,
-  #                          ifelse(per_mid <= -50,-50,per_mid)
-  #                          ),
-  #        per_early_plot =ifelse(per_early >= 50, 50,
-  #                          ifelse(per_early <= -50,-50,per_early)
-  #                          )
-  #        )
+Prop_results <- PropChange(Taxon_list, links="y") %>%
+  filter(!is.na(eez_neighbour)) %>%
+  mutate(per_mid_plot =ifelse(per_mid >= 50, 50,
+                              ifelse(per_mid <= -50,-50,per_mid)
+  ),
+  per_early_plot =ifelse(per_early >= 50, 50,
+                         ifelse(per_early <= -50,-50,per_early)
+  )
+  )
 
 # For dat availabillity
  # write_csv(prop_results,
@@ -1785,11 +1813,17 @@ World_map_dat <- Matching_names %>%
 
 World_map <- rnaturalearth::ne_countries(scale = 'small', returnclass = c("sf")) %>%
   clean_names() %>% 
+  select(iso_a3,sovereignt,sov_a3,name,name_long,region_wb,continent,geometry) %>% 
   # st_transform(crs = "+proj=eck4") %>%
   st_transform(crs = 4326) %>% # 4326
-  left_join(World_map_dat,
+  mutate(iso_a3 = ifelse(sovereignt == "Norway","NOR",
+                         ifelse(name == "France","FRA",
+                                iso_a3)
+                         )
+         ) %>% 
+    left_join(World_map_dat,
             by = "iso_a3")
-  
+
 
 # Load eez_centroid data
 Eez_centroid <- my_path("D", "Spatial","eez_centroids.csv",read = T)
@@ -1848,15 +1882,12 @@ Main_data <- Eme_Res %>% # 19728
 ### Median number
 
 Prop_results %>% 
-  filter(variable == "n_spp") %>% 
+  filter(variable == "n_per") %>% 
   group_by() %>% 
   summarise(
     median(early,na.rm=T),
     sd(early,na.rm=T)
   )
-
-
-
 
 # Prepare data from results
 Data <- Prop_results %>% 
@@ -1881,7 +1912,7 @@ Data <- Prop_results %>%
   ) %>% 
   drop_na() %>%
   filter(
-    variable %in% c("mean_eez","n_spp")#,
+    variable %in% c("mean_eez","n_per")#,
     # source %in% c("Brazil","Argentina","Chile","Peru","Uruguay")
   )
 
@@ -1919,7 +1950,9 @@ paths <- network_data_sf %>%
   unnest() %>% 
   mutate_at(vars(X,Y), round,2) %>% 
   gather("time_step","per_chng",per_early:per_mid) %>% 
-  mutate(per_plot = ifelse(per_chng > 100,100,per_chng))
+  mutate(per_plot = ifelse(per_chng > 100,100,per_chng),
+         direction = ifelse(per_chng > 0,"positive","negative")
+         )
   
 # Plot it!
 
@@ -1931,20 +1964,33 @@ Map_data <- Data %>%
 # Average number of taxa to change per eez
 
 n_taxa_data <- Prop_results %>% 
-  filter(variable == "n_spp") %>% 
+  filter(variable == "n_per") %>%
+  select(eez_name,early,mid) %>% 
   rename(sf_eez_name = eez_name) %>% 
   left_join(Matching_names) %>% 
   group_by(sau_fishing_entity,fishing_entity_id) %>% 
-  summarise(total_spp = mean(early,na.rm=T))
+  summarise(avrg_spp_per = mean(early,na.rm=T))
   
 n_taxa_map <- World_map %>% 
   left_join(n_taxa_data,
             by = c("sau_fishing_entity","fishing_entity_id")
             )
 
+mean(n_taxa_data$avrg_spp_per,na.rm=T)
 
 
-gc()# clean ram
+
+
+# Rectangles dataset
+# coord_sf(xlim = c(-3, 35),ylim = c(30, 45)) +
+Rectangles <- tibble(
+    x1=c(-100,-3,-14), #LatAm, Med, NE
+    x2=c(-55,35,23),
+    y1=c(9,31,50), 
+    y2=c(30,44,67)
+  )
+
+# gc()# clean ram
 
 time <- "per_mid"
 # time <- "per_early"
@@ -1956,50 +2002,59 @@ time <- "per_mid"
 
 Prop_map <- ggplot() +
   geom_sf(data = subset(n_taxa_map, sovereignt != "Antarctica"),
-          aes(fill = total_spp),
+          aes(fill = avrg_spp_per),
           size = 0.1,col = "white") +
-geom_sf(data = World_eez_sf, size = 0.1, fill = "white", col = "gray30") +
-geom_point(data = subset(Map_data, time_step == time & per_plot < 0),
-           aes(start_lon,
-               start_lat,
-               col = per_plot),
-           size = 0.05,
-           col = "gray80",
-           shape = 20,
-           stroke = 1.5) +
-geom_path(data = subset(paths, time_step == time & per_plot > 0),
-          aes(X,
-              Y,
-              group = interaction(line_id,subline_id),
-              col = per_plot
-          ),
-          size = 0.3,
-          lineend = "round",
-          arrow = arrow(length = unit(0.008, "npc"),
-                        ends = "first"),
-          show.legend = NA) +
+  geom_sf(data = World_eez_sf, size = 0.1, fill = "white", col = "gray30") +
+  geom_point(data = subset(Map_data, time_step == time & per_plot < 0),
+             aes(start_lon,
+                 start_lat
+             ),
+             size = 0.05,
+             col = "gray80",
+             shape = 20,
+             stroke = 1.5) +
+  geom_path(data = subset(paths, time_step == time & per_plot > 0),
+            aes(X,
+                Y,
+                group = interaction(line_id,subline_id),
+                col = per_plot
+            ),
+            size = 0.3,
+            lineend = "round",
+            arrow = arrow(length = unit(0.008, "npc"),
+                          ends = "first"),
+            show.legend = NA) +
+  # Closeup Rectangles 
+  geom_rect(data=Rectangles,
+            aes(xmin=x1, 
+                xmax=x2,
+                ymin=y1,
+                ymax=y2),
+            color="grey50", 
+            fill = NA,
+            linetype = "dashed"
+            ) +
   my_ggtheme_m() +
-scale_colour_viridis(
-  name="Average Gain of Stock-Share Ratio (%)\nand Number of taxa (n)",
-  limits = c(0,max(Map_data$per_plot)),
-  breaks = seq(0,max(Map_data$per_plot),10)#,
-  # option="magma",
-  # direction = -1
-) +
-scale_fill_viridis(
-  name="Average Gain of Stock-Share Ratio (%)\nand Number of taxa (n)",
-  limits = c(0,max(Map_data$per_plot)),
-  breaks = seq(0,max(Map_data$per_plot),10)#,
-  # alpha = 0.8
-  # option="magma",
-  # direction = -1
-) +
-ggsave("./Figures/fig_sup_1.png",
-       width = 12,
-       height = 8,
-       units = "in"
-)
-
+  scale_colour_viridis(
+    name="Stock-Share Ratio Gain \nand taxa change (%)",
+    limits = c(0,max(Map_data$per_plot)),
+    breaks = seq(0,max(Map_data$per_plot),10)#,
+    # option="magma",
+    # direction = -1
+  ) +
+  scale_fill_viridis(
+    name="Stock-Share Ratio Gain \nand taxa change (%)",
+    limits = c(0,max(Map_data$per_plot)),
+    breaks = seq(0,max(Map_data$per_plot),10)#,
+    # alpha = 0.8
+    # option="magma",
+    # direction = -1
+  ) #+
+  # ggsave("./Figures/fig_sup_1.png",
+  # width = 12,
+  # height = 8,
+  # units = "in"
+  # )
 
 ## ------------------- ##
 # Regional Plots
@@ -2007,19 +2062,16 @@ ggsave("./Figures/fig_sup_1.png",
 
 Lat_am_land <- World_map %>% 
   filter(region_wb %in% c("Latin America & Caribbean") |
-          sau_fishing_entity %in% c("USA","Mexico")
-         )
+           sau_fishing_entity %in% c("USA","Mexico")
+  )
 
 Lat_am_eez <- World_eez_sf %>% 
   rename(sf_eez_name = eez_name) %>% 
   left_join(Matching_names) %>% 
   filter(
-    # sau_fishing_entity %in% Lat_am_land$sau_fishing_entity,
          !str_detect(sf_eez_name,"Pacific"),
          !sf_eez_name %in% c("USA (East Coast)","Suriname","Guyana","French Guiana","Bermuda (UK)","Brazil","El Salvador")
          )
-
-# Lat_am_eez %>% filter(str_detect(sf_eez_name,"Tri")) 
 
 Lat_am_data <- Map_data %>% 
   filter(source %in% Lat_am_eez$sf_eez_name)
@@ -2032,7 +2084,7 @@ Lat_am_paths <- paths %>%
 Lat_am_map <- ggplot() +
   geom_sf(data = Lat_am_eez, size = 0.1, fill = "white", col = "gray30") +
   geom_sf(data = subset(n_taxa_map, sovereignt != "Antarctica"),
-          aes(fill = total_spp),
+          aes(fill = avrg_spp_per),
           size = 0.1,col = "white") +
   geom_point(data = subset(Lat_am_data, time_step == time & per_plot < 0 ),
              aes(start_lon,
@@ -2052,10 +2104,10 @@ Lat_am_map <- ggplot() +
                           ends = "first"),
             show.legend = NA) +
   coord_sf(xlim = c(-100, -55),ylim = c(9, 30)) + 
-  labs(x = "Lon", y = "Lat") +
+  labs(x = "", y = "") +
   scale_x_continuous(breaks = seq(-100,60,10)) +
-  scale_y_continuous(breaks = seq(10,30,5)) +
-  # my_ggtheme_m() +
+  scale_y_continuous(breaks = seq(10,30,10)) +
+  my_ggtheme_m() +
   theme(legend.position = "",
         panel.background = element_rect(fill = "white", color = "white"),
         panel.grid.major =  element_line(color = "white")
@@ -2106,7 +2158,7 @@ Med_paths <- paths %>%
 Med_map <- ggplot() +
   geom_sf(data = Med_eez, size = 0.5, fill = "white", col = "gray30") +
   geom_sf(data = subset(n_taxa_map, sovereignt != "Antarctica"),
-          aes(fill = total_spp),
+          aes(fill = avrg_spp_per),
           size = 0.1,col = "white") +
   geom_point(data = subset(Med_data, time_step == time & per_plot < 0 ),
              aes(start_lon,
@@ -2126,10 +2178,10 @@ Med_map <- ggplot() +
                           ends = "first"),
             show.legend = NA) +
   coord_sf(xlim = c(-3, 35),ylim = c(30, 45)) +
-  labs(x = "Lon", y = "Lat") +
+  labs(x = "", y = "") +
   scale_x_continuous(breaks = seq(-5,35,10)) +
   scale_y_continuous(breaks = seq(30,50,5)) +
-  # my_ggtheme_m() +
+  my_ggtheme_m() +
   theme(legend.position = "",
         panel.background = element_rect(fill = "white", color = "white"),
         panel.grid.major =  element_line(color = "white")
@@ -2147,7 +2199,8 @@ Med_map <- ggplot() +
     breaks = seq(0,max(Med_data$per_plot),5),
     # option="magma",
     # direction = -1
-  );Med_map
+  )#;Med_map
+
 
 ## ------------------- ##
 # Northern Europe
@@ -2185,7 +2238,7 @@ Eu_paths <- paths %>%
 Eu_map <- ggplot() +
   geom_sf(data = Eu_eez, size = 0.5, fill = "white", col = "gray30") +
   geom_sf(data = subset(n_taxa_map, sovereignt != "Antarctica"),
-          aes(fill = total_spp),
+          aes(fill = avrg_spp_per),
           size = 0.1,col = "white") +
   geom_point(data = subset(Med_data, time_step == time & per_plot < 0 ),
              aes(start_lon,
@@ -2205,10 +2258,10 @@ Eu_map <- ggplot() +
                           ends = "first"),
             show.legend = NA) +
   coord_sf(xlim = c(-15, 30), ylim = c(45, 65)) +
-  labs(x = "Lon", y = "Lat") +
+  labs(x = "", y = "") +
   scale_y_continuous(breaks = seq(45,65,10)) +
-  # scale_x_continuous(breaks = seq(45,65,10)) +
-  # my_ggtheme_m() +
+  # scale_x_continuous(breaks = seq(45,65,5)) +
+  my_ggtheme_m() +
   theme(legend.position = "",
         panel.background = element_rect(fill = "white", color = "white"),
         panel.grid.major =  element_line(color = "white")
@@ -2226,43 +2279,48 @@ Eu_map <- ggplot() +
     breaks = seq(0,max(Med_data$per_plot),5),
     # option="magma",
     # direction = -1
-  );Eu_map
+  )#;Eu_map
 
+# Legend
+map_plot <- get_legend(Prop_map)
+
+Prop_map <- Prop_map + 
+  theme(legend.position = "")
 
 ## ------------------- ##
-# Final Figure
+# Render final plot
 ## ------------------- ##
 
-# gc()
-# plot_all <- ggdraw() +
-#       # map
-#       draw_plot(Prop_map, x = 0, y = 0.45, width = 1, height = 0.58) +
-#       # Lat America reg plor
-#       draw_plot(Lat_am_map, x = 0.1, y = 0.08, width = 0.3, height = 0.4) +
-#       # Europe reg plot
-#       draw_plot(Eu_map, x = 0.35, y = 0.08, width = 0.3, height = 0.4) +
-#       # Med regional plot
-#       draw_plot(Med_map, x = 0.65, y = 0.08, width = 0.3, height = 0.4) +
-#       draw_plot_label(label = c("a", "b"), 
-#                       size = 20,
-#                       x = c(0, 0), 
-#                       y = c(1, 0.45)
-#       ) #+
-#       # draw_plot_label(label = c("Revenue (USD) | Catch (Tonnes)","(Million)"), 
-#                       # size = 8,
-#                       # x = c(0.325,0.485), 
-#                       # y = c(0.31,0.29)
-#       )
-#     
-#     
-#     save_plot(
-#       # paste(Figures_Path,"100_25_Bins_Value_Region.png",sep=""),
-#       "test.png",
-#       plot_all,
-#       base_height = 8,
-#       base_width = 8
-#     )
-  
+
+# Clean memory
+gc()
+
+# Draw figure
+plot_all <- ggdraw() +
+  # Main map
+  draw_plot(Prop_map, x = 0, y = 0.40, width = 1, height = 0.6) +
+  # Latin America and the Car.
+  draw_plot(Lat_am_map, x = 0.01, y = 0.02, width = 0.33, height = 0.45) +
+  # Europe
+  draw_plot(Eu_map, x = 0.33, y = 0.01, width = 0.33, height = 0.45) +
+  # The Med
+  draw_plot(Med_map, x = 0.66, y = 0.02 , width = 0.33, height = 0.45) +
+  # Legend
+  draw_plot(map_plot, x = 0.3, y = 0, width = 0.59, height = 0.1) +
+  # Labels
+  draw_plot_label(label = c("A", "B", "The Caribbean","North West Europe","The Mediterranean"),
+                  size = c(20,20,15,15,15),
+                  x = c(0.01,0.01,0.058,0.38,0.70),
+                  y = c(1,0.45,0.44,0.44,0.44)
+  )
+
+# Save plot
+save_plot(
+  "./Figures/figS3.png",
+  plot_all,
+  base_height = 10,
+  base_width = 12
+)
 
 ```
 
@@ -2685,6 +2743,8 @@ Eez_hist <- Eme_Res %>%
 
 ```{r, buble_plot, eval = F, echo = F}
 
+# Needs previous chunk
+
 Buble_data <- Eez_d_hist %>% 
   filter(metric == "mean_yr") %>% 
   group_by(sau_fishing_entity,tresh) %>% 
@@ -2813,7 +2873,7 @@ Dem_pel <- Eme_Res %>%
 Average_data <- Dem_pel %>% 
   group_by(un_sub_region) %>% 
   summarise(mean_toe = mean(emerging_yr,na.rm=T)) %>% 
-  mutate(regional_average="average")
+  mutate(regional_average="regional average")
   
 
 # Dem Pelagic boxplot
@@ -2833,10 +2893,10 @@ ggplot(Dem_pel) +
     ),
     alpha = 0.8
   ) +
-  facet_wrap(~un_sub_region,scales = "free") +
+  facet_wrap(~un_sub_region,scales = "free_x") +
   scale_fill_viridis("Habitat preference",
                      discrete = T) +
-  scale_color_grey("Regional average") +
+  scale_color_grey("") +
   xlab("") +
   ylab("Time of emergence") +
   my_ggtheme_p() +
