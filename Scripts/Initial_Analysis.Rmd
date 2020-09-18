@@ -1845,7 +1845,7 @@ Eez_centroid_eck <- do.call(rbind, st_geometry(Eez_centroid_sf)) %>%
   select(eez_name,longitude = lon,latitude = lat)
 
 
-
+# Join all data for analysis
 
 Main_data <- Eme_Res %>% # 19728
   filter(tresh == "Tresh_one") %>% # 11490
@@ -3047,14 +3047,14 @@ TukeyHSD(Hab_aov) %>%
 # -------------------------------- #
 
 # Model 1; all variables
-M1 <- lm(emerging_yr ~ sst_toe + bot_toe + status + biome + dem_pel + DemersPelag, data = Lm_data)
+M1 <- lm(emerging_yr ~ sst_toe + bot_toe + status + biome + dem_pel + DemersPelag, data = Main_data)
 
 M1_sum <- summary(M1)
 M1_aic <- AIC(M1)
 M1_r <-  M1_sum$adj.r.squared
 
 # Model 2; non demPel
-M2 <- lm(emerging_yr ~ sst_toe + bot_toe + status + biome + dem_pel, data = Lm_data)
+M2 <- lm(emerging_yr ~ sst_toe + bot_toe + status + biome + dem_pel, data = Main_data)
 
 M2_sum <- summary(M2)
 M2_aic <- AIC(M2)
@@ -3062,49 +3062,49 @@ M2_r <-  M2_sum$adj.r.squared
 
 
 # Model 3; non biome
-M3 <- lm(emerging_yr ~ sst_toe + bot_toe + status + dem_pel + DemersPelag, data = Lm_data)
+M3 <- lm(emerging_yr ~ sst_toe + bot_toe + status + dem_pel + DemersPelag, data = Main_data)
 
 M3_sum <- summary(M3)
 M3_aic <- AIC(M3)
 M3_r <-  M3_sum$adj.r.squared
 
 # Model 4; non status
-M4 <- lm(emerging_yr ~ sst_toe + bot_toe + biome + dem_pel + DemersPelag, data = Lm_data)
+M4 <- lm(emerging_yr ~ sst_toe + bot_toe + biome + dem_pel + DemersPelag, data = Main_data)
 
 M4_sum <- summary(M4)
 M4_aic <- AIC(M4)
 M4_r <-  M4_sum$adj.r.squared
 
 # Model 5; non sst
-M5 <- lm(emerging_yr ~ status + bot_toe + biome + dem_pel + DemersPelag, data = Lm_data)
+M5 <- lm(emerging_yr ~ status + bot_toe + biome + dem_pel + DemersPelag, data = Main_data)
 
 M5_sum <- summary(M5)
 M5_aic <- AIC(M5)
 M5_r <-  M5_sum$adj.r.squared
 
 # Model 6; all + basin
-M6 <- lm(emerging_yr ~ sst_toe + bot_toe + status + biome + dem_pel + DemersPelag, data = Lm_data)
+M6 <- lm(emerging_yr ~ sst_toe + bot_toe + status + biome + dem_pel + DemersPelag, data = Main_data)
 
 M6_sum <- summary(M6)
 M6_aic <- AIC(M6)
 M6_r <-  M6_sum$adj.r.squared
 
 # Model 7; Categories instead of status
-M7 <- lm(emerging_yr ~ sst_toe + bot_toe + category + biome + dem_pel + DemersPelag, data = Lm_data)
+M7 <- lm(emerging_yr ~ sst_toe + bot_toe + category + biome + dem_pel + DemersPelag, data = Main_data)
 
 M7_sum <- summary(M7)
 M7_aic <- AIC(M7)
 M7_r <-  M7_sum$adj.r.squared
 
 # Model 8; All variables + ccentroid lat
-M8 <- lm(emerging_yr ~ sst_toe + bot_toe + category + as.factor(biome) + DemersPelag + latitude, data = Lm_data)
+M8 <- lm(emerging_yr ~ sst_toe + bot_toe + category + as.factor(biome) + DemersPelag + latitude, data = Main_data)
 
 M8_sum <- summary(M8)
 M8_aic <- AIC(M8)
 M8_r <-  M8_sum$adj.r.squared
 
 # Model 9; Include UN regions
-M9 <- lm(emerging_yr ~ sst_toe + bot_toe + category + biome + DemersPelag + latitude + un_region, data = Lm_data)
+M9 <- lm(emerging_yr ~ sst_toe + bot_toe + category + biome + DemersPelag + latitude + un_region, data = Main_data)
 
 M9_sum <- summary(M9)
 M9_aic <- AIC(M9)
