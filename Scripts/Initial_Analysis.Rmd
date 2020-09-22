@@ -2500,6 +2500,43 @@ ggplot() +
 
 ###### Just mean time
 
+```{r vulnerabillity_index, eval = T}
+
+# Per EEZs
+Eez_d_hist <- Eme_Res %>% 
+  group_by(eezid ,sau_fishing_entity,fishing_entity_id,tresh) %>% 
+  # summarise(n_tax = length(unique(taxon_key))) %>% 
+  summarise(
+    mean_yr = mean(emerging_yr,na.rm=T),
+    sd_yr = sd(emerging_yr,na.rm=T),
+    n_taxa = length(unique(taxon_key))
+    ) %>% 
+  gather("metric","value",mean_yr:n_taxa) %>% 
+  # filter(metric != "n_taxa") %>% 
+  mutate(
+    reverse = abs(value-2100)  + 2000
+  ) %>% 
+  filter(
+    tresh == "Tresh_one",
+    metric == "mean_yr"
+  )
+
+
+Value_map_data <- Eme_value_data %>% 
+  left_join(Total_value,
+            by = c("fishing_entity_id","variable")) %>% 
+  mutate(participation = (sum_value/tot_value)*100) %>% 
+  filter(
+    tresh == "Tresh_one",
+    variable == "value"
+  )
+
+
+
+```
+
+
+
 ```{r emergence_map, eval = T}
 
 # Per EEZs
@@ -2541,6 +2578,36 @@ Value_map_data <- Eme_value_data %>%
   left_join(Total_value,
             by = c("fishing_entity_id","variable")) %>% 
   mutate(participation = (sum_value/tot_value)*100)
+
+### ----------------- ###
+### Index alternative ###
+### ----------------- ###
+
+Index_data <- Eez_d_hist %>% 
+  left_join(Value_map_data) %>% 
+  mutate(
+    index = (participation/value),
+    index = ifelse(is.na(index),0,index)
+  ) %>% 
+  select(1:3,value,participation,index,everything()) 
+
+##### Normalize index
+# https://www.datanovia.com/en/blog/how-to-normalize-and-standardize-data-in-r-for-great-heatmap-visualization/
+
+# Get min and maximums
+min_index <- min(Index_data$index)
+max_index <- max(Index_data$index)
+
+Index_data <- Index_data %>% 
+  mutate(
+    index = 2000 + (index-min_index)*(2100-2000)/(max_index-min_index)
+  )
+
+
+Value_map_data <- Index_data %>% 
+  select(sau_fishing_entity,fishing_entity_id,tresh,variable,participation = indexb)
+
+### ----------------- ###
 
 
 # Per fishing entity
@@ -2648,14 +2715,16 @@ Eez_hist <- Eme_Res %>%
     ggplot() +
     geom_sf(
       aes(
-        fill = reverse
+        fill = reverse #original map
+        # fill = value
       ),
       color =  "white",
       size = 0.1
     ) +
     # Inlcude the participation of species
     geom_sf(data = World_map_part,
-            aes(fill = participation+2000),
+            # aes(fill = participation+2000), #original map
+            aes(fill = participation),
             color =  "white",
             size = 0.1
             ) +
@@ -2663,13 +2732,13 @@ Eez_hist <- Eme_Res %>%
     geom_sf(data = grey_land, aes(),fill = "grey50", color =  "white",size = 0.1) +
     geom_sf(data = grey_eez, aes(),fill = "grey50", color =  "white",size = 0.1) +
     # Set Participation labels
-    annotate("text", 
+    annotate("text",
              x =-135,
              y = -69,
-             label = "Participation (%)", 
-             color="black", 
-             size=4, 
-             angle=0, 
+             label = "Vulnerabillity index",
+             color="black",
+             size=4,
+             angle=0,
              fontface="bold",
              hjust=0) +
     annotate("text", 
@@ -2696,7 +2765,8 @@ Eez_hist <- Eme_Res %>%
     annotate("text", 
              x = c(-79,-39,3,45,87),
              y = -85,
-             label = seq(2100,2000,-25), 
+             label = seq(2100,2000,-25), # original
+             # label = seq(2000,2100,25), 
              color="black", 
              size=4, 
              angle=0, 
