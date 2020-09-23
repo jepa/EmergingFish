@@ -2498,44 +2498,7 @@ ggplot() +
 
 ##### Fig. 3 Mapping the time of emergence
 
-###### Just mean time
-
-```{r vulnerabillity_index, eval = T}
-
-# Per EEZs
-Eez_d_hist <- Eme_Res %>% 
-  group_by(eezid ,sau_fishing_entity,fishing_entity_id,tresh) %>% 
-  # summarise(n_tax = length(unique(taxon_key))) %>% 
-  summarise(
-    mean_yr = mean(emerging_yr,na.rm=T),
-    sd_yr = sd(emerging_yr,na.rm=T),
-    n_taxa = length(unique(taxon_key))
-    ) %>% 
-  gather("metric","value",mean_yr:n_taxa) %>% 
-  # filter(metric != "n_taxa") %>% 
-  mutate(
-    reverse = abs(value-2100)  + 2000
-  ) %>% 
-  filter(
-    tresh == "Tresh_one",
-    metric == "mean_yr"
-  )
-
-
-Value_map_data <- Eme_value_data %>% 
-  left_join(Total_value,
-            by = c("fishing_entity_id","variable")) %>% 
-  mutate(participation = (sum_value/tot_value)*100) %>% 
-  filter(
-    tresh == "Tresh_one",
-    variable == "value"
-  )
-
-
-
-```
-
-
+###### Mean ToE and vulnerabillity Index
 
 ```{r emergence_map, eval = T}
 
@@ -2585,11 +2548,23 @@ Value_map_data <- Eme_value_data %>%
 
 Index_data <- Eez_d_hist %>% 
   left_join(Value_map_data) %>% 
-  mutate(
-    index = (participation/value),
-    index = ifelse(is.na(index),0,index)
+  filter(
+    tresh == "Tresh_one",
+    metric == "mean_yr"
   ) %>% 
-  select(1:3,value,participation,index,everything()) 
+  group_by(sau_fishing_entity,variable) %>% 
+  summarise(
+    toe = mean(value,na.rm=T),
+    # sum_value = sum(sum_value),
+    mean_part = mean(participation,na.rm=T)
+  ) %>% 
+  filter(!is.na(variable)) %>% 
+  # spread(variable,sum_value) %>% 
+  spread(variable,mean_part) %>% 
+  mutate(
+    imp = catch+value,
+    index = imp/toe
+  )
 
 ##### Normalize index
 # https://www.datanovia.com/en/blog/how-to-normalize-and-standardize-data-in-r-for-great-heatmap-visualization/
@@ -2600,12 +2575,27 @@ max_index <- max(Index_data$index)
 
 Index_data <- Index_data %>% 
   mutate(
-    index = 2000 + (index-min_index)*(2100-2000)/(max_index-min_index)
-  )
+    index_norm =(index-min_index)/(max_index-min_index),
+    index_2000 = 2000 + (index-min_index)*(2100-2000)/(max_index-min_index)
+  ) 
 
+### Explore index ####
+
+ggplot(data = Index_data) +
+  geom_point(
+    aes(
+      x = toe,
+      y = imp,
+      color = index_2000
+    ),
+    size = 4
+  ) +
+   scale_color_viridis(option="magma", discrete = F)
+
+#### ------------  ####
 
 Value_map_data <- Index_data %>% 
-  select(sau_fishing_entity,fishing_entity_id,tresh,variable,participation = indexb)
+  select(sau_fishing_entity,fishing_entity_id,tresh,variable,participation = index)
 
 ### ----------------- ###
 
