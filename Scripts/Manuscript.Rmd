@@ -9,6 +9,8 @@ output:
   pdf_document: default
 bibliography: ../References/ToE_Ref.bib
 csl: ../References/science.csl
+header-includes:
+- \usepackage{amsmath}
 ---
 
 <!-- # Instructions  -->
@@ -74,7 +76,8 @@ This analysis includes 633 marine exploited transboundary species previously ide
 
 ### Projecting species distributions under climate change
 
-We projected the distribution of marine species using a dynamic bioclimatic envelope model (hereafter called DBEM) [@Cheung:2010dt; @Cheung:2016jd]. The DBEM  represents species’ physiology, habitat suitability, depth and latitudinal ranges, and spatial population dynamics as well as preferences to sea temperature, salinity, oxygen content, sea ice extent (for polar species) and bathymetry. For pelagic species, the model uses environmental variables at the surface (e.g., sea surface temperature) whereas demersal species distribution are driven by ocean bottom variables (e.g., bottom temperature). This way, the model estimates species abundance and maximum catch potential (a proxy of maximum sustainable yield) over a $0.5^{\circ}$ x $0.5^{\circ}$ grid of the world (see Cheung *et al.* [-@Cheung:2010dt; -@Cheung:2016jd] for model details).
+We projected the distribution of marine species using a dynamic bioclimatic envelope model (hereafter called DBEM) [@Cheung:2010dt; @Cheung:2016jd]. The DBEM  represents species’ physiology, habitat suitability, depth and latitudinal ranges, and spatial population dynamics as well as preferences to sea temperature, salinity, oxygen content, sea ice extent (for polar species) and bathymetry. For pelagic species, the model uses environmental variables at the surface (e.g., sea surface temperature) whereas demersal species distribution are driven by ocean bottom variables (e.g., bottom temperature). This way, the model estimates species abundance and maximum catch potential (a proxy of maximum sustainable yield) over a $0.5^{\circ}$ x $0.5^{\circ}$ grid of the world (see Cheung *et al.* [-@Cheung:2010dt; -@Cheung:2016jd] for model details). Recent work has demonstrated that, at the global scale, DBEM is able to reproduce catch changes similar in magnitude to those detected in observed catch time series in the
+world’s EEZs (Cheung et al. in revision).
 
 We forced the DBEM with environmental data from a ten ensemble member simulation of the Geophysical Fluid Dynamics Laboratory Earth system model (GFDL-ESM2M) to project the distributions of the 633 species from 1951 to 2100 [@Dunne:2012bo; @Dunne:2013db; @Rodgers:2015jq]. The GFDL-ESM2M is run under historical forcing until 2005 and follows the ‘high’ climate change emissions scenario, the Representative Concentration Pathway 8.5 (RCP 8.5) over the 2006-2100 period [Riahi:2011dk]. In GFDL-ESM2M, atmospheric surface temperature is projected to increase by $3.2^{\circ}C$ by 2081-2100, relative to preindustrial levels. Because the main approach of this paper relies on understanding the spatial and temporal variation of a species’ distribution, we have to understand both the historical as well as the future climate-driven distribution variability, to infer differences between time frames. We do this by following an ensemble member approach where each member constitutes a different realization of the Earth system variability condition [@Rodggers:2015jq; @Frolicher:2009ge]. Thus, for our experiment, each of the ten GFDL-ESM2M-ensembles were started from infinitesimally small differences in Earth system initial conditions resulting in a unique atmosphere and ocean state at each point in time. This approach allows us to estimate the natural internal variability (e.g., background noise) and isolate the forced climate signal of a stock’s distribution by averaging the secular trend over all ten ensemble members.
 
@@ -82,37 +85,72 @@ We forced the DBEM with environmental data from a ten ensemble member simulation
 
 We developed an index to evaluate range shifts in transboundary stocks under climate change (TI). This index is based on the shifts in the distribution centroid of a transboundary stock relative to the centroid of the neighboring EEZs that share this stock (Figure \ref{fig:FigureS2}). The centroid of a transboundary stock was determined by the average latitude ($lat_{ts}$) and longitude ($lon_{ts}$) across the grid cells with the highest abundance within the neighboring EEZs sharing the stock e.g., sockeye salmon (*Oncorhynchus nerka*) that is transboundary between the United States and Canada. Therefore,
 
-$lat_{ts} = \mu (lat_{per})$
+<!-- $lat_{ts} = \mu (lat_{per})$ -->
 
-$lon_{ts} = \mu (lon_{per})$
+<!-- $lon_{ts} = \mu (lon_{per})$ -->
+
+\begin{equation}
+\begin{split}
+\label{eq:one}
+lat_{ts} = \mu (lat_{per}) \\
+lon_{ts} = \mu (lon_{per})
+\end{split}
+\end{equation}
 
 where $lat_{per}$ and $lon_{per}$ are the latitudes and longitudes of the grid cells holding the $per^{th}$ percentile of the projected transboundary stock abundance. To focus on areas where transboundary stocks are more abundant and fishing activities are more likely to take place, we included grid cells where the projected stock abundance within the neighbouring EEZs sharing the stock was above the top $10^{th}$ percentile (e.g., *per* = 10%). We ran a sensitivity analysis (e.g. *per* = 20, 50, 90) to relax this parameter (Figure \ref{fig:FigureS2}). The centroid of a EEZ was estimated using the *st* package in *R* (version 3.2.1) (Figure \ref{fig:FigureS1}). For each ensemble member, neighboring EEZs and transboundary stock, we computed the distance between centroids assuming the earth is a perfect sphere and ignoring geographic barriers using the geosphere package in *R*;
 
 
-$$D_{ens} = acos(sin(lat_{eez})*sin(lat_{ts}) + cos(lat_{eez})*cos(lat_{ts})*cos(lon_{eez}-lon_{ts}))$$
+<!-- $$D_{ens} = acos(sin(lat_{eez})*sin(lat_{ts}) + cos(lat_{eez})*cos(lat_{ts})*cos(lon_{eez}-lon_{ts}))$$ -->
+
+\begin{equation}
+\label{eq:two}
+
+D_{ens} = acos(sin(lat_{eez})*sin(lat_{ts}) + cos(lat_{eez})*cos(lat_{ts})*cos(lon_{eez}-lon_{ts}))
+
+\end{equation}
+
 where $lat_{eez}$ and $lat_{ts}$ are the latitudes of the EEZ and transboundary stock centroids, respectively and $lon_{eez}$ and $lon_{ts}$ are the respective longitudes.
 
 Then, for each year we calculated the transboundary index as follows:
 
-$$TI =(\frac{D_{A,t}}{sd(D_{A,th})} - \frac{D_{B,t}}{sd(D_{B,th)}})^2$$
+<!-- $$TI =(\frac{D_{A,t}}{sd(D_{A,th})} - \frac{D_{B,t}}{sd(D_{B,th)}})^2$$ -->
 
-where $D_A$ and $D_B$ represent the distance between the distribution centroids of a species and the centroid of the pair of neighbouring EEZs (A and B) sharing the species for each time step from 2006 to 2100 (*t*); and *sd* is the standard deviation of the historical (*th*, 1951 - 2005) centroid distribution for $D_A$ and $D_B$. Thus, a higher TI means that a shared species becomes more or less abundant relative to its neighbouring EEZs that is beyond what the fisheries experienced historically. From the perspective of a state’s fisheries, higher TI indicates an increase in the challenges to the effective management and sustainability of the shared species’ fisheries. In contrast, a smaller TI suggests that the sharing of the species between neighbouring EEZs is becoming relatively more stable; a condition that favours effective management and sustainability of the shared species’ fisheries. The index was smoothed to a 10 year average to xxx. 
+\begin{equation}
+\label{eq:three}
+TI =(\frac{D_{A,t}}{sd(D_{A,th})} - \frac{D_{B,t}}{sd(D_{B,th)}})^2
+\end{equation}
+
+
+where $D_A$ and $D_B$ represent the distance between the distribution centroids of a species and the centroid of the pair of neighbouring EEZs (A and B) sharing the species for each time step from 2006 to 2100 (*t*); and *sd* is the standard deviation of the historical (*th*, 1951 - 2005) centroid distribution for $D_A$ and $D_B$. Thus, a higher TI means that a shared species becomes more or less abundant relative to its neighbouring EEZs that is beyond what the fisheries experienced historically. From the perspective of a state’s fisheries, higher TI indicates an increase in the challenges to the effective management and sustainability of the shared species’ fisheries. In contrast, a smaller TI suggests that the sharing of the species between neighbouring EEZs is becoming relatively more stable; a condition that favours effective management and sustainability of the shared species’ fisheries. The index was smoothed to a 10 year average to reduce interanual variabillity. 
 
 #### Calculating the Time-of-Emergence of the transboundary index
 
 Knowing the point in time (e.g., year) at which the distribution of a shared stock will diverge from its natural internal variability is important in informing the lead-time to which climate adaptation in transboundary fisheries management needs to be implemented [@Link:2010ei]. Thus, we define ToE as the time when the shared stock between neighbouring EEZs will exceed the historical natural internal variability as follows:
 
-$EmergenceTIndex = \frac{\mu_{TI[t]}}{SD_{TI_{th}}}$
-$ToE = t when Emergence index[t] > 1$
+<!-- $EmergenceTIndex = \frac{\mu_{TI[t]}}{SD_{TI_{th}}}$ -->
+<!-- $ToE = t when Emergence index[t] > 1$ -->
 
-where $\mu_{TI}$ is the yearly mean TI ($\mu$) across all ten ensemble members in year *yr* and $SD_{TI}$ is the standard deviation of the smoothed (10-year moving average) TI across the ensemble members for the historical reference period (1951 - 2005). We set a threshold of TI above which we consider a shared stock to have emerged from the historical internal variability of the TI. The threshold was set as one standard deviation of the variability ($SD_{TI}$) (i.e., eq. **x**, representing a probability of 68% that the transboundary index has emerged from historical variability). We tested the sensitivity of the calculated emergence index to  a higher emergence threshold of two times the standard deviation (i.e., representing a probability of 95% that the index has emerged).
+\begin{equation}
+\begin{split}
+\label{eq:four}
+EmergenceTIndex = \frac{\mu_{TI[t]}}{SD_{TI_{th}}} \\
+ToE = t when Emergence index[t] > 1
+\end{split}
+\end{equation}
+
+where $\mu_{TI}$ is the yearly mean TI ($\mu$) across all ten ensemble members in year *yr* and $SD_{TI}$ is the standard deviation of the smoothed (10-year moving average) TI across the ensemble members for the historical reference period (1951 - 2005). We set a threshold of TI above which we consider a shared stock to have emerged from the historical internal variability of the TI. The threshold was set as one standard deviation of the variability ($SD_{TI}$) (i.e., Equation \ref{eq:four}, representing a probability of 68% that the transboundary index has emerged from historical variability). We tested the sensitivity of the calculated emergence index to  a higher emergence threshold of two times the standard deviation (i.e., representing a probability of 95% that the index has emerged).
 
 
 #### Computing a transboundary fisheries vulnerability index
 
 We created a country-specific index to examine the risk of impacts of species’ range shifts on transboundary fisheries management. The index reflects both the rate of change of shared stocks’ distribution (indicated by the time-of-emergence of the transboundary index) and the importance of the shifting species to a country’s total catch and revenue from the species. The index is calculated from:
 
-$$ index' = (P_c + P_v)/ToE $$
+<!-- $$ index' = (P_c + P_v)/ToE $$ -->
+
+\begin{equation}
+\label{eq:five}
+index' = (P_c + P_v)/ToE
+\end{equation}
 
 where *P_c* and *P_v* indicate the proportion accounted for by shared species in total catch and value generated from transboundary fisheries within a country’s EEZ, respectively. Here, the proportion of total catch and value are represented as the average of 2005 to 2014 within individual EEZs according to the *Sea Around Us*. The index was then normalized to a 0 (less vulnerable) to 1 (more vulnerable) scale.
 
@@ -120,15 +158,19 @@ where *P_c* and *P_v* indicate the proportion accounted for by shared species in
 
 In game theory, cooperation over a shared resource will more likely result in a better overall outcome for the sharing parties than operating on a non-cooperative basis [@Munro:1980sd]. However, the benefits that each player gets from a cooperative strategy must be above a minimum payoff i.e., *Threat Point* (TP) [@Sumaila:2013]. Here, we define TP as the minimum proportion of a shared stock within an EEZ that a country will accept to engage in cooperative management with the country’s sharing neighbour [@OCPalacios; @OCSumaila]. Any proportion below the defined threat point of a country would result in a deflection from the joint management of the shared stock. 
 
+First we estimated the stock share ratio (SSR) for each species and year (1951-2100) by aggregating the number of $0.5^{\circ}$ x $0.5^{\circ}$ grid cells in which the species is present across neighboring EEZs, and then calculated the proportion of the stock held within each EEZ [@PalaciosAbrantes:2020tv]. Second, we average the calculated proportion of stock within an EEZ held into three time periods to reduce the effects of inter-annual climate variability. The first time period ($t_h$) spans 1951 to 2005 and matches the historical period in the GFDLESM-2M simulations, over which the model was forced with observation-based greenhouse gas, aerosol and natural external forcing [@Dunne:2012bo; @Dunne:2013db]. It is assumed as the historic baseline of shared distributions for each species. We then selected two future periods; early $21^{st}$ century as the average of 2021 to 2040 (*te*), and mid $21^{st}$ century as the average of 2041 to 2060 (*tm*). We chose these time periods to match the challenges of achieving fisheries-related UN-SDGs [@UnitedNations2018] such as SDG 14.4 (end overfishing), SDG 2.4 (ensure sustainable food production systems) or SDG 1.2 (poverty reduction), to be achieved by 2030 [@Singh:2017ds]. The analysis was replicated for projected species distributions from each of the ten ensemble members and results were averaged across ensemble members. Third, we estimated the percentage change in the SSR ($\Delta{SSR}$) of each future time period ($SSR_f$) relative to the historic time period ($SSR_h$) following Palacios-Abrantes et al. (*in press*),
+
+<!-- $$ \Delta{SSR_{e,m}} = \frac{(SSR_{f}-SSR_{th})}{SSR_{th}}* 100 $$ -->
+<!-- $TP = \Delta{SSR}_{e,m} < \mu \pm \sigma$ -->
 
 
-First we estimated the stock share ratio (SSR) for each species and year (1951-2100) by aggregating the number of $0.5^{\circ}$ x $0.5^{\circ}$ grid cells in which the species is present across neighboring EEZs, and then calculated the proportion of the stock held within each EEZ [@PalaciosAbrantes:2020tv]. Second, we average the calculated proportion of stock within an EEZ held into three time periods to reduce the effects of inter-annual climate variability. The first time period ($t_h$) spans 1951 to 2005 and matches the historical period in the GFDLESM-2M simulations, over which the model was forced with observation-based greenhouse gas, aerosol and natural external forcing [@Dunne:2012bo; @Dunne:2013db]. It is assumed as the historic baseline of shared distributions for each species. We then selected two future periods; early $21^{st}$ century as the average of 2021 to 2040 (*te*), and mid $21^{st}$ century as the average of 2041 to 2060 (*tm*). We chose these time periods to match the challenges of achieving fisheries-related UN-SDGs [@UnitedNations2018] such as SDG 14.4 (end overfishing) and SDG 1.2 (poverty reduction), to be achieved by 2020 and 2030, respectively [@Singh:2017ds]. The analysis was replicated for projected species distributions from each of the ten ensemble members and results were averaged across ensemble members. Third, we estimated the percentage change in the SSR ($\Delta{SSR}$) of each future time period ($SSR_f$) relative to the historic time period ($SSR_h$) following Palacios-Abrantes et al. (*in press*),
-
-
-
-$$ \Delta{SSR_{e,m}} = \frac{(SSR_{f}-SSR_{th})}{SSR_{th}}* 100 $$
-
-$TP = \Delta{SSR}_{e,m} < μ±σ$
+\begin{equation}
+\begin{split}
+\label{eq:six}
+\Delta{SSR_{e,m}} = \frac{(SSR_{f}-SSR_{th})}{SSR_{th}}* 100 \\
+TP = \Delta{SSR}_{e,m} < \mu \pm \sigma
+\end{split}
+\end{equation}
 
 Finally, the TP of each EEZ was calculated when $\Delta{SSR_{e,m}}$ is beyond one standard deviation of the historical distribution i.e., when $SSR_f \geq (SSR_f + \sigma)$ or $SSR_f \leq (SSR_f - \sigma)$.
 
@@ -136,7 +178,7 @@ Finally, the TP of each EEZ was calculated when $\Delta{SSR_{e,m}}$ is beyond on
 
 We tested the results for normality (e.g. skewness, kurtosis) and performed a couple of non-parametric Kruskal–Wallis test by ranks [@Hollander:2013wz] to investigate geopolitical and ecological differences in the ToE of transboundary species. Specifically, we tested if the habitat association of transboundary species and the geographic location of EEZs would have any effect on the time of emergence of transboundary stocks. For both cases, our null hypothesis was that there were no significant differences in the time of emergence across habitat association nor EEZs.
 <!-- Moreover, we implemented a multiple linear regression analysis to a series to explain the ToE of each species in each EEZ. Specifically, we looked at habitat preferences, catch trends, geopolitical and biome location and ToE of both bottom and sea surface temperature (See *Databases and species selection*). We hypothesize that all of these factors would have significant influence in the ToE of transboundary species. -->
-All analyses were run using the statistical software *R version 3.5.2 (2018-12-20; Eggshell Igloo)* with the packages *data.table* [@Packagedatatable:2019uh], *janitor* [@PackagejanitorSim:2018ur], *rfishbase* [@PackagerfishbaseR:2019th], *sf* [@PackagesfSimpleF:2018vp], *sp* [@PackagespClasses:2019tn], *tidiverse* [@PackagetidyverseE:2017vq], *tidytext* [@PackagetidytextTe:2019vk], *gmt* [@gmt] and *zoo* [@PackagezooSInfr:2019tm], *readxl* [@REF], *ggrepel* [@REF], *zeallot* [@REF], *viridis* [@REF], *cowplot* [@REF], *moments* [@REF] and *pgirmess* [@REF]. All code is available at https://github.com/jepa/TransEmergence
+All analyses were run using the statistical software *R version 3.5.2 (2018-12-20; Eggshell Igloo)* with the packages *data.table* [@Packagedatatable:2019uh], *janitor* [@PackagejanitorSim:2018ur], *rfishbase* [@PackagerfishbaseR:2019th], *sf* [@PackagesfSimpleF:2018vp], *sp* [@PackagespClasses:2019tn], *tidiverse* [@PackagetidyverseE:2017vq], *tidytext* [@PackagetidytextTe:2019vk], *gmt* [@PackagegmtInterfa:2017vh] and *zoo* [@PackagezooSInfr:2019tm], *ggrepel* [@PackageggrepelAut:2020to], *zeallot* [@PackagezeallotMul:2018wy], *viridis* [@PackageviridisDef:2018us], *cowplot* [@CowplotStreamlined:2019wt], *moments* [@PackagemomensMome:2015uh] and *pgirmess* [@PackagepgirmessSp:2018um]. All code is available at https://github.com/jepa/TransEmergence
 
 ## Results
 
@@ -267,7 +309,7 @@ The premise of our vulnerability index is that, from a management perspective, c
 
 ### Changes in specie-share ratio will be everywhere 
 
-By 2030, changes in SSR will be seen across the globe, but with no clear pattern in the direction of change (Figure \ref{fig:Figure5}). Poleward shifts in SSR will be seen in regions of the world with relatively large EEZs and few boundaries like the North East Pacific. However, despite a general recognition that climate change is shifting species distributions poleward [@Cheung:2010dt; @Poloczanska:2016kk; @IPCC:2019tn], the Eastern Tropical Pacific will see an equatorial shift with EEZs from Mexico to Ecuador losing SSR to their southern neighbors. This shift is consistent with regional modeling studies suggesting that by mid $21^{st}$ century marine species will displace between 50 and 100 km southward of Mexico’s EEZ towards Peru under a high emission climate change scenario (Clark *et al.,* n.d.). Moreover, regions with presence of multiple frontiers like the Caribbean and the North East Atlantic will see a complex network of changes in SSR with no marked direction (Figure \ref{fig:Figure5}B). These regions are known for being highly connected by both fish adult migration [@Levin:2018in] and larvae dispersal [@Ramesh:2019va] leading to joint management plans [@Baudron:2020dj] and the call for new implemented shared policies [@Levin:2018in]. However, game theory suggests that the greater number of parties negotiating, the harder it is for parties to reach an agreement [@Sumaila:2013hv], thus, making it particularly challenging for countries in these regions to coordinate the management of shifting shared species.
+By 2030, changes in SSR will be seen across the globe, but with no clear pattern in the direction of change (Figure \ref{fig:Figure5}). Poleward shifts in SSR will be seen in regions of the world with relatively large EEZs and few boundaries like the North East Pacific. However, despite a general recognition that climate change is shifting species distributions poleward [@Cheung:2010dt; @Poloczanska:2016kk; @IPCC:2019tn], the Eastern Tropical Pacific will see an equatorial shift with EEZs from Mexico to Ecuador losing SSR to their southern neighbors. This shift is consistent with regional modeling studies suggesting that by mid $21^{st}$ century marine species will displace between 50 and 100 km southward of Mexico’s EEZ towards Peru under a high emission climate change scenario [@Clarke:2020ep]. Moreover, regions with presence of multiple frontiers like the Caribbean and the North East Atlantic will see a complex network of changes in SSR with no marked direction (Figure \ref{fig:Figure5}B). These regions are known for being highly connected by both fish adult migration [@Levin:2018in] and larvae dispersal [@Ramesh:2019va] leading to joint management plans [@Baudron:2020dj] and the call for new implemented shared policies [@Levin:2018in]. However, game theory suggests that the greater number of parties negotiating, the harder it is for parties to reach an agreement [@Sumaila:2013hv], thus, making it particularly challenging for countries in these regions to coordinate the management of shifting shared species.
 
 ## Caveats and uncertainties
 
