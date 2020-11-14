@@ -1012,6 +1012,22 @@ Neighbours <- my_path("D", extra_path = "Spatial/", name="Neighbours_eez_id.csv"
 Transboundary_spp <- my_path("D", extra_path = "Species/", name="Transboundary_spp.csv", read = TRUE) %>% 
   clean_names()
 
+# ------------------------------------------- #
+### Estimate number of transboundary stocks ###
+# ------------------------------------------- #
+
+Transboundary_spp %>% 
+  left_join(Neighbours,
+            by = c("eez_name", "eez_neighbour")) %>% 
+  # filter(neighbour_id %in% c(1,105)) %>%
+  # filter(neighbour_id == 470) %>%
+  group_by(neighbour_id) %>% 
+  summarise(n_stock = length(unique(taxon_key))) %>% 
+  # View()
+  group_by() %>% 
+  summarise(t_trans_stocks = sum(n_stock)) # 9132
+
+
 ## ----------------- ##
 # Global variables
 ## ----------------- ##
@@ -1607,7 +1623,7 @@ Neighbours_n <- Neighbours %>%
   )
 
 # Clean names to match data
-Matching_names <- my_path("G","Spatial/SAU", "matching_names.csv", read = T) %>% 
+Matching_names <- my_path("G","Spatial/SAU", "sau_matching_names.csv", read = T) %>% 
   rename(eezid = eez_id)
 
 Fishing_names <- Matching_names %>% 
@@ -1868,7 +1884,854 @@ Main_data <- Eme_Res %>% # 19728
 
 ```
 
+###  Year of Eergence Analysis
 
+
+```{r ToE_generals,  eval = T, echo = T}
+
+# Total number of emerging stocks
+
+# Global estimates
+Eme_Res %>% 
+  group_by(tresh,neighbour_id) %>% 
+  summarise(
+    emerging_stocks = length(unique(taxon_key))
+    ) %>% 
+  group_by(tresh) %>% 
+  summarise(
+    emerging_stocks = sum(emerging_stocks),
+    prop_total = (emerging_stocks/9132)*100,
+    )
+
+# Global average ToE
+Eme_Res %>% 
+  group_by(tresh) %>% 
+  summarise(
+    # emerging_stocks = length(unique(taxon_key)),
+    # prop_total = (emerging_stocks/9132)*100,
+    mean= mean(emerging_yr),
+    sd = sd(emerging_yr),
+    min = min(emerging_yr),
+    max = max(emerging_yr)
+           )
+
+
+
+```
+
+##### Fig. 1. Accumulative plots
+
+```{r Time_lapse_data,  eval = T, echo = T}
+
+# Per Stock
+stock_d <-  
+  Eme_Res %>% 
+  left_join(Neighbours) %>% 
+  # distinct(taxon_key,neighbour_id, .keep_all = TRUE) %>% 
+  group_by(taxon_key,neighbour_id,tresh) %>% 
+  summarise(
+    taxon_emer = min(emerging_yr)
+  ) %>% 
+  group_by(taxon_emer,tresh) %>% 
+  summarise(
+    n_tax = n()
+  ) %>% 
+  group_by(tresh) %>% 
+  mutate(
+    com_sum = cumsum(n_tax),
+    level = "stock"
+  )
+
+max(stock_d$com_sum)
+
+#  EEZ data
+eez_d <-  Eme_Res %>% 
+  left_join(Neighbours) %>% 
+  filter(n_ens == 10) %>% 
+  # distinct(eez_name,neighbour_id, .keep_all = TRUE) %>% 
+  group_by(sf_eez_name,tresh) %>% 
+  summarise(
+    taxon_emer = min(emerging_yr)
+  ) %>% 
+  group_by(taxon_emer,tresh) %>% 
+  summarise(
+    n_tax = n()
+  ) %>% 
+  group_by(tresh) %>% 
+  mutate(
+    com_sum = cumsum(n_tax),
+    level = "eez"
+  )
+
+max(eez_d$com_sum)
+
+# Plot Data
+plot_data <- stock_d %>% 
+  bind_rows(eez_d) %>% 
+  filter(tresh != "NA") %>% 
+  mutate(
+    # total = ifelse(level == "stock",length(unique(Eme_Res$taxon_key)),length(unique(Eme_Res$sf_eez_name))),
+    total = ifelse(level == "stock",max(stock_d$com_sum),max(eez_d$com_sum)),
+    per = com_sum/total*100
+  ) %>% 
+  gather("metric","value",com_sum,per) %>% 
+  filter(tresh == "Tresh_one")
+
+
+# Manually include rest of EEZs
+
+cont_eez <- plot_data %>% 
+  filter(level == "eez") %>% 
+  slice(1:36) %>%
+  select(-1) %>% 
+  mutate(
+    value = ifelse(metric == "per",100,232),
+    taxon_emer = c(seq(2082,2099,1),seq(2082,2099,1))
+  )
+
+plot_data <- plot_data %>% 
+  bind_rows(cont_eez) %>% 
+  mutate(
+    my_facet = ifelse(metric == "per","Percentage (%)","Cumulative sum (n stocks)"),
+    label = ifelse(total == max(stock_d$com_sum),"Total number of emerging stocks","Total number of EEZs")
+  )
+
+# How many between 2006 and 2020?
+plot_data %>% 
+  filter(taxon_emer <= 2020,
+         tresh == "Tresh_one") %>% 
+  group_by(level,metric) %>% 
+  summarise(
+    max(taxon_emer),
+    min(taxon_emer),
+    max(taxon_emer),
+    min(taxon_emer)
+  )
+
+# Percentage increase of EEZ after 2020
+lm_eez <- plot_data %>% 
+  filter(taxon_emer <= 2020,
+         tresh == "Tresh_one",
+         metric == "per")
+
+summary(lm(lm_eez$taxon_emer~lm_eez$value))
+
+```
+
+
+```{r Time_lapse_plot}
+#### Both plots for tresh one
+
+ggplot() +
+  geom_area(data = subset(plot_data, level == "eez"),
+            aes(
+              x = as.numeric(taxon_emer),
+              y = value,
+              fill = level
+            ),
+            alpha= 0.5,
+            size=0.5,
+            colour="black"
+  )  +
+  geom_area(data = subset(plot_data, level == "stock"),
+            aes(
+              x = as.numeric(taxon_emer),
+              y = value,
+              fill = level
+            ),
+            alpha= 0.5,
+            size=0.5,
+            colour="black"
+  )  +
+  # geom_line(data = subset(plot_data, metric == "com_sum"),
+  #           aes(
+  #             x = as.numeric(taxon_emer),
+  #             y = total,
+  #             fill = level
+  #           ),
+  #           colour="grey30",
+  # )  +
+  # geom_text(data = subset(plot_data, metric == "com_sum"),
+  #           aes(
+  #             x = 2037,
+  #             y = total+5,
+  #             label = label
+  #           ),
+  #           size = 3,
+  #           colour="grey30",
+  #           hjust=0.6,
+  # )  +
+  facet_wrap(~my_facet,
+             scales = "free") + 
+  scale_y_continuous("",expand = expand_scale(mult = c(0, .05))) +
+  scale_x_continuous("Time of emergence",
+                     breaks = seq(2000,2100,25),
+                     limits = c(2005,2100),
+                     expand = c(0, 0)
+  ) +
+  my_ggtheme_p() +
+  theme(
+    legend.position = "right"
+  ) +
+  guides(fill=guide_legend(title= "Level")) +
+  scale_fill_viridis(discrete = T,
+                     labels = c("EEZs","Stocks")
+  ) +
+  ggsave("./Figures/cumu_per_freq.png",
+  width = 12,
+  height = 7,
+  units = "in"
+  )
+
+```
+
+
+##### Fig. 2 Mapping the time of emergence
+
+###### Mean ToE and vulnerabillity Index
+
+```{r emergence_map, eval = T}
+
+# Per EEZs
+Eez_d_hist <- Eme_Res %>% 
+  group_by(eezid,sau_fishing_entity,tresh) %>% 
+  # summarise(n_tax = length(unique(taxon_key))) %>% 
+  summarise(
+    mean_yr = mean(emerging_yr,na.rm=T),
+    sd_yr = sd(emerging_yr,na.rm=T),
+    n_taxa = length(unique(taxon_key))
+    ) %>% 
+  gather("metric","value",mean_yr:n_taxa) %>% 
+  # filter(metric != "n_taxa") %>% 
+  mutate(
+    reverse = abs(value-2100)  + 2000
+  )
+
+# Estimate the value (catch and USD) of emerging species
+Eme_value_data <- Eme_Res %>% 
+  group_by(sau_fishing_entity,fishing_entity_id,tresh,taxon_key) %>% 
+  summarise(n()) %>% 
+  left_join(Sau_data,
+            by = c("fishing_entity_id","taxon_key")) %>% 
+  filter(!is.na(variable)) %>% 
+  group_by(sau_fishing_entity,fishing_entity_id,tresh,variable) %>% 
+  summarise(
+   sum_value = sum(value,na.rm=T),
+    n_taxa = length(unique(taxon_key)) 
+  )
+  
+# Total value of each fishing nation
+
+Total_value <- Sau_data %>% 
+  group_by(fishing_entity_id,variable) %>% 
+  summarise(tot_value= sum(value,na.rm=T))
+
+
+Value_map_data <- Eme_value_data %>% 
+  left_join(Total_value,
+            by = c("fishing_entity_id","variable")) %>% 
+  mutate(participation = (sum_value/tot_value)*100)
+
+### ----------------- ###
+### Index alternative ###
+### ----------------- ###
+
+Index_data <- Eez_d_hist %>% 
+  left_join(Value_map_data) %>% 
+  filter(
+    tresh == "Tresh_one",
+    metric == "mean_yr"
+  ) %>% 
+  group_by(sau_fishing_entity,fishing_entity_id,variable) %>% 
+  summarise(
+    toe = mean(value,na.rm=T),
+    # sum_value = sum(sum_value),
+    mean_part = mean(participation,na.rm=T)
+  ) %>% 
+  filter(!is.na(variable)) %>% 
+  # spread(variable,sum_value) %>% 
+  spread(variable,mean_part) %>% 
+  mutate(
+    imp = catch+value,
+    index = imp/toe
+  )
+
+##### Normalize index
+# https://www.datanovia.com/en/blog/how-to-normalize-and-standardize-data-in-r-for-great-heatmap-visualization/
+
+# Get min and maximums
+min_index <- min(Index_data$index)
+max_index <- max(Index_data$index)
+
+Index_data <- Index_data %>% 
+  mutate(
+    index_norm =(index-min_index)/(max_index-min_index),
+    index_2000 = 2000 + (index-min_index)*(2100-2000)/(max_index-min_index)
+  ) 
+
+### Explore index ####
+
+# ggplot(data = Index_data) +
+#   geom_point(
+#     aes(
+#       x = toe,
+#       y = imp,
+#       color = index_2000
+#     ),
+#     size = 4
+#   ) +
+#    scale_color_viridis(option="magma", discrete = F)
+
+#### ------------  ####
+
+Value_map_data <- Index_data %>%
+  select(sau_fishing_entity,fishing_entity_id,
+         # tresh,
+         # variable,
+         participation = index_2000)
+
+### ----------------- ###
+
+
+# Per fishing entity
+
+fish_d_hist <- Eme_Res %>% 
+  group_by(sau_fishing_entity,tresh) %>% 
+  # summarise(n_tax = length(unique(taxon_key))) %>% 
+  summarise(
+    value = length(unique(taxon_key))
+    ) %>% 
+  filter(!is.na(sau_fishing_entity))
+
+World_map_nemer <- World_map %>%
+  full_join(Value_map_data,
+            by = c("sau_fishing_entity","fishing_entity_id")
+  ) %>% 
+  filter(!is.na(participation))
+
+# These are regions without transboundary species
+grey_land <- World_map %>% 
+  filter(!fishing_entity_id %in% Value_map_data$fishing_entity_id) %>% 
+  filter(!sovereignt %in% c("Antarctica","Brazil"))
+
+grey_eez <- World_eez_sf %>% 
+  filter(!eezid %in% Eez_d_hist$eezid,
+         !eez_name %in% Neighbours$eez_name)
+
+Brazil_land <- World_map %>% 
+  filter(sovereignt == "Brazil") 
+
+Brazil_eez <- World_eez_sf %>% 
+  filter(eez_name %in% c("Brazil","USA (Alaska, Arctic)"))
+
+
+
+for(i in 1:1){
+  
+  tresh_list <- c("Tresh_one","Tresh_two")
+  name_save <- paste("./Figures/emer_map_lat_",tresh_list[i],".png",sep = "")
+  
+  ## --------------- ##
+  # Latitudinal plot
+  ## --------------- ##
+  
+  ### Random plot
+
+Eez_hist <- Eme_Res %>% 
+  group_by(eezid,eez_name = sf_eez_name) %>% 
+  left_join(Eez_centroid) %>% 
+  filter(tresh == tresh_list[i]) %>% 
+  group_by(latitude) %>% 
+  summarise(
+    number = n()
+  ) %>% 
+  group_by() %>% 
+  mutate(RMean = rollmean(x = number, 
+                          10, 
+                          align = "center", 
+                          fill = number
+  )
+  ) %>% 
+  mutate(lab="lab") %>% 
+  ggplot() +
+  geom_area(
+    aes(
+      x = latitude,
+      y = RMean,
+      fill = lab,
+      color = lab
+    )
+  ) +
+  coord_flip() +
+  scale_x_continuous("",
+    limits = c(-50,80),
+    breaks = c(-50,0,50,80)
+  ) +
+  scale_y_continuous(
+    "Emerging stocks",
+    limits = c(0, 124),
+    breaks = c(0,62,124)
+    
+  ) +
+  scale_fill_viridis(option="magma", discrete = T, begin = 0.7) +
+  scale_color_viridis(option="magma", discrete = T, begin = 0.7) +
+  theme_minimal() + 
+  theme(
+    panel.background = element_rect(fill = "white", colour = "white"),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank(),
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    axis.text.y = element_blank(),
+    axis.ticks.y = element_blank(),
+    axis.text = element_text(size = 12, colour="black"),
+    axis.title.x = element_text(size = 12, colour="black", face = "bold"),
+    legend.position = ""
+  )
+  
+  ## --------------- ##
+  # Map
+  ## --------------- ##
+
+  World_map_part <- World_map_nemer# %>% 
+    # filter(
+    #   tresh ==  tresh_list[i], 
+    #   variable == "value"
+    # )
+  
+  map <- World_eez_sf %>% 
+    left_join(Eez_d_hist,
+              by = "eezid") %>% 
+    filter(tresh == tresh_list[i],
+           metric == "mean_yr") %>% 
+    ggplot() +
+    geom_sf(
+      aes(
+        fill = reverse #original map
+        # fill = value
+      ),
+      color =  "white",
+      size = 0.1
+    ) +
+    # Inlcude the participation of species
+    geom_sf(data = World_map_part,
+            # aes(fill = participation+2000), #original map
+            aes(fill = participation),
+            color =  "white",
+            size = 0.1
+            ) +
+    # grey maps
+    # ggplot() +
+    geom_sf(data = grey_land, aes(), fill = "grey50", color =  "white",size = 0.1) +
+    geom_sf(data = grey_eez, aes(), fill = "white", color =  "grey50",size = 0.1) +
+    geom_sf(data = Brazil_eez, aes(), fill = "lightblue", color =  "white",size = 0.1) +
+    geom_sf(data = Brazil_land, aes(), fill = "lightblue", color =  "white",size = 0.1) +
+    # Set Participation labels
+    annotate("text",
+             x =-135,
+             y = -69,
+             label = "Vulnerabillity index",
+             color="black",
+             size=4,
+             angle=0,
+             fontface="bold",
+             hjust=0) +
+    annotate("text", 
+             x = c(-76,-35,6,48,88),
+             y = -69,
+             # x =(c(-8500000,-3000000,2500000,7500000,12800000)),
+             # y = -9050000,
+             label = c(0,25,50,75,100), 
+             color="black", 
+             size=4, 
+             angle=0, 
+             # fontface="bold",
+             hjust=0) +
+    # Set ToE labels
+    annotate("text", 
+             x =-135,
+             y = -85,
+             label = "Time of Emergence",
+             color="black", 
+             size=4, 
+             angle=0, 
+             fontface="bold",
+             hjust=0) +
+    annotate("text", 
+             x = c(-79,-39,3,45,87),
+             y = -85,
+             label = seq(2100,2000,-25), # original
+             # label = c(">2100",seq(2075,2000,-25)), # not inluding the > because we dont know
+             color="black", 
+             size=4, 
+             angle=0, 
+             # fontface="bold",
+             hjust=0) +
+    scale_fill_viridis("",
+      limits = c(2000,2100),
+      breaks = seq(2000,2100,25),
+      labels = c("","","","","")#,
+      # direction = -1
+    ) +
+    # scale_fill_gradientn("",
+    #                      limits = c(2000,2100),
+    #                      breaks = seq(2000,2100,25),
+    #                       labels = c("","","","",""),
+    #                      colours = pal
+    # ) +
+    # geom_hline(yintercept = c(-50,0,50,80)) +
+    my_ggtheme_m() +
+    theme(
+      legend.box.margin = margin(t = -64, l = 229),
+      legend.text = element_blank(),
+      legend.key.width = unit(5, "line")
+    )
+  
+  
+  
+  ## --------------- ##
+  # Regional Boxplot
+  ## --------------- ##
+  
+  boxplot <- Eme_Res %>% 
+    filter(tresh == "Tresh_one",
+           !is.na(un_sub_region)) %>%
+    group_by(un_sub_region) %>% 
+    summarise(order = median(emerging_yr)) %>% 
+    left_join(Eme_Res) %>% 
+    filter(tresh == "Tresh_one",
+           !is.na(un_sub_region)) %>% 
+    mutate(un_sub_region = ifelse(str_detect(un_sub_region,"Latin"),"Ltn. Ame. and the Car.",paste(un_sub_region))) %>% 
+    ggplot() +
+    geom_boxplot(
+      aes(
+        # x = un_sub_region,
+        x = reorder(un_sub_region,order),
+        y = emerging_yr#,
+        # fill = un_geo_region
+      ),
+      fill = "grey"
+    ) +
+    facet_wrap(~un_geo_region,
+               scales = "free_x",
+               nrow = 1) +
+    scale_fill_viridis("UN Sub region",
+                       discrete = T) +
+    scale_color_grey("") +
+    xlab("") +
+    ylab("Time of Emergence") +
+    my_ggtheme_p() +
+    theme(
+      axis.text.x = element_text(size = 10, angle = 45, face = "plain", hjust = 1), 
+      strip.text.x = element_text(size = 14, colour = "black"), 
+      # axis.ticks.x = element_blank(),
+      legend.position = "right"
+    )
+  
+  ## --------------- ##
+  # Combine plots and save them
+  ## --------------- ##
+  
+  p <- ggdraw() +
+    # ToE Latitudinal plot
+    draw_plot(Eez_hist, x = 0.873, y = 0.53, width = 0.124, height = 0.37) +
+    # Time of Emergence Map
+    draw_plot(map, x = 0, y = 0.4, width = 0.95, height = 0.6) +
+    # Regional boxplot
+    draw_plot(boxplot, x = 0, y = -0.03, width = 1, height = 0.44) +
+    # Labels
+    draw_plot_label(label = c("A", "B"), 
+                      size = 20,
+                      x = c(0, 0), 
+                      y = c(0.95, 0.46)
+      )
+  
+  
+  save_plot(
+    name_save,
+    p,
+    base_height = 11,
+    base_width = 12
+  )
+
+}
+
+
+```
+
+##### Fig. 4. Bubble plot
+
+```{r, buble_plot, eval = F, echo = F}
+
+# Needs previous chunk
+
+Buble_data <- Eez_d_hist %>% 
+  filter(metric == "mean_yr") %>% 
+  group_by(sau_fishing_entity,tresh) %>% 
+  summarise(mean_yr = mean(value)) %>% 
+  left_join(Eme_value_data,
+            by = c("sau_fishing_entity","tresh")) %>% 
+  filter(tresh == "Tresh_one",
+         variable == "value") %>% 
+  mutate(
+    weight_toe = sum_value/mean_yr,
+    sum_value_bi = sum_value/1000000000,
+    log_value = log10(sum_value_bi)
+    ) %>%   # Billion usd
+  left_join(Matching_names,
+            by = c("sau_fishing_entity","fishing_entity_id")) %>% 
+  distinct(sau_fishing_entity,.keep_all = TRUE) %>% 
+  filter(!is.na(un_geo_region)) %>% 
+  ungroup() %>% 
+  mutate(
+    sau_fishing_entity = ifelse(sum_value_bi >= 1 & !sau_fishing_entity %in% c("Spain"), paste(sau_fishing_entity,"*",sep = ""),sau_fishing_entity))
+
+### Fucntion for estimating percentile
+
+quibble <- function(x, q = p) {
+        tibble(x = quantile(x, q), q = q)
+}
+
+Percentile_value <- Buble_data %>% 
+  group_by() %>%  # for whole distribution
+        do(quibble(.$log_value, 0.75))
+
+
+## Top fishing nations
+Buble_data %>% 
+  filter(log_value > Percentile_value$x) %>% 
+  View()
+
+
+# Labels Data
+
+Labels_data <- tibble(
+  x = c(2020,2040,2007),
+  y = c(-5.8,-5.8,Percentile_value$x+.1),
+  label = c("Early emergence", "Late emergence","Fisheries > 75th percentile")
+)
+
+
+# Plot the bubbles!
+ggplot(Buble_data) +
+  geom_point(
+    aes(
+      x = mean_yr,
+      y = log_value,
+      size = n_taxa,
+      # colour = un_geo_region,
+      shape = un_geo_region
+    ),
+    alpha = 0.7
+  ) +
+  # Divisory lines
+  geom_vline(xintercept = 2030, color = "grey90", size = 0.5) +
+  geom_hline(data = Percentile_value,
+             aes(yintercept = x),
+             color = "grey90"
+  )  +
+  geom_label_repel(data = subset(Buble_data, sum_value_bi >= 1),
+                   aes(
+                     x = mean_yr,
+                     y = log_value,
+                     label = sau_fishing_entity
+                   ),
+                   arrow = arrow(length = unit(0.009, "npc"),
+                                 type = "closed",
+                                 ends = "first"),
+                   force = 2,
+                   box.padding = 1,
+                   fill = "NA"
+                   
+  ) +
+  geom_text(data = Labels_data,
+            aes(
+              x = x,
+              y = y,
+              label = label
+            ),
+            size = 3,
+            color = "grey30"
+  ) +
+  scale_color_viridis(name="Region",
+                      discrete = T) +
+  scale_x_continuous("Average time of emergence",
+                     limits = c(2000,2080),
+                     breaks = seq(2000,2080,10)
+  ) +
+  scale_y_continuous("Fishing revenue (log10)",
+                     limits = c(-6,2),
+                     breaks = seq(-6,2,2),
+                     expand = c(0,0)
+  ) +
+  scale_size("Number of\nemerging taxa") +
+  ggsave("./Figures/bubble_plot.png",
+         width = 8,
+         height = 8,
+         units = "in"
+  )
+
+```
+
+### Species level analysis
+
+#### Fig. 5 Species Boxplot
+
+```{r deme_pela, eval = F, echo =F}
+
+# Dem Pelagic boxplot
+Eme_Res %>% 
+  left_join(Spp_env_pref) %>% 
+  mutate(DemersPelag = ifelse(is.na(DemersPelag),"other",DemersPelag)) %>% 
+  group_by(DemersPelag) %>% 
+  summarise(mean_toe = median(emerging_yr,na.rm=T),
+            n_spp = length(unique(taxon_key))) %>% 
+  left_join(Dem_pel) %>% 
+  mutate(
+    label = paste0(DemersPelag, "\n(n=",n_spp,")")
+  ) %>% 
+  filter(tresh == "Tresh_one",
+         DemersPelag != "pelagic") %>% # just one spp.
+  ggplot() +
+  geom_boxplot(
+    aes(x = reorder(label,mean_toe),
+        # aes(x = DemersPelag,
+        y = emerging_yr,
+        # fill = DemersPelag
+    ),
+    alpha = 0.8,
+    fill = "grey"
+  ) +
+  # scale_fill_viridis("Habitat preference",
+                     # discrete = T) +
+  xlab("") +
+  ylab("Time of emergence") +
+  my_ggtheme_p() +
+  theme(
+    axis.text.x = element_text(size = 10, angle = 45, face = "plain", hjust = 1), 
+    # axis.ticks.x = element_blank(),
+    legend.position = "right"
+  ) +
+  scale_x_reordered() +
+  ggsave("./Figures/regional_hab_boxplot.png",
+         width = 10,
+         height = 5,
+         units = "in"
+  )
+
+```
+
+### Statistics
+
+#### Test for normallity
+
+```{r, normality_test, eval = F, echo = F}
+# Test for normality
+
+Stats_data <- Eme_Res %>% 
+  filter(tresh == "Tresh_one",
+         n_ens == 10)
+  
+
+# ------------------- #
+# Test normal asumptions 
+# ------------------- #
+
+hist(Stats_data$emerging_yr) # Positevely skewed
+qqnorm(Stats_data$emerging_yr) # not normally distributed
+skewness(Stats_data$emerging_yr) #1.02
+kurtosis(Stats_data$emerging_yr) #2.82
+
+# ------------------- #
+
+# (NOT NORMAL DISTRIRBUTION)
+
+```
+
+## Regional differences
+
+```{r multiple_reg, eval = F, echo = F}
+
+Reg_diff_data <- Eme_Res %>% 
+  filter(tresh == "Tresh_one",
+         !is.na(un_sub_region)
+         )
+
+# ------------------- #
+# Run non-parametric Krustal
+# ------------------- #
+
+Reg_kw <- kruskal.test(un_sub_region~emerging_yr, data = Reg_diff_data)
+
+Reg_kw
+# Kruskal-Wallis rank sum test
+# 
+# data:  un_sub_region by emerging_yr
+# Kruskal-Wallis chi-squared = 287.23, df = 93, p-value < 2.2e-16
+
+kruskalmc(emerging_yr~un_sub_region, data = Reg_diff_data)
+
+# Multiple differences but Eastern Asia, Lat. Ame. Car. and Polinesia are the nes who differe the most (e.g. differe with more revions).
+
+# ------------------- #
+# Just to double check ANOVA results (give the same)
+# ------------------- #
+Reg_aov <- aov(emerging_yr~un_sub_region, data = Reg_diff_data)
+Reg_aov
+
+summary(Reg_aov)
+
+TukeyHSD(Reg_aov) %>% 
+  tidy() %>% 
+   filter(adj.p.value < 0.05) %>%
+  View()
+
+
+```
+
+## Habitat preference differences
+
+```{r multiple_reg, eval = F, echo = F}
+
+Hab_diff_data <- Eme_Res %>% 
+  filter(tresh == "Tresh_one",
+         !is.na(un_sub_region)
+         ) %>% 
+  left_join(Spp_env_pref,
+            by = "taxon_key") 
+
+# ------------------- #
+# Run non-parametric Krustal
+# ------------------- #
+
+Hab_kw <- kruskal.test(DemersPelag~emerging_yr, data = Hab_diff_data)
+
+Hab_kw
+# Kruskal-Wallis rank sum test
+
+# data:  DemersPelag by emerging_yr
+# Kruskal-Wallis chi-squared = 286.48, df = 93, p-value < 2.2e-16
+
+kruskalmc(emerging_yr~DemersPelag, data = Hab_diff_data)
+
+# Multiple differences but main differences for pelagic-ocenaic and reefs
+
+# ------------------- #
+# Just to double check ANOVA results (give the same)
+# ------------------- #
+
+Hab_aov <- aov(emerging_yr~DemersPelag, data = hab_diff_data)
+Hab_aov
+
+summary(Hab_aov)
+
+TukeyHSD(Hab_aov) %>% 
+  tidy() %>% 
+   filter(adj.p.value < 0.05) %>%
+  View()
+
+
+```
 
 
 ####  Prooportion Analysis
@@ -2370,839 +3233,6 @@ ggplot() +
 
 ```
 
-####  Year of Eergence Analysis
-
-
-##### Fig. 2. Accumulative plots
-
-```{r Time_lapse_plot,  eval = T, echo = T}
-
-# Per Stock
-stock_da <-  Eme_Res %>% 
-  left_join(Neighbours) %>% 
-  # distinct(taxon_key,neighbour_id, .keep_all = TRUE) %>% 
-  group_by(taxon_key,tresh) %>% 
-  summarise(
-    taxon_emer = min(emerging_yr)
-  ) %>% 
-  group_by(taxon_emer,tresh) %>% 
-  summarise(
-    n_tax = n()
-  ) %>% 
-  group_by(tresh) %>% 
-  mutate(
-    com_sum = cumsum(n_tax),
-    level = "stock"
-  )
-
-#  EEZ data
-eez_d <-  Eme_Res %>% 
-  left_join(Neighbours) %>% 
-  filter(n_ens == 10) %>% 
-  # distinct(eez_name,neighbour_id, .keep_all = TRUE) %>% 
-  group_by(sf_eez_name,tresh) %>% 
-  summarise(
-    taxon_emer = min(emerging_yr)
-  ) %>% 
-  group_by(taxon_emer,tresh) %>% 
-  summarise(
-    n_tax = n()
-  ) %>% 
-  group_by(tresh) %>% 
-  mutate(
-    com_sum = cumsum(n_tax),
-    level = "eez"
-  )
-
-# Plot Data
-plot_data <- stock_d %>% 
-  bind_rows(eez_d) %>% 
-  filter(tresh != "NA") %>% 
-  mutate(
-    total = ifelse(level == "stock",length(unique(Eme_Res$taxon_key)),length(unique(Eme_Res$sf_eez_name))),
-    per = com_sum/total*100
-  ) %>% 
-  gather("metric","value",com_sum,per) %>% 
-  filter(tresh == "Tresh_one") %>% 
-  mutate(
-    my_facet = ifelse(metric == "per","Percentage (%)","Cumulative sum"),
-    label = ifelse(total == 478,"Total number of stocks","Total number of EEZs")
-  );plot_data
-
-
-#### Both plots for tresh one
-
-ggplot() +
-  geom_area(data = subset(plot_data, level == "stock"),
-            aes(
-              x = as.numeric(taxon_emer),
-              y = value,
-              fill = level
-            ),
-            alpha= 0.8,
-            size=0.5,
-            colour="black"
-  )  +
-  geom_area(data = subset(plot_data, level == "eez"),
-            aes(
-              x = as.numeric(taxon_emer),
-              y = value,
-              fill = level
-            ),
-            alpha= 0.8,
-            size=0.5,
-            colour="black"
-  )  +
-  geom_line(data = subset(plot_data, metric == "com_sum"),
-            aes(
-              x = as.numeric(taxon_emer),
-              y = total,
-              fill = level
-            ),
-            colour="grey30",
-  )  +
-  geom_text(data = subset(plot_data, metric == "com_sum"),
-            aes(
-              x = 2037,
-              y = total+5,
-              label = label
-            ),
-            size = 3,
-            colour="grey30",
-            hjust=0.6,
-  )  +
-  facet_wrap(~my_facet,
-             scales = "free") + 
-  scale_y_continuous("",expand = expand_scale(mult = c(0, .05))) +
-  scale_x_continuous("Time of emergence",
-                     breaks = seq(2000,2100,25),
-                     limits = c(2005,2100),
-                     expand = c(0, 0)
-  ) +
-  my_ggtheme_p() +
-  theme(
-    legend.position = "right"
-  ) +
-  guides(fill=guide_legend(title= "Level")) +
-  scale_fill_viridis(discrete = T,
-                     labels = c("EEZs","Stocks")
-  ) +
-  ggsave("./Figures/cumu_per_freq.png",
-         width = 7,
-         height = 7,
-         units = "in"
-  )
-
-```
-
-
-##### Fig. 3 Mapping the time of emergence
-
-###### Mean ToE and vulnerabillity Index
-
-```{r emergence_map, eval = T}
-
-# Per EEZs
-Eez_d_hist <- Eme_Res %>% 
-  group_by(eezid ,sau_fishing_entity,tresh) %>% 
-  # summarise(n_tax = length(unique(taxon_key))) %>% 
-  summarise(
-    mean_yr = mean(emerging_yr,na.rm=T),
-    sd_yr = sd(emerging_yr,na.rm=T),
-    n_taxa = length(unique(taxon_key))
-    ) %>% 
-  gather("metric","value",mean_yr:n_taxa) %>% 
-  # filter(metric != "n_taxa") %>% 
-  mutate(
-    reverse = abs(value-2100)  + 2000
-  )
-
-# Estimate the value (catch and USD) of emerging species
-Eme_value_data <- Eme_Res %>% 
-  group_by(sau_fishing_entity,fishing_entity_id,tresh,taxon_key) %>% 
-  summarise(n()) %>% 
-  left_join(Sau_data,
-            by = c("fishing_entity_id","taxon_key")) %>% 
-  filter(!is.na(variable)) %>% 
-  group_by(sau_fishing_entity,fishing_entity_id,tresh,variable) %>% 
-  summarise(
-   sum_value = sum(value,na.rm=T),
-    n_taxa = length(unique(taxon_key)) 
-  )
-  
-# Total value of each fishing nation
-
-Total_value <- Sau_data %>% 
-  group_by(fishing_entity_id,variable) %>% 
-  summarise(tot_value= sum(value,na.rm=T))
-
-
-Value_map_data <- Eme_value_data %>% 
-  left_join(Total_value,
-            by = c("fishing_entity_id","variable")) %>% 
-  mutate(participation = (sum_value/tot_value)*100)
-
-### ----------------- ###
-### Index alternative ###
-### ----------------- ###
-
-Index_data <- Eez_d_hist %>% 
-  left_join(Value_map_data) %>% 
-  filter(
-    tresh == "Tresh_one",
-    metric == "mean_yr"
-  ) %>% 
-  group_by(sau_fishing_entity,variable) %>% 
-  summarise(
-    toe = mean(value,na.rm=T),
-    # sum_value = sum(sum_value),
-    mean_part = mean(participation,na.rm=T)
-  ) %>% 
-  filter(!is.na(variable)) %>% 
-  # spread(variable,sum_value) %>% 
-  spread(variable,mean_part) %>% 
-  mutate(
-    imp = catch+value,
-    index = imp/toe
-  )
-
-##### Normalize index
-# https://www.datanovia.com/en/blog/how-to-normalize-and-standardize-data-in-r-for-great-heatmap-visualization/
-
-# Get min and maximums
-min_index <- min(Index_data$index)
-max_index <- max(Index_data$index)
-
-Index_data <- Index_data %>% 
-  mutate(
-    index_norm =(index-min_index)/(max_index-min_index),
-    index_2000 = 2000 + (index-min_index)*(2100-2000)/(max_index-min_index)
-  ) 
-
-### Explore index ####
-
-ggplot(data = Index_data) +
-  geom_point(
-    aes(
-      x = toe,
-      y = imp,
-      color = index_2000
-    ),
-    size = 4
-  ) +
-   scale_color_viridis(option="magma", discrete = F)
-
-#### ------------  ####
-
-Value_map_data <- Index_data %>% 
-  select(sau_fishing_entity,fishing_entity_id,tresh,variable,participation = index)
-
-### ----------------- ###
-
-
-# Per fishing entity
-
-fish_d_hist <- Eme_Res %>% 
-  group_by(sau_fishing_entity,tresh) %>% 
-  # summarise(n_tax = length(unique(taxon_key))) %>% 
-  summarise(
-    value = length(unique(taxon_key))
-    ) %>% 
-  filter(!is.na(sau_fishing_entity))
-
-World_map_nemer <- World_map %>%
-  left_join(Value_map_data,
-            by = c("sau_fishing_entity","fishing_entity_id")
-  ) %>% 
-  filter(!is.na(participation))
-
-grey_land <- World_map %>% 
-  filter(!fishing_entity_id %in% World_map_nemer$fishing_entity_id) %>% 
-  filter(sovereignt != "Antarctica")
-
-grey_eez <- World_eez_sf %>% 
-  filter(!eezid %in% Eez_d_hist$eezid)
-
-
-for(i in 1:2){
-  
-  tresh_list <- c("Tresh_one","Tresh_two")
-  name_save <- paste("./Figures/emer_map_lat_",tresh_list[i],".png",sep = "")
-  
-  ## --------------- ##
-  # Latitudinal plot
-  ## --------------- ##
-  
-  ### Random plot
-
-Eez_hist <- Eme_Res %>% 
-  group_by(eezid,eez_name = sf_eez_name) %>% 
-  left_join(Eez_centroid) %>% 
-  filter(tresh == tresh_list[i]) %>% 
-  group_by(latitude) %>% 
-  summarise(
-    number = n()
-  ) %>% 
-  group_by() %>% 
-  mutate(RMean = rollmean(x = number, 
-                          10, 
-                          align = "center", 
-                          fill = number
-  )
-  ) %>% 
-  mutate(lab="lab") %>% 
-  ggplot() +
-  geom_area(
-    aes(
-      x = latitude,
-      y = RMean,
-      fill = lab,
-      color = lab
-    )
-  ) +
-  coord_flip() +
-  scale_x_continuous("",
-    limits = c(-50,80),
-    breaks = c(-50,0,50,80)
-  ) +
-  scale_y_continuous(
-    "Emerging stocks",
-    limits = c(0, 124),
-    breaks = c(0,62,124)
-    
-  ) +
-  scale_fill_viridis(option="magma", discrete = T, begin = 0.7) +
-  scale_color_viridis(option="magma", discrete = T, begin = 0.7) +
-  theme_minimal() + 
-  theme(
-    panel.background = element_rect(fill = "white", colour = "white"),
-    panel.grid.major.y = element_blank(),
-    panel.grid.minor.y = element_blank(),
-    panel.grid.major.x = element_blank(),
-    panel.grid.minor.x = element_blank(),
-    axis.text.y = element_blank(),
-    axis.ticks.y = element_blank(),
-    axis.text = element_text(size = 12, colour="black"),
-    axis.title.x = element_text(size = 12, colour="black", face = "bold"),
-    legend.position = ""
-  );Eez_hist
-  
-  ## --------------- ##
-  # Map
-  ## --------------- ##
-
-  World_map_part <- World_map_nemer %>% 
-    filter(
-      tresh ==  tresh_list[i], 
-      variable == "value"
-    )
-  
-  map <- World_eez_sf %>% 
-    left_join(Eez_d_hist,
-              by = "eezid") %>% 
-    filter(tresh == tresh_list[i],
-           metric == "mean_yr") %>% 
-    ggplot() +
-    geom_sf(
-      aes(
-        fill = reverse #original map
-        # fill = value
-      ),
-      color =  "white",
-      size = 0.1
-    ) +
-    # Inlcude the participation of species
-    geom_sf(data = World_map_part,
-            # aes(fill = participation+2000), #original map
-            aes(fill = participation),
-            color =  "white",
-            size = 0.1
-            ) +
-    # grey maps
-    geom_sf(data = grey_land, aes(),fill = "grey50", color =  "white",size = 0.1) +
-    geom_sf(data = grey_eez, aes(),fill = "grey50", color =  "white",size = 0.1) +
-    # Set Participation labels
-    annotate("text",
-             x =-135,
-             y = -69,
-             label = "Vulnerabillity index",
-             color="black",
-             size=4,
-             angle=0,
-             fontface="bold",
-             hjust=0) +
-    annotate("text", 
-             x = c(-76,-35,6,48,88),
-             y = -69,
-             # x =(c(-8500000,-3000000,2500000,7500000,12800000)),
-             # y = -9050000,
-             label = c(0,25,50,75,100), 
-             color="black", 
-             size=4, 
-             angle=0, 
-             # fontface="bold",
-             hjust=0) +
-    # Set ToE labels
-    annotate("text", 
-             x =-135,
-             y = -85,
-             label = "Time of Emergence",
-             color="black", 
-             size=4, 
-             angle=0, 
-             fontface="bold",
-             hjust=0) +
-    annotate("text", 
-             x = c(-79,-39,3,45,87),
-             y = -85,
-             label = seq(2100,2000,-25), # original
-             # label = seq(2000,2100,25), 
-             color="black", 
-             size=4, 
-             angle=0, 
-             # fontface="bold",
-             hjust=0) +
-    scale_fill_viridis("",
-      limits = c(2000,2100),
-      breaks = seq(2000,2100,25),
-      labels = c("","","","","")#,
-      # direction = -1
-    ) +
-    # geom_hline(yintercept = c(-50,0,50,80)) +
-    my_ggtheme_m() +
-    theme(
-      legend.box.margin = margin(t = -64, l = 229),
-      legend.text = element_blank(),
-      legend.key.width = unit(5, "line")
-    )
-  
-  
-  ## --------------- ##
-  # Combine plots and save them
-  ## --------------- ##
-  
-  p <- ggdraw() +
-    # ToE Latitudinal plot
-    draw_plot(Eez_hist, x = 0.873, y = 0.13, width = 0.124, height = 0.77) +
-    # Time of Emergence Map
-    draw_plot(map, x = 0, y = 0, width = 0.95, height = 1)
-  
-  save_plot(
-    name_save,
-    p,
-    base_height = 6,
-    base_width = 12
-  )
-
-}
-
-
-```
-
-##### Fig. 4. Bubble plot
-
-```{r, buble_plot, eval = F, echo = F}
-
-# Needs previous chunk
-
-Buble_data <- Eez_d_hist %>% 
-  filter(metric == "mean_yr") %>% 
-  group_by(sau_fishing_entity,tresh) %>% 
-  summarise(mean_yr = mean(value)) %>% 
-  left_join(Eme_value_data,
-            by = c("sau_fishing_entity","tresh")) %>% 
-  filter(tresh == "Tresh_one",
-         variable == "value") %>% 
-  mutate(
-    weight_toe = sum_value/mean_yr,
-    sum_value_bi = sum_value/1000000000,
-    log_value = log10(sum_value_bi)
-    ) %>%   # Billion usd
-  left_join(Matching_names,
-            by = c("sau_fishing_entity","fishing_entity_id")) %>% 
-  distinct(sau_fishing_entity,.keep_all = TRUE) %>% 
-  filter(!is.na(un_geo_region)) %>% 
-  ungroup() %>% 
-  mutate(
-    sau_fishing_entity = ifelse(sum_value_bi >= 1 & !sau_fishing_entity %in% c("Spain"), paste(sau_fishing_entity,"*",sep = ""),sau_fishing_entity))
-
-### Fucntion for estimating percentile
-
-quibble <- function(x, q = p) {
-        tibble(x = quantile(x, q), q = q)
-}
-
-Percentile_value <- Buble_data %>% 
-  group_by() %>%  # for whole distribution
-        do(quibble(.$log_value, 0.75))
-
-
-## Top fishing nations
-Buble_data %>% 
-  filter(log_value > Percentile_value$x) %>% 
-  View()
-
-
-# Labels Data
-
-Labels_data <- tibble(
-  x = c(2020,2040,2007),
-  y = c(-5.8,-5.8,Percentile_value$x+.1),
-  label = c("Early emergence", "Late emergence","Fisheries > 75th percentile")
-)
-
-
-# Plot the bubbles!
-ggplot(Buble_data) +
-  geom_point(
-    aes(
-      x = mean_yr,
-      y = log_value,
-      size = n_taxa,
-      colour = un_geo_region
-    ),
-    alpha = 0.7
-  ) +
-  # Divisory lines
-  geom_vline(xintercept = 2030, color = "grey90", size = 0.5) +
-  geom_hline(data = Percentile_value,
-             aes(yintercept = x),
-             color = "grey90"
-  )  +
-  geom_label_repel(data = subset(Buble_data, sum_value_bi >= 1),
-                   aes(
-                     x = mean_yr,
-                     y = log_value,
-                     label = sau_fishing_entity
-                   ),
-                   arrow = arrow(length = unit(0.009, "npc"),
-                                 type = "closed",
-                                 ends = "first"),
-                   force = 2,
-                   box.padding = 1,
-                   fill = "NA"
-                   
-  ) +
-  geom_text(data = Labels_data,
-            aes(
-              x = x,
-              y = y,
-              label = label
-            ),
-            size = 3,
-            color = "grey30"
-  ) +
-  scale_color_viridis(name="Region",
-                      discrete = T) +
-  scale_x_continuous("Average time of emergence",
-                     limits = c(2000,2080),
-                     breaks = seq(2000,2080,10)
-  ) +
-  scale_y_continuous("Fishing revenue (log10)",
-                     limits = c(-6,2),
-                     breaks = seq(-6,2,2),
-                     expand = c(0,0)
-  ) +
-  scale_size("Number of\nemerging taxa") +
-  ggsave("./Figures/bubble_plot.png",
-         width = 8,
-         height = 8,
-         units = "in"
-  )
-
-```
-
-### Species level analysis
-
-#### Fig. 5 Boxplot
-
-```{r deme_pela, eval = F, echo =F}
-
-Dem_pel <- Eme_Res %>% 
-  filter(tresh == "Tresh_one",
-         !is.na(un_sub_region)) %>% 
-  left_join(Spp_env_pref) %>% 
-  mutate(DemersPelag = ifelse(is.na(DemersPelag),"other",
-                              ifelse(DemersPelag %in% c("bathypelagic","benthopelagic"), "bathy-bentho-pelagic",paste(DemersPelag)
-                              )
-  ),
-    un_sub_region = ifelse(str_detect(un_sub_region,"Latin"),"Ltn. Ame. and the Car.",paste(un_sub_region)))
-
-## Averages 
-
-Average_data <- Dem_pel %>% 
-  group_by(un_sub_region) %>% 
-  summarise(mean_toe = mean(emerging_yr,na.rm=T)) %>% 
-  mutate(regional_average="regional average")
-  
-
-# Dem Pelagic boxplot
-ggplot(Dem_pel) +
-  geom_hline(data = Average_data,
-             aes(
-               yintercept = mean_toe,
-               colour = regional_average
-             ),
-             linetype = "dashed"
-             ) +
-  geom_boxplot(
-    aes(
-      x = reorder_within(DemersPelag,emerging_yr,un_sub_region),
-      y = emerging_yr,
-      fill = DemersPelag
-    ),
-    alpha = 0.8
-  ) +
-  facet_wrap(~un_sub_region,scales = "free_x") +
-  scale_fill_viridis("Habitat preference",
-                     discrete = T) +
-  scale_color_grey("") +
-  xlab("") +
-  ylab("Time of emergence") +
-  my_ggtheme_p() +
-  theme(
-    axis.text.x = element_blank(),
-    axis.ticks.x = element_blank(),
-    legend.position = "right"
-  ) +
-  scale_x_reordered() +
-  ggsave("./Figures/regional_hab_boxplot.png",
-         width = 14,
-         height = 8,
-         units = "in"
-  )
-```
-
-### Statistics
-
-#### Test for normallity
-
-```{r, normality_test, eval = F, echo = F}
-# Test for normality
-
-Stats_data <- Eme_Res %>% 
-  filter(tresh == "Tresh_one",
-         n_ens == 10)
-  
-
-# ------------------- #
-# Test normal asumptions 
-# ------------------- #
-
-hist(Stats_data$emerging_yr) # Positevely skewed
-qqnorm(Stats_data$emerging_yr) # not normally distributed
-skewness(Stats_data$emerging_yr) #1.02
-kurtosis(Stats_data$emerging_yr) #2.82
-
-# ------------------- #
-
-# (NOT NORMAL DISTRIRBUTION)
-
-```
-
-## Regional differences
-
-```{r multiple_reg, eval = F, echo = F}
-
-Reg_diff_data <- Eme_Res %>% 
-  filter(tresh == "Tresh_one",
-         !is.na(un_sub_region)
-         )
-
-# ------------------- #
-# Run non-parametric Krustal
-# ------------------- #
-
-Reg_kw <- kruskal.test(un_sub_region~emerging_yr, data = Reg_diff_data)
-
-Reg_kw
-# Kruskal-Wallis rank sum test
-# 
-# data:  un_sub_region by emerging_yr
-# Kruskal-Wallis chi-squared = 287.23, df = 93, p-value < 2.2e-16
-
-kruskalmc(emerging_yr~un_sub_region, data = Reg_diff_data)
-
-# Multiple differences but Eastern Asia, Lat. Ame. Car. and Polinesia are the nes who differe the most (e.g. differe with more revions).
-
-# ------------------- #
-# Just to double check ANOVA results (give the same)
-# ------------------- #
-Reg_aov <- aov(emerging_yr~un_sub_region, data = Reg_diff_data)
-Reg_aov
-
-summary(Reg_aov)
-
-TukeyHSD(Reg_aov) %>% 
-  tidy() %>% 
-   filter(adj.p.value < 0.05) %>%
-  View()
-
-
-```
-
-## Habitat preference differences
-
-```{r multiple_reg, eval = F, echo = F}
-
-Hab_diff_data <- Eme_Res %>% 
-  filter(tresh == "Tresh_one",
-         !is.na(un_sub_region)
-         ) %>% 
-  left_join(Spp_env_pref,
-            by = "taxon_key") 
-
-# ------------------- #
-# Run non-parametric Krustal
-# ------------------- #
-
-Hab_kw <- kruskal.test(DemersPelag~emerging_yr, data = Hab_diff_data)
-
-Hab_kw
-# Kruskal-Wallis rank sum test
-
-# data:  DemersPelag by emerging_yr
-# Kruskal-Wallis chi-squared = 286.48, df = 93, p-value < 2.2e-16
-
-kruskalmc(emerging_yr~DemersPelag, data = Hab_diff_data)
-
-# Multiple differences but main differences for pelagic-ocenaic and reefs
-
-# ------------------- #
-# Just to double check ANOVA results (give the same)
-# ------------------- #
-
-Hab_aov <- aov(emerging_yr~DemersPelag, data = hab_diff_data)
-Hab_aov
-
-summary(Hab_aov)
-
-TukeyHSD(Hab_aov) %>% 
-  tidy() %>% 
-   filter(adj.p.value < 0.05) %>%
-  View()
-
-
-```
-
-## Table.1 Multy linear model
-
-```{r multiple_reg, eval = F, echo = F}
-
-# Possible explanatory variables
-
-## Habitat association (DemersPelag)
-## Dem Vs Pelagic (Dem_pel)
-## SST time of Emer (Toe_sst)
-## Stock Status [FishForVisa] (Catch_trend)
-## Biogeographic location (Biogeo_reg)
-
-
-# AIC value; model between predictive capacity and complexity (i.e., number of explanatory variables) is given by the model with lowest AIC value
-
-
-
-# -------------------------------- #
-#### Build models
-# -------------------------------- #
-
-# Model 1; all variables
-M1 <- lm(emerging_yr ~ sst_toe + bot_toe + status + biome + dem_pel + DemersPelag, data = Main_data)
-
-M1_sum <- summary(M1)
-M1_aic <- AIC(M1)
-M1_r <-  M1_sum$adj.r.squared
-
-# Model 2; non demPel
-M2 <- lm(emerging_yr ~ sst_toe + bot_toe + status + biome + dem_pel, data = Main_data)
-
-M2_sum <- summary(M2)
-M2_aic <- AIC(M2)
-M2_r <-  M2_sum$adj.r.squared
-
-
-# Model 3; non biome
-M3 <- lm(emerging_yr ~ sst_toe + bot_toe + status + dem_pel + DemersPelag, data = Main_data)
-
-M3_sum <- summary(M3)
-M3_aic <- AIC(M3)
-M3_r <-  M3_sum$adj.r.squared
-
-# Model 4; non status
-M4 <- lm(emerging_yr ~ sst_toe + bot_toe + biome + dem_pel + DemersPelag, data = Main_data)
-
-M4_sum <- summary(M4)
-M4_aic <- AIC(M4)
-M4_r <-  M4_sum$adj.r.squared
-
-# Model 5; non sst
-M5 <- lm(emerging_yr ~ status + bot_toe + biome + dem_pel + DemersPelag, data = Main_data)
-
-M5_sum <- summary(M5)
-M5_aic <- AIC(M5)
-M5_r <-  M5_sum$adj.r.squared
-
-# Model 6; all + basin
-M6 <- lm(emerging_yr ~ sst_toe + bot_toe + status + biome + dem_pel + DemersPelag, data = Main_data)
-
-M6_sum <- summary(M6)
-M6_aic <- AIC(M6)
-M6_r <-  M6_sum$adj.r.squared
-
-# Model 7; Categories instead of status
-M7 <- lm(emerging_yr ~ sst_toe + bot_toe + category + biome + dem_pel + DemersPelag, data = Main_data)
-
-M7_sum <- summary(M7)
-M7_aic <- AIC(M7)
-M7_r <-  M7_sum$adj.r.squared
-
-# Model 8; All variables + ccentroid lat
-M8 <- lm(emerging_yr ~ sst_toe + bot_toe + category + as.factor(biome) + DemersPelag + latitude, data = Main_data)
-
-M8_sum <- summary(M8)
-M8_aic <- AIC(M8)
-M8_r <-  M8_sum$adj.r.squared
-
-# Model 9; Include UN regions
-M9 <- lm(emerging_yr ~ sst_toe + bot_toe + category + biome + DemersPelag + latitude + un_region, data = Main_data)
-
-M9_sum <- summary(M9)
-M9_aic <- AIC(M9)
-M9_r <-  M9_sum$adj.r.squared
-
-
-
-tibble(
-  "model" = paste("M",seq(1,9,1),sep=""),
-  "AIC" = c(M1_aic,M2_aic,M3_aic,M4_aic,M5_aic,M6_aic,M7_aic,M8_aic, M9_aic),
-  "rsquared" = c(M1_r,M2_r,M3_r,M4_r,M5_r,M6_r,M7_r,M8_r,M9_r)
-)
-
-# The Winner is M9    49283.   0.0765
-
-#Table for paper
-M9_sum %>% 
-  tidy() %>% 
-  filter(p.value < 0.05) %>% 
-  mutate(p.value = ifelse(p.value < 0.001,0.001,round(p.value,3))) %>% 
-  # stargazer(title = "Multiple regression results for time of emergence of Transboundary stocks. Only showing explanatory variables. The model significantly predicts time of emergencec (F(31,5270) = 15.38, p < 0.001, R2 = 0.06).",
-            # align=TRUE)
-  # knitr::kable() %>% 
-  write_csv(.,
-            "./Tables/mlr_result.csv")
-
-#Table for supplements
-M9_sum %>% 
-  tidy() %>% 
-  # filter(p.value < 0.05) %>% 
-  # mutate(p.value = ifelse(p.value < 0.001,0.001,round(p.value,3))) %>% 
-  # stargazer(title = "Multiple regression results for time of emergence of Transboundary stocks. Only showing explanatory variables. The model significantly predicts time of emergencec (F(18,6155) = 20.68, p < 0.001, R2 = 0.05).",
-            # align=TRUE)
-  # knitr::kable() %>% 
-  write_csv(.,
-            "./Tables/mlr_result_sup.csv")
-```
-
 
 # END PAPER
 
@@ -3379,6 +3409,124 @@ ggtheme_map() +
 
 
 # Old Code
+
+###### Table.1 Multy linear model
+
+```{r multiple_reg, eval = F, echo = F}
+
+# Possible explanatory variables
+
+## Habitat association (DemersPelag)
+## Dem Vs Pelagic (Dem_pel)
+## SST time of Emer (Toe_sst)
+## Stock Status [FishForVisa] (Catch_trend)
+## Biogeographic location (Biogeo_reg)
+
+
+# AIC value; model between predictive capacity and complexity (i.e., number of explanatory variables) is given by the model with lowest AIC value
+
+
+
+# -------------------------------- #
+#### Build models
+# -------------------------------- #
+
+# Model 1; all variables
+M1 <- lm(emerging_yr ~ sst_toe + bot_toe + status + biome + dem_pel + DemersPelag, data = Main_data)
+
+M1_sum <- summary(M1)
+M1_aic <- AIC(M1)
+M1_r <-  M1_sum$adj.r.squared
+
+# Model 2; non demPel
+M2 <- lm(emerging_yr ~ sst_toe + bot_toe + status + biome + dem_pel, data = Main_data)
+
+M2_sum <- summary(M2)
+M2_aic <- AIC(M2)
+M2_r <-  M2_sum$adj.r.squared
+
+
+# Model 3; non biome
+M3 <- lm(emerging_yr ~ sst_toe + bot_toe + status + dem_pel + DemersPelag, data = Main_data)
+
+M3_sum <- summary(M3)
+M3_aic <- AIC(M3)
+M3_r <-  M3_sum$adj.r.squared
+
+# Model 4; non status
+M4 <- lm(emerging_yr ~ sst_toe + bot_toe + biome + dem_pel + DemersPelag, data = Main_data)
+
+M4_sum <- summary(M4)
+M4_aic <- AIC(M4)
+M4_r <-  M4_sum$adj.r.squared
+
+# Model 5; non sst
+M5 <- lm(emerging_yr ~ status + bot_toe + biome + dem_pel + DemersPelag, data = Main_data)
+
+M5_sum <- summary(M5)
+M5_aic <- AIC(M5)
+M5_r <-  M5_sum$adj.r.squared
+
+# Model 6; all + basin
+M6 <- lm(emerging_yr ~ sst_toe + bot_toe + status + biome + dem_pel + DemersPelag, data = Main_data)
+
+M6_sum <- summary(M6)
+M6_aic <- AIC(M6)
+M6_r <-  M6_sum$adj.r.squared
+
+# Model 7; Categories instead of status
+M7 <- lm(emerging_yr ~ sst_toe + bot_toe + category + biome + dem_pel + DemersPelag, data = Main_data)
+
+M7_sum <- summary(M7)
+M7_aic <- AIC(M7)
+M7_r <-  M7_sum$adj.r.squared
+
+# Model 8; All variables + ccentroid lat
+M8 <- lm(emerging_yr ~ sst_toe + bot_toe + category + as.factor(biome) + DemersPelag + latitude, data = Main_data)
+
+M8_sum <- summary(M8)
+M8_aic <- AIC(M8)
+M8_r <-  M8_sum$adj.r.squared
+
+# Model 9; Include UN regions
+M9 <- lm(emerging_yr ~ sst_toe + bot_toe + category + biome + DemersPelag + latitude + un_region, data = Main_data)
+
+M9_sum <- summary(M9)
+M9_aic <- AIC(M9)
+M9_r <-  M9_sum$adj.r.squared
+
+
+
+tibble(
+  "model" = paste("M",seq(1,9,1),sep=""),
+  "AIC" = c(M1_aic,M2_aic,M3_aic,M4_aic,M5_aic,M6_aic,M7_aic,M8_aic, M9_aic),
+  "rsquared" = c(M1_r,M2_r,M3_r,M4_r,M5_r,M6_r,M7_r,M8_r,M9_r)
+)
+
+# The Winner is M9    49283.   0.0765
+
+#Table for paper
+M9_sum %>% 
+  tidy() %>% 
+  filter(p.value < 0.05) %>% 
+  mutate(p.value = ifelse(p.value < 0.001,0.001,round(p.value,3))) %>% 
+  # stargazer(title = "Multiple regression results for time of emergence of Transboundary stocks. Only showing explanatory variables. The model significantly predicts time of emergencec (F(31,5270) = 15.38, p < 0.001, R2 = 0.06).",
+            # align=TRUE)
+  # knitr::kable() %>% 
+  write_csv(.,
+            "./Tables/mlr_result.csv")
+
+#Table for supplements
+M9_sum %>% 
+  tidy() %>% 
+  # filter(p.value < 0.05) %>% 
+  # mutate(p.value = ifelse(p.value < 0.001,0.001,round(p.value,3))) %>% 
+  # stargazer(title = "Multiple regression results for time of emergence of Transboundary stocks. Only showing explanatory variables. The model significantly predicts time of emergencec (F(18,6155) = 20.68, p < 0.001, R2 = 0.05).",
+            # align=TRUE)
+  # knitr::kable() %>% 
+  write_csv(.,
+            "./Tables/mlr_result_sup.csv")
+```
 
 
 ```{r TransIndex, eval = F, echo = F}
