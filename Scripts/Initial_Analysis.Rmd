@@ -2020,16 +2020,17 @@ summary(lm(lm_eez$taxon_emer~lm_eez$value))
 
 
 ```{r Time_lapse_plot}
+
 #### Both plots for tresh one
 
-ggplot() +
+plot <- ggplot() +
   geom_area(data = subset(plot_data, level == "eez"),
             aes(
               x = as.numeric(taxon_emer),
               y = value,
               fill = level
             ),
-            alpha= 0.5,
+            alpha= 0.8,
             size=0.5,
             colour="black"
   )  +
@@ -2039,7 +2040,7 @@ ggplot() +
               y = value,
               fill = level
             ),
-            alpha= 0.5,
+            alpha= 0.8,
             size=0.5,
             colour="black"
   )  +
@@ -2063,7 +2064,8 @@ ggplot() +
   # )  +
   facet_wrap(~my_facet,
              scales = "free") + 
-  scale_y_continuous("",expand = expand_scale(mult = c(0, .05))) +
+  # scale_y_continuous("Cumulative number",expand = expand_scale(mult = c(0, .05))
+  #                    ) +
   scale_x_continuous("Time of emergence",
                      breaks = seq(2000,2100,25),
                      limits = c(2005,2100),
@@ -2071,10 +2073,13 @@ ggplot() +
   ) +
   my_ggtheme_p() +
   theme(
-    legend.position = "right"
+    legend.position = "right",
+    strip.text.x = element_blank()
   ) +
   guides(fill=guide_legend(title= "Level")) +
   scale_fill_viridis(discrete = T,
+                     begin = 0.1, 
+                     end = 0.7,
                      labels = c("EEZs","Stocks")
   ) +
   ggsave("./Figures/cumu_per_freq.png",
@@ -2082,6 +2087,7 @@ ggplot() +
   height = 7,
   units = "in"
   )
+
 
 ```
 
