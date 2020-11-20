@@ -2064,11 +2064,13 @@ plot <- ggplot() +
   # )  +
   facet_wrap(~my_facet,
              scales = "free") + 
-  # scale_y_continuous("Cumulative number",expand = expand_scale(mult = c(0, .05))
-  #                    ) +
+  scale_y_continuous("",
+                     expand = c(0,0)
+                     ) +
   scale_x_continuous("Time of emergence",
                      breaks = seq(2000,2100,25),
                      limits = c(2005,2100),
+                     label = c(seq(2000,2075,25),">2100"),
                      expand = c(0, 0)
   ) +
   my_ggtheme_p() +
@@ -2136,44 +2138,44 @@ Total_value <- Sau_data %>%
 Value_map_data <- Eme_value_data %>% 
   left_join(Total_value,
             by = c("fishing_entity_id","variable")) %>% 
-  mutate(participation = (sum_value/tot_value)*100)
+  mutate(participation = (sum_value/tot_value)*100+2000)
 
 ### ----------------- ###
 ### Index alternative ###
 ### ----------------- ###
 
-Index_data <- Eez_d_hist %>% 
-  left_join(Value_map_data) %>% 
-  filter(
-    tresh == "Tresh_one",
-    metric == "mean_yr"
-  ) %>% 
-  group_by(sau_fishing_entity,fishing_entity_id,variable) %>% 
-  summarise(
-    toe = mean(value,na.rm=T),
-    # sum_value = sum(sum_value),
-    mean_part = mean(participation,na.rm=T)
-  ) %>% 
-  filter(!is.na(variable)) %>% 
-  # spread(variable,sum_value) %>% 
-  spread(variable,mean_part) %>% 
-  mutate(
-    imp = catch+value,
-    index = imp/toe
-  )
+# Index_data <- Eez_d_hist %>% 
+#   left_join(Value_map_data) %>% 
+#   filter(
+#     tresh == "Tresh_one",
+#     metric == "mean_yr"
+#   ) %>% 
+#   group_by(sau_fishing_entity,fishing_entity_id,variable) %>% 
+#   summarise(
+#     toe = mean(value,na.rm=T),
+#     # sum_value = sum(sum_value),
+#     mean_part = mean(participation,na.rm=T)
+#   ) %>% 
+#   filter(!is.na(variable)) %>% 
+#   # spread(variable,sum_value) %>% 
+#   spread(variable,mean_part) %>% 
+#   mutate(
+#     imp = catch+value,
+#     index = imp/toe
+#   )
 
 ##### Normalize index
 # https://www.datanovia.com/en/blog/how-to-normalize-and-standardize-data-in-r-for-great-heatmap-visualization/
 
 # Get min and maximums
-min_index <- min(Index_data$index)
-max_index <- max(Index_data$index)
+# min_index <- min(Index_data$index)
+# max_index <- max(Index_data$index)
 
-Index_data <- Index_data %>% 
-  mutate(
-    index_norm =(index-min_index)/(max_index-min_index),
-    index_2000 = 2000 + (index-min_index)*(2100-2000)/(max_index-min_index)
-  ) 
+# Index_data <- Index_data %>% 
+#   mutate(
+    # index_norm =(index-min_index)/(max_index-min_index),
+  #   index_2000 = 2000 + (index-min_index)*(2100-2000)/(max_index-min_index)
+  # ) 
 
 ### Explore index ####
 
@@ -2190,11 +2192,11 @@ Index_data <- Index_data %>%
 
 #### ------------  ####
 
-Value_map_data <- Index_data %>%
-  select(sau_fishing_entity,fishing_entity_id,
+# Value_map_data <- Index_data %>%
+  # select(sau_fishing_entity,fishing_entity_id,
          # tresh,
          # variable,
-         participation = index_2000)
+         # participation = index_2000)
 
 ### ----------------- ###
 
@@ -2232,7 +2234,7 @@ Brazil_eez <- World_eez_sf %>%
 
 
 
-for(i in 1:1){
+for(i in 1:2){
   
   tresh_list <- c("Tresh_one","Tresh_two")
   name_save <- paste("./Figures/emer_map_lat_",tresh_list[i],".png",sep = "")
@@ -2336,7 +2338,7 @@ Eez_hist <- Eme_Res %>%
     annotate("text",
              x =-135,
              y = -69,
-             label = "Vulnerabillity index",
+             label = "Participation (%)",
              color="black",
              size=4,
              angle=0,
@@ -2675,7 +2677,11 @@ Reg_kw
 # data:  un_sub_region by emerging_yr
 # Kruskal-Wallis chi-squared = 287.23, df = 93, p-value < 2.2e-16
 
-kruskalmc(emerging_yr~un_sub_region, data = Reg_diff_data)
+kruskalmc(emerging_yr~un_sub_region, data = Reg_diff_data) %>% 
+  as.data.frame() %>% 
+  rownames_to_column("comparrison") %>% 
+  # head()
+  write_csv("kw_regional.csv")
 
 # Multiple differences but Eastern Asia, Lat. Ame. Car. and Polinesia are the nes who differe the most (e.g. differe with more revions).
 
@@ -2718,7 +2724,11 @@ Hab_kw
 # data:  DemersPelag by emerging_yr
 # Kruskal-Wallis chi-squared = 286.48, df = 93, p-value < 2.2e-16
 
-kruskalmc(emerging_yr~DemersPelag, data = Hab_diff_data)
+kruskalmc(emerging_yr~DemersPelag, data = Hab_diff_data) %>% 
+  as.data.frame() %>% 
+  rownames_to_column("comparrison") %>% 
+  # head()
+  write_csv("kw_habitat.csv")
 
 # Multiple differences but main differences for pelagic-ocenaic and reefs
 
@@ -2833,7 +2843,7 @@ Map_data <- Data %>%
 # Average number of taxa to change per eez
 
 n_taxa_data <- Prop_results %>% 
-  filter(variable == "n_per") %>%
+  filter(variable == "n_spp") %>%
   select(eez_name,early,mid) %>% 
   rename(sf_eez_name = eez_name) %>% 
   left_join(Matching_names) %>% 
