@@ -3345,9 +3345,173 @@ Exploited_spp_list <- my_path("G","SAU","exploited_species_list.csv",read = T) %
   clean_names() %>% 
   pull(taxon_name)
 
+# Load all sp in one table
+sen_list <- c(20,50,90,95)
+
+
+read_sen <- function(sen){
+  
+  if(sen != 95){
+  
+  level <- paste0("Emergence_2005_p",sen)
+  extra_path <- paste0("Toe_Sens_per/",level)
+  
+  # Get taxon list
+  Taxon_list_sens <- list.files(my_path("R",extra_path = extra_path))
+  
+  Paths_sen <- paste(my_path("R",extra_path = extra_path),Taxon_list_sens,sep="")
+  
+  }else{
+    
+  Taxon_list_sens <- list.files(my_path("R",extra_path = "Toe_Sens_per/Emergence_2005_p20"))
+  
+  Paths <- paste(my_path("R",extra_path = "Emergence_2005"),Taxon_list_emer,"_emergence.txt",sep="")
+
+  }
+  
+  Eme_sen <- bind_rows(lapply(Paths_sen, fread)) %>% 
+    mutate(sen = sen) %>% 
+    filter(
+      n_ens == 10
+    ) %>% 
+    left_join(Neighbours,
+              by = c("eez_name","eez_neighbour")
+    ) %>% 
+    rename(sf_eez_name=eez_name) %>% 
+    left_join(Matching_names,
+              by=  "sf_eez_name") %>% 
+    clean_names()
+  
+  return(Eme_sen)
+  
+}
+
+Sen_data <- bind_rows(
+  lapply(sen_list,read_sen)
+) %>% 
+  filter(
+    tresh== "tresh_one"
+  )
 
 ```
 
+```{r data_analysis, eval = T, echo = F}
+
+# Per Stock
+sen_stock_d <-  
+  Sen_data %>% 
+  left_join(Neighbours) %>%
+  group_by(taxon_key,neighbour_id,sen) %>% 
+  summarise(
+    taxon_emer = min(emerging_yr)
+  ) %>% 
+  group_by(taxon_emer,sen) %>% 
+  summarise(
+    n_tax = n()
+  ) %>% 
+  group_by(sen) %>% 
+  mutate(
+    com_sum = cumsum(n_tax),
+    level = "stock"
+  )
+
+
+#  EEZ data
+sen_eez_d <-  Sen_data %>% 
+  left_join(Neighbours) %>% 
+  filter(n_ens == 10) %>% 
+  group_by(sf_eez_name,sen) %>% 
+  summarise(
+    taxon_emer = min(emerging_yr)
+  ) %>% 
+  group_by(taxon_emer,sen) %>% 
+  summarise(
+    n_tax = n()
+  ) %>% 
+  group_by(sen) %>% 
+  mutate(
+    com_sum = cumsum(n_tax),
+    level = "eez"
+  )
+
+
+# Plot Data
+sen_plot_data <- sen_stock_d %>% 
+  bind_rows(sen_eez_d) %>% 
+  mutate(
+    # total = ifelse(level == "stock",length(unique(Eme_Res$taxon_key)),length(unique(Eme_Res$sf_eez_name))),
+    total = ifelse(level == "stock",max(stock_d$com_sum),max(eez_d$com_sum)),
+    per = com_sum/total*100
+  ) %>% 
+  gather("metric","value",com_sum,per) %>% 
+  ungroup() %>% 
+  mutate(
+    my_facet = ifelse(metric == "per","Percentage (%)","Cumulative sum (n stocks)"),
+    label = ifelse(total == max(stock_d$com_sum),"Total number of emerging stocks","Total number of EEZs"),
+  sen = paste("Percentile above",sen,"%") 
+  )
+
+# Plot me
+ggplot() +
+  geom_area(data = subset(sen_plot_data, level == "stock"),
+            aes(
+              x = as.numeric(taxon_emer),
+              y = value,
+              fill = level
+            ),
+            size=0.5,
+            colour="black"
+  )  +
+  geom_area(data = subset(sen_plot_data, level == "eez"),
+            aes(
+              x = as.numeric(taxon_emer),
+              y = value,
+              fill = level
+            ),
+            size=0.5,
+            colour="black"
+  )  +
+  # Shameslly plot it again to fix colors
+  geom_area(data = subset(sen_plot_data, level == "stock" & my_facet == "Percentage (%)"),
+            aes(
+              x = as.numeric(taxon_emer),
+              y = value,
+              fill = level
+            ),
+            size=0.5,
+            colour="black"
+            ) +
+  facet_wrap(~my_facet + sen,
+             scales = "free",
+             nrow=2) + 
+  scale_y_continuous("",
+                     expand = c(0,0)
+                     ) +
+  scale_x_continuous("Time of emergence",
+                     breaks = seq(2000,2100,25),
+                     limits = c(2005,2100),
+                     label = c(seq(2000,2075,25),">2100"),
+                     expand = c(0,0)
+  ) +
+  my_ggtheme_p() +
+  theme(
+    legend.position = "right",
+    # strip.text.x = element_blank(),
+    panel.spacing = unit(3, "lines") # space between plots
+  ) +
+  guides(fill=guide_legend(title= "Level", reverse=FALSE)) +
+  scale_fill_viridis(discrete = T,
+                     begin = 0.1, 
+                     end = 0.7,
+                     labels = c("EEZs","Stocks")
+  ) +
+  ggsave("./Figures/toe_sen.png",
+  width = 14,
+  height = 10,
+  units = "in"
+  )
+
+```
 
 # END PAPER
 
