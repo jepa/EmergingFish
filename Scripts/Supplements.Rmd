@@ -42,8 +42,7 @@ grid.raster(img)
 
 ```
 
-
-```{r toeFigureS3, eval = T,  echo = F, fig.width=4, fig.height=4, fig.cap =  "Average Time  of Emergence and standar dviation for a 64% confidence treshold  (purple) and a 98% confidence teshold (yellow)"}
+```{r toeFigureS3, eval = T,  echo = F, fig.width=14, fig.height=7, fig.cap ="Sensitivity analysis of the number of grid cells with projected stock abundance within the neighbouring EEZs sharing the stock. The level used in this article was the top 95th percentile (e.g., far right column)."}
 
 img <- readPNG("../Figures/Supp3.png")
 grid.raster(img)
@@ -51,10 +50,18 @@ grid.raster(img)
 ```
 
 
-
-```{r toeFigureS4, eval = T,  echo = F, fig.width=4, fig.height=4, fig.cap =  "Distribution of Stock Share Ratio percentage change by the early (2021-2040) and middle (2040-2060) 21st centurury relative to today (1951-2005)"}
+```{r toeFigureS4, eval = T,  echo = F, fig.width=4, fig.height=4, fig.cap =  "Average Time  of Emergence and standar dviation for a 64% confidence treshold  (purple) and a 98% confidence teshold (yellow)"}
 
 img <- readPNG("../Figures/Supp4.png")
+grid.raster(img)
+
+```
+
+
+
+```{r toeFigureS5, eval = T,  echo = F, fig.width=4, fig.height=4, fig.cap =  "Distribution of Stock Share Ratio percentage change by the early (2021-2040) and middle (2040-2060) 21st centurury relative to today (1951-2005)"}
+
+img <- readPNG("../Figures/Supp5.png")
 grid.raster(img)
 
 ```
@@ -63,9 +70,9 @@ grid.raster(img)
 
 
 
-```{r toeFigureS5, eval = T,  echo = F, fig.width=9, fig.height=12, fig.cap =  "Changes in Stock Share Ration by 2050 (2041-2060) relative to 1951-2005. Lines represent the average gain of transboundary stock share ratio with srrows going from the losing EEZ (point) to the winner (arrowhead). Polygons represent the percentage of initial species that will see a shift. Panel B zooms in to specific areas shown in grey boxes of A."}
+```{r toeFigureS6, eval = T,  echo = F, fig.width=9, fig.height=12, fig.cap =  "Changes in Stock Share Ration by 2050 (2041-2060) relative to 1951-2005. Lines represent the average gain of transboundary stock share ratio with srrows going from the losing EEZ (point) to the winner (arrowhead). Polygons represent the percentage of initial species that will see a shift. Panel B zooms in to specific areas shown in grey boxes of A."}
 
-img <- readPNG("../Figures/Supp5.png")
+img <- readPNG("../Figures/Supp6.png")
 grid.raster(img)
 
 ```
