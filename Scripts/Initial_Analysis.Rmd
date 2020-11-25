@@ -1012,6 +1012,22 @@ Neighbours <- my_path("D", extra_path = "Spatial/", name="Neighbours_eez_id.csv"
 Transboundary_spp <- my_path("D", extra_path = "Species/", name="Transboundary_spp.csv", read = TRUE) %>% 
   clean_names()
 
+# ------------------------------------------- #
+### Estimate number of transboundary stocks ###
+# ------------------------------------------- #
+
+Transboundary_spp %>% 
+  left_join(Neighbours,
+            by = c("eez_name", "eez_neighbour")) %>% 
+  # filter(neighbour_id %in% c(1,105)) %>%
+  # filter(neighbour_id == 470) %>%
+  group_by(neighbour_id) %>% 
+  summarise(n_stock = length(unique(taxon_key))) %>% 
+  # View()
+  group_by() %>% 
+  summarise(t_trans_stocks = sum(n_stock)) # 9132
+
+
 ## ----------------- ##
 # Global variables
 ## ----------------- ##
@@ -1607,7 +1623,7 @@ Neighbours_n <- Neighbours %>%
   )
 
 # Clean names to match data
-Matching_names <- my_path("G","Spatial/SAU", "matching_names.csv", read = T) %>% 
+Matching_names <- my_path("G","Spatial/SAU", "sau_matching_names.csv", read = T) %>% 
   rename(eezid = eez_id)
 
 Fishing_names <- Matching_names %>% 
@@ -1804,6 +1820,14 @@ World_eez_sf <- st_read(dsn = path_world,
   st_simplify(preserveTopology = TRUE, dTolerance = 0.1) %>% 
   clean_names()
 
+
+World_eez_sf %>% 
+  filter(str_detect(eez_name,"Russia")) %>% 
+  ggplot() +
+  geom_sf() +
+  aes(fill = eez_name)
+
+
 # Call world map from natural earth
 
 World_map_dat <- Matching_names %>% 
@@ -1845,7 +1869,7 @@ Eez_centroid_eck <- do.call(rbind, st_geometry(Eez_centroid_sf)) %>%
   select(eez_name,longitude = lon,latitude = lat)
 
 
-
+# Join all data for analysis
 
 Main_data <- Eme_Res %>% # 19728
   filter(tresh == "Tresh_one") %>% # 11490
@@ -1868,520 +1892,51 @@ Main_data <- Eme_Res %>% # 19728
 
 ```
 
+###  Year of Eergence Analysis
 
 
+```{r ToE_generals,  eval = T, echo = T}
 
-####  Prooportion Analysis
+# Total number of emerging stocks
 
-##### Fig. 1 and S1. (Netowrk)
-
-```{r fig_map_Juan, eval = F, echo =F}
-# Figure made thanks to Juanito!
-# http://jsmayorga.com/post/mapping-the-global-network-of-transnational-fisheries/
-
-### Median number
-
-Prop_results %>% 
-  filter(variable == "n_per") %>% 
-  group_by() %>% 
+# Global estimates
+Eme_Res %>% 
+  group_by(tresh,neighbour_id) %>% 
   summarise(
-    median(early,na.rm=T),
-    sd(early,na.rm=T)
-  )
-
-# Prepare data from results
-Data <- Prop_results %>% 
-  # get coords for sources
-  left_join(Eez_centroid,
-            by = "eez_name") %>%
-  rename(source = eez_name,
-         start_lon = longitude,
-         start_lat = latitude,
-         eez_name=eez_neighbour) %>% 
-  # get coords for targets
-  left_join(Eez_centroid,
-            by = "eez_name") %>% 
-  rename(target = eez_name,
-         end_lon = longitude,
-         end_lat = latitude) %>% 
-  ungroup() %>% 
-  # Plot miscs
-  mutate(
-    per_early = ifelse(is.na(per_early),0,per_early),
-    per_mid = ifelse(is.na(per_mid),0,per_mid)
-  ) %>% 
-  drop_na() %>%
-  filter(
-    variable %in% c("mean_eez","n_per")#,
-    # source %in% c("Brazil","Argentina","Chile","Peru","Uruguay")
-  )
-
-# Convert to data to spatial
-network_data_sf <- Data %>%
-  select(start_lon, start_lat, end_lon, end_lat) %>% 
-  purrr::transpose() %>% 
-  purrr::map(~ matrix(flatten_dbl(.), nrow = 2, byrow = TRUE)) %>% 
-  purrr::map(st_linestring) %>%
-  st_sfc(crs = 4326) %>%
-  # st_sfc(crs = "+proj=eck4") %>% # for tbular plot
-  st_sf(geometry = .)%>%
-  bind_cols(Data) %>%
-  select(everything(), geometry) %>% 
-  # Set circles ('cus the world is not flat!)
-  st_segmentize(units::set_units(100, km)) %>% 
-  mutate(geometry = (geometry + c(180,90)) %% c(360) - c(180,90)) %>%
-  st_wrap_dateline(options = c("WRAPDATELINE=YES",  "DATELINEOFFSET=180"), quiet = TRUE) %>%
-  sf::st_sf(crs = 4326)
-  # sf::st_sf(crs = "+proj=eck4") # for tbular plot
-
-
-#  unpack the coordinates of each feature 
-coord_data <- as.data.frame( st_coordinates(st_cast(network_data_sf,"MULTILINESTRING")$geometry))
-
-c(network_data_sf$line_id, network_data_sf$coords) %<-% (
-  coord_data %>% 
-    rename(subline_id = L1) %>%   
-    nest(-L2)
-)
-
-# Create data path for line connections
-paths <- network_data_sf %>% 
-  sf::st_set_geometry(NULL) %>% 
-  unnest() %>% 
-  mutate_at(vars(X,Y), round,2) %>% 
-  gather("time_step","per_chng",per_early:per_mid) %>% 
-  mutate(per_plot = ifelse(per_chng > 100,100,per_chng),
-         direction = ifelse(per_chng > 0,"positive","negative")
-         )
-  
-# Plot it!
-
-# Proportion map data 
-Map_data <- Data %>% 
-  gather("time_step","per_chng",per_early:per_mid) %>% 
-  mutate(per_plot = ifelse(per_chng > 100,100,per_chng))
-
-# Average number of taxa to change per eez
-
-n_taxa_data <- Prop_results %>% 
-  filter(variable == "n_per") %>%
-  select(eez_name,early,mid) %>% 
-  rename(sf_eez_name = eez_name) %>% 
-  left_join(Matching_names) %>% 
-  group_by(sau_fishing_entity,fishing_entity_id) %>% 
-  summarise(avrg_spp_per = mean(early,na.rm=T))
-  
-n_taxa_map <- World_map %>% 
-  left_join(n_taxa_data,
-            by = c("sau_fishing_entity","fishing_entity_id")
-            )
-
-mean(n_taxa_data$avrg_spp_per,na.rm=T)
-
-
-
-
-# Rectangles dataset
-# coord_sf(xlim = c(-3, 35),ylim = c(30, 45)) +
-Rectangles <- tibble(
-    x1=c(-100,-3,-14), #LatAm, Med, NE
-    x2=c(-55,35,23),
-    y1=c(9,31,50), 
-    y2=c(30,44,67)
-  )
-
-# gc()# clean ram
-
-time <- "per_mid"
-# time <- "per_early"
-
-## ------------------- ##
-# Global Plot
-## ------------------- ##
-
-
-Prop_map <- ggplot() +
-  geom_sf(data = subset(n_taxa_map, sovereignt != "Antarctica"),
-          aes(fill = avrg_spp_per),
-          size = 0.1,col = "white") +
-  geom_sf(data = World_eez_sf, size = 0.1, fill = "white", col = "gray30") +
-  geom_point(data = subset(Map_data, time_step == time & per_plot < 0),
-             aes(start_lon,
-                 start_lat
-             ),
-             size = 0.05,
-             col = "gray80",
-             shape = 20,
-             stroke = 1.5) +
-  geom_path(data = subset(paths, time_step == time & per_plot > 0),
-            aes(X,
-                Y,
-                group = interaction(line_id,subline_id),
-                col = per_plot
-            ),
-            size = 0.3,
-            lineend = "round",
-            arrow = arrow(length = unit(0.008, "npc"),
-                          ends = "first"),
-            show.legend = NA) +
-  # Closeup Rectangles 
-  geom_rect(data=Rectangles,
-            aes(xmin=x1, 
-                xmax=x2,
-                ymin=y1,
-                ymax=y2),
-            color="grey50", 
-            fill = NA,
-            linetype = "dashed"
-            ) +
-  my_ggtheme_m() +
-  scale_colour_viridis(
-    name="Stock-Share Ratio Gain \nand taxa change (%)",
-    limits = c(0,max(Map_data$per_plot)),
-    breaks = seq(0,max(Map_data$per_plot),10)#,
-    # option="magma",
-    # direction = -1
-  ) +
-  scale_fill_viridis(
-    name="Stock-Share Ratio Gain \nand taxa change (%)",
-    limits = c(0,max(Map_data$per_plot)),
-    breaks = seq(0,max(Map_data$per_plot),10)#,
-    # alpha = 0.8
-    # option="magma",
-    # direction = -1
-  ) #+
-  # ggsave("./Figures/fig_sup_1.png",
-  # width = 12,
-  # height = 8,
-  # units = "in"
-  # )
-
-## ------------------- ##
-# Regional Plots
-## ------------------- ##
-
-Lat_am_land <- World_map %>% 
-  filter(region_wb %in% c("Latin America & Caribbean") |
-           sau_fishing_entity %in% c("USA","Mexico")
-  )
-
-Lat_am_eez <- World_eez_sf %>% 
-  rename(sf_eez_name = eez_name) %>% 
-  left_join(Matching_names) %>% 
-  filter(
-         !str_detect(sf_eez_name,"Pacific"),
-         !sf_eez_name %in% c("USA (East Coast)","Suriname","Guyana","French Guiana","Bermuda (UK)","Brazil","El Salvador")
-         )
-
-Lat_am_data <- Map_data %>% 
-  filter(source %in% Lat_am_eez$sf_eez_name)
-
-Lat_am_paths <- paths %>% 
-  filter(source %in% Lat_am_eez$sf_eez_name,
-         target %in% Lat_am_eez$sf_eez_name)
-
-
-Lat_am_map <- ggplot() +
-  geom_sf(data = Lat_am_eez, size = 0.1, fill = "white", col = "gray30") +
-  geom_sf(data = subset(n_taxa_map, sovereignt != "Antarctica"),
-          aes(fill = avrg_spp_per),
-          size = 0.1,col = "white") +
-  geom_point(data = subset(Lat_am_data, time_step == time & per_plot < 0 ),
-             aes(start_lon,
-                 start_lat,
-                 col = per_plot),
-             size = 1,
-             col = "gray30",
-             shape = 20,
-             stroke = 1.5) +
-  geom_path(data = subset(Lat_am_paths, time_step == time & per_plot > 0),
-            aes(X, Y,
-                group = interaction(line_id,subline_id),
-                col = per_plot
-            ),
-            size = 1,
-            arrow = arrow(length = unit(0.05, "npc"),
-                          ends = "first"),
-            show.legend = NA) +
-  coord_sf(xlim = c(-100, -55),ylim = c(9, 30)) + 
-  labs(x = "", y = "") +
-  scale_x_continuous(breaks = seq(-100,60,10)) +
-  scale_y_continuous(breaks = seq(10,30,10)) +
-  my_ggtheme_m() +
-  theme(legend.position = "",
-        panel.background = element_rect(fill = "white", color = "white"),
-        panel.grid.major =  element_line(color = "white")
-        ) +
-  scale_colour_viridis(
-    name="Average Gain of\nStock-Share Ratio (%)",
-    limits = c(0,max(Lat_am_data$per_plot)),
-    breaks = seq(0,max(Lat_am_data$per_plot),10),
-    # option="magma",
-    # direction = -1
-  )+
-  scale_fill_viridis(
-    name="Average Gain of\nStock-Share Ratio (%)",
-    limits = c(0,max(Lat_am_data$per_plot)),
-    breaks = seq(0,max(Lat_am_data$per_plot),10),
-    # option="magma",
-    # direction = -1
-  );Lat_am_map
-
-
-## ------------------- ##
-# The Med
-## ------------------- ##
-
-# Land polygon
-Med_land <- World_map %>% 
-  filter(region_wb %in% c("Europe & Central Asia","Middle East & North Africa") |
-          sau_fishing_entity %in% c("Spain","France")
-         )
-
-# EEZ polygon
-Med_eez <- World_eez_sf %>% 
-  rename(sf_eez_name = eez_name) %>% 
-  left_join(Matching_names) %>% 
-  filter(sau_fishing_entity %in% Med_land$sau_fishing_entity,
-         sf_eez_name != "Spain (Northwest)")
-
-# Med data
-Med_data <- Map_data %>% 
-  filter(source %in% Med_eez$sf_eez_name)
-
-# Med paths
-Med_paths <- paths %>% 
-  filter(source %in% Med_eez$sf_eez_name,
-         target %in% Med_eez$sf_eez_name)
-
-# Med plot
-Med_map <- ggplot() +
-  geom_sf(data = Med_eez, size = 0.5, fill = "white", col = "gray30") +
-  geom_sf(data = subset(n_taxa_map, sovereignt != "Antarctica"),
-          aes(fill = avrg_spp_per),
-          size = 0.1,col = "white") +
-  geom_point(data = subset(Med_data, time_step == time & per_plot < 0 ),
-             aes(start_lon,
-                 start_lat,
-                 col = per_plot),
-             size = 1,
-             col = "gray30",
-             shape = 20,
-             stroke = 1.5) +
-  geom_path(data = subset(Med_paths, time_step == time & per_plot > 0),
-            aes(X, Y,
-                group = interaction(line_id,subline_id),
-                col = per_plot
-            ),
-            size = 1,
-            arrow = arrow(length = unit(0.05, "npc"),
-                          ends = "first"),
-            show.legend = NA) +
-  coord_sf(xlim = c(-3, 35),ylim = c(30, 45)) +
-  labs(x = "", y = "") +
-  scale_x_continuous(breaks = seq(-5,35,10)) +
-  scale_y_continuous(breaks = seq(30,50,5)) +
-  my_ggtheme_m() +
-  theme(legend.position = "",
-        panel.background = element_rect(fill = "white", color = "white"),
-        panel.grid.major =  element_line(color = "white")
-        ) +
-  scale_colour_viridis(
-    name="Average Gain of\nStock-Share Ratio (%)",
-    limits = c(0,max(Med_data$per_plot)),
-    breaks = seq(0,max(Med_data$per_plot),5),
-    # option="magma",
-    # direction = -1
-  )+
-  scale_fill_viridis(
-    name="Average Gain of\nStock-Share Ratio (%)",
-    limits = c(0,max(Med_data$per_plot)),
-    breaks = seq(0,max(Med_data$per_plot),5),
-    # option="magma",
-    # direction = -1
-  )#;Med_map
-
-
-## ------------------- ##
-# Northern Europe
-## ------------------- ##
-
-Eu_land <- World_map %>% 
-  filter(
-    continent == "Europe",
-    sau_fishing_entity != "Iceland"
+    emerging_stocks = length(unique(taxon_key))
+    ) %>% 
+  group_by(tresh) %>% 
+  summarise(
+    emerging_stocks = sum(emerging_stocks),
+    prop_total = (emerging_stocks/9132)*100,
     )
 
-# 
-# ggplot(N_Eu_land) +
-#   geom_sf() 
-  
-
-Eu_eez <- World_eez_sf %>% 
-  rename(sf_eez_name = eez_name) %>% 
-  left_join(Matching_names) %>% 
-  filter(
-    !sf_eez_name %in% c("Iceland", "Norway","Italy","Greece","Croatia","Bulgaria","Romania"),
-    !str_detect(sf_eez_name,"Spain")
-  )
-
-# Eu_eez %>% filter(str_detect(sf_eez_name,"Romania"))
-
-Eu_data <- Map_data %>% 
-  filter(source %in% Eu_eez$sf_eez_name)
-
-Eu_paths <- paths %>% 
-  filter(source %in% Eu_eez$sf_eez_name,
-         target %in% Eu_eez$sf_eez_name)
+# Global average ToE
+Eme_Res %>% 
+  group_by(tresh) %>% 
+  summarise(
+    # emerging_stocks = length(unique(taxon_key)),
+    # prop_total = (emerging_stocks/9132)*100,
+    mean= mean(emerging_yr),
+    sd = sd(emerging_yr),
+    min = min(emerging_yr),
+    max = max(emerging_yr)
+           )
 
 
-Eu_map <- ggplot() +
-  geom_sf(data = Eu_eez, size = 0.5, fill = "white", col = "gray30") +
-  geom_sf(data = subset(n_taxa_map, sovereignt != "Antarctica"),
-          aes(fill = avrg_spp_per),
-          size = 0.1,col = "white") +
-  geom_point(data = subset(Med_data, time_step == time & per_plot < 0 ),
-             aes(start_lon,
-                 start_lat,
-                 col = per_plot),
-             size = 1,
-             col = "gray30",
-             shape = 20,
-             stroke = 1.5) +
-  geom_path(data = subset(Eu_paths, time_step == time & per_plot > 0),
-            aes(X, Y,
-                group = interaction(line_id,subline_id),
-                col = per_plot
-            ),
-            size = 1,
-            arrow = arrow(length = unit(0.05, "npc"),
-                          ends = "first"),
-            show.legend = NA) +
-  coord_sf(xlim = c(-15, 30), ylim = c(45, 65)) +
-  labs(x = "", y = "") +
-  scale_y_continuous(breaks = seq(45,65,10)) +
-  # scale_x_continuous(breaks = seq(45,65,5)) +
-  my_ggtheme_m() +
-  theme(legend.position = "",
-        panel.background = element_rect(fill = "white", color = "white"),
-        panel.grid.major =  element_line(color = "white")
-        ) +
-  scale_colour_viridis(
-    name="Average Gain of\nStock-Share Ratio (%)",
-    limits = c(0,max(Eu_data$per_plot)),
-    breaks = seq(0,max(Eu_data$per_plot),5),
-    # option="magma",
-    # direction = -1
-   )+
-  scale_fill_viridis(
-    name="Average Gain of\nStock-Share Ratio (%)",
-    limits = c(0,max(Med_data$per_plot)),
-    breaks = seq(0,max(Med_data$per_plot),5),
-    # option="magma",
-    # direction = -1
-  )#;Eu_map
-
-# Legend
-map_plot <- get_legend(Prop_map)
-
-Prop_map <- Prop_map + 
-  theme(legend.position = "")
-
-## ------------------- ##
-# Render final plot
-## ------------------- ##
-
-
-# Clean memory
-gc()
-
-# Draw figure
-plot_all <- ggdraw() +
-  # Main map
-  draw_plot(Prop_map, x = 0, y = 0.40, width = 1, height = 0.6) +
-  # Latin America and the Car.
-  draw_plot(Lat_am_map, x = 0.01, y = 0.02, width = 0.33, height = 0.45) +
-  # Europe
-  draw_plot(Eu_map, x = 0.33, y = 0.01, width = 0.33, height = 0.45) +
-  # The Med
-  draw_plot(Med_map, x = 0.66, y = 0.02 , width = 0.33, height = 0.45) +
-  # Legend
-  draw_plot(map_plot, x = 0.3, y = 0, width = 0.59, height = 0.1) +
-  # Labels
-  draw_plot_label(label = c("A", "B", "The Caribbean","North West Europe","The Mediterranean"),
-                  size = c(20,20,15,15,15),
-                  x = c(0.01,0.01,0.058,0.38,0.70),
-                  y = c(1,0.45,0.44,0.44,0.44)
-  )
-
-# Save plot
-save_plot(
-  "./Figures/figS3.png",
-  plot_all,
-  base_height = 10,
-  base_width = 12
-)
 
 ```
 
-##### Fig S2 (Histogram of change)
+##### Fig. 1. Accumulative plots
 
-```{r hist_change}
-
- Prop_results %>% 
-  gather("time_step","change",per_early,per_mid) %>% 
-  filter(variable == "mean_eez" & 
-           !is.na(change)
-         ) %>%
-ggplot() +
-  geom_density(
-               aes(
-                 x = ifelse(change >= 100,100,change),
-                 # x = change,
-                 fill = ifelse(time_step == "per_early","q",time_step)
-                 # fill = time_step,
-                 
-               ),
-               # stat = "count",
-               # alpha= 0.8,
-               size=0.1,
-               # position = "stack"
-  ) +
-  scale_y_continuous("Density",
-                     # breaks = seq(0,90,10),
-                     # limits = c(0,100)
-  ) +
-  scale_x_continuous("Percentage Change",
-                     breaks = seq(-75,500,25)
-  ) +
-  my_ggtheme_p() +
-  theme(legend.position = "right") +
-  scale_fill_viridis(discrete = T, 
-                     option = "plasma",
-                     alpha = 0.5,
-                     name = "Time Step", labels = c("Middle", "Early")
-                     ) +
-  coord_flip() +
-  ggsave("./Figures/hist_change.png",
-         width = 6,
-         height = 6,
-         units = "in"
-  )
-
-```
-
-####  Year of Eergence Analysis
-
-
-##### Fig. 2. Accumulative plots
-
-```{r Time_lapse_plot,  eval = T, echo = T}
+```{r Time_lapse_data,  eval = T, echo = T}
 
 # Per Stock
-stock_da <-  Eme_Res %>% 
+stock_d <-  
+  Eme_Res %>% 
   left_join(Neighbours) %>% 
   # distinct(taxon_key,neighbour_id, .keep_all = TRUE) %>% 
-  group_by(taxon_key,tresh) %>% 
+  group_by(taxon_key,neighbour_id,tresh) %>% 
   summarise(
     taxon_emer = min(emerging_yr)
   ) %>% 
@@ -2394,6 +1949,8 @@ stock_da <-  Eme_Res %>%
     com_sum = cumsum(n_tax),
     level = "stock"
   )
+
+max(stock_d$com_sum)
 
 #  EEZ data
 eez_d <-  Eme_Res %>% 
@@ -2414,97 +1971,206 @@ eez_d <-  Eme_Res %>%
     level = "eez"
   )
 
+max(eez_d$com_sum)
+
 # Plot Data
 plot_data <- stock_d %>% 
   bind_rows(eez_d) %>% 
   filter(tresh != "NA") %>% 
   mutate(
-    total = ifelse(level == "stock",length(unique(Eme_Res$taxon_key)),length(unique(Eme_Res$sf_eez_name))),
+    # total = ifelse(level == "stock",length(unique(Eme_Res$taxon_key)),length(unique(Eme_Res$sf_eez_name))),
+    total = ifelse(level == "stock",max(stock_d$com_sum),max(eez_d$com_sum)),
     per = com_sum/total*100
   ) %>% 
   gather("metric","value",com_sum,per) %>% 
-  filter(tresh == "Tresh_one") %>% 
+  filter(tresh == "Tresh_one")
+
+
+# Manually include rest of EEZs
+
+cont_eez <- plot_data %>% 
+  filter(level == "eez") %>% 
+  slice(1:36) %>%
+  select(-1) %>% 
   mutate(
-    my_facet = ifelse(metric == "per","Percentage (%)","Cumulative sum"),
-    label = ifelse(total == 478,"Total number of stocks","Total number of EEZs")
-  );plot_data
-
-
-#### Both plots for tresh one
-
-ggplot() +
-  geom_area(data = subset(plot_data, level == "stock"),
-            aes(
-              x = as.numeric(taxon_emer),
-              y = value,
-              fill = level
-            ),
-            alpha= 0.8,
-            size=0.5,
-            colour="black"
-  )  +
-  geom_area(data = subset(plot_data, level == "eez"),
-            aes(
-              x = as.numeric(taxon_emer),
-              y = value,
-              fill = level
-            ),
-            alpha= 0.8,
-            size=0.5,
-            colour="black"
-  )  +
-  geom_line(data = subset(plot_data, metric == "com_sum"),
-            aes(
-              x = as.numeric(taxon_emer),
-              y = total,
-              fill = level
-            ),
-            colour="grey30",
-  )  +
-  geom_text(data = subset(plot_data, metric == "com_sum"),
-            aes(
-              x = 2037,
-              y = total+5,
-              label = label
-            ),
-            size = 3,
-            colour="grey30",
-            hjust=0.6,
-  )  +
-  facet_wrap(~my_facet,
-             scales = "free") + 
-  scale_y_continuous("",expand = expand_scale(mult = c(0, .05))) +
-  scale_x_continuous("Time of emergence",
-                     breaks = seq(2000,2100,25),
-                     limits = c(2005,2100),
-                     expand = c(0, 0)
-  ) +
-  my_ggtheme_p() +
-  theme(
-    legend.position = "right"
-  ) +
-  guides(fill=guide_legend(title= "Level")) +
-  scale_fill_viridis(discrete = T,
-                     labels = c("EEZs","Stocks")
-  ) +
-  ggsave("./Figures/cumu_per_freq.png",
-         width = 7,
-         height = 7,
-         units = "in"
+    value = ifelse(metric == "per",100,232),
+    taxon_emer = c(seq(2082,2099,1),seq(2082,2099,1))
   )
+
+plot_data <- plot_data %>% 
+  bind_rows(cont_eez) %>% 
+  mutate(
+    my_facet = ifelse(metric == "per","Percentage (%)","Cumulative sum (n stocks)"),
+    label = ifelse(total == max(stock_d$com_sum),"Total number of emerging stocks","Total number of EEZs")
+  )
+
+# How many between 2006 and 2020?
+plot_data %>% 
+  filter(taxon_emer <= 2020,
+         tresh == "Tresh_one") %>% 
+  group_by(level,metric) %>% 
+  summarise(
+    max(taxon_emer),
+    min(taxon_emer),
+    max(taxon_emer),
+    min(taxon_emer)
+  )
+
+# Percentage increase of EEZ after 2020
+lm_eez <- plot_data %>% 
+  filter(taxon_emer <= 2020,
+         tresh == "Tresh_one",
+         metric == "per")
+
+summary(lm(lm_eez$taxon_emer~lm_eez$value))
 
 ```
 
 
-##### Fig. 3 Mapping the time of emergence
+```{r Time_lapse_plot, eval = T, echo = F}
 
-###### Just mean time
+### Three plots
+
+count_eez_plot <- ggplot() +
+  geom_area(data = subset(plot_data, metric == "com_sum" & level == "eez"),
+            aes(
+              x = as.numeric(taxon_emer),
+              y = value,
+              fill = level
+            ),
+            size=0.5,
+            colour="black"
+  )  +
+  scale_y_continuous("Cumulative number of EEZs (n)",
+                     expand = c(0,0)
+                     ) +
+  scale_x_continuous("",
+                     breaks = seq(2000,2100,25),
+                     limits = c(2005,2100),
+                     # label = c(seq(2000,2075,25),">2100"),
+                     expand = c(0, 0)
+  ) +
+  my_ggtheme_p() +
+  theme(legend.position = "") +
+  guides(fill=guide_legend(title= "Level", reverse=FALSE)) +
+  scale_fill_viridis(discrete = T,
+                     begin = 0.1, 
+                     end = 0.1
+  )
+
+
+
+#### Count stock plot 
+count_stock_plot <- ggplot() +
+  geom_area(data = subset(plot_data, metric == "com_sum" & level == "stock"),
+            aes(
+              x = as.numeric(taxon_emer),
+              y = value,
+              fill = level
+            ),
+            size=0.5,
+            colour="black"
+  )  +
+  scale_y_continuous("Cumulative number of stocks (n)",
+                     expand = c(0,0)
+                     ) +
+  scale_x_continuous("Time of emergence of transboundary index",
+                     breaks = seq(2000,2100,25),
+                     limits = c(2005,2100),
+                     # label = c(seq(2000,2075,25),">2100"),
+                     expand = c(0, 0)
+  ) +
+  my_ggtheme_p() +
+  theme(legend.position = "") +
+  guides(fill=guide_legend(title= "Level", reverse=FALSE)) +
+  scale_fill_viridis(discrete = T,
+                     begin = 0.7, 
+                     end = 0.7
+  )
+
+
+# Percentage plot
+percentage_plot <- ggplot() +
+  geom_area(data = subset(plot_data, level == "eez" & my_facet == "Percentage (%)"),
+            aes(
+              x = as.numeric(taxon_emer),
+              y = value,
+              fill = level
+            ),
+            size=0.5,
+            colour="black"
+  ) + 
+  geom_area(data = subset(plot_data, level == "stock" & my_facet == "Percentage (%)"),
+            aes(
+              x = as.numeric(taxon_emer),
+              y = value,
+              fill = level
+            ),
+            size=0.5,
+            colour="black"
+  ) + 
+  scale_y_continuous("Cumulative proportion of the total (%)",
+                     expand = c(0,0)
+  ) +
+  scale_x_continuous("",
+                     breaks = seq(2000,2100,25),
+                     limits = c(2005,2100),
+                     # label = c(seq(2000,2075,25),">2100"),
+                     expand = c(0, 0)
+  ) +
+  my_ggtheme_p() +
+  theme(
+    legend.position = "right",
+    strip.text.x = element_blank()
+  ) +
+  guides(fill=guide_legend(title= "Level", reverse=FALSE)) +
+  scale_fill_viridis(discrete = T,
+                     begin = 0.1, 
+                     end = 0.7,
+                     labels = c("EEZs","Stocks")
+  )
+
+
+# Legend
+  legend <- get_legend(percentage_plot)
+  
+  percentage_plot <- percentage_plot + 
+    theme(legend.position = "")
+  
+
+# Draw figure
+  plot_all <- ggdraw() +
+    # Latin America and the Car.
+    draw_plot(count_eez_plot, x = 0.01, y = 0, width = 0.28, height = 1) +
+    # Europe
+    draw_plot(count_stock_plot, x = 0.28, y = 0, width = 0.28, height = 1) +
+    # Percentage plot
+    draw_plot(percentage_plot, x = 0.56, y = 0 , width = 0.28, height = 1) +
+    # legend
+    draw_plot(legend, x = 0.84, y = 0 , width = 0.28, height = 1)
+  
+  
+  # Save plot
+  save_plot(
+    "./Figures/cumu_per_freq.png",
+    plot_all,
+    base_height = 5,
+    base_width = 12
+  )
+
+
+```
+
+
+##### Fig. 2 Mapping the time of emergence
+
+###### Mean ToE and vulnerabillity Index
 
 ```{r emergence_map, eval = T}
 
 # Per EEZs
 Eez_d_hist <- Eme_Res %>% 
-  group_by(eezid ,sau_fishing_entity,tresh) %>% 
+  group_by(eezid,sau_fishing_entity,tresh) %>% 
   # summarise(n_tax = length(unique(taxon_key))) %>% 
   summarise(
     mean_yr = mean(emerging_yr,na.rm=T),
@@ -2540,7 +2206,67 @@ Total_value <- Sau_data %>%
 Value_map_data <- Eme_value_data %>% 
   left_join(Total_value,
             by = c("fishing_entity_id","variable")) %>% 
-  mutate(participation = (sum_value/tot_value)*100)
+  mutate(participation = (sum_value/tot_value)*100+2000)
+
+### ----------------- ###
+### Index alternative ###
+### ----------------- ###
+
+# Index_data <- Eez_d_hist %>% 
+#   left_join(Value_map_data) %>% 
+#   filter(
+#     tresh == "Tresh_one",
+#     metric == "mean_yr"
+#   ) %>% 
+#   group_by(sau_fishing_entity,fishing_entity_id,variable) %>% 
+#   summarise(
+#     toe = mean(value,na.rm=T),
+#     # sum_value = sum(sum_value),
+#     mean_part = mean(participation,na.rm=T)
+#   ) %>% 
+#   filter(!is.na(variable)) %>% 
+#   # spread(variable,sum_value) %>% 
+#   spread(variable,mean_part) %>% 
+#   mutate(
+#     imp = catch+value,
+#     index = imp/toe
+#   )
+
+##### Normalize index
+# https://www.datanovia.com/en/blog/how-to-normalize-and-standardize-data-in-r-for-great-heatmap-visualization/
+
+# Get min and maximums
+# min_index <- min(Index_data$index)
+# max_index <- max(Index_data$index)
+
+# Index_data <- Index_data %>% 
+#   mutate(
+    # index_norm =(index-min_index)/(max_index-min_index),
+  #   index_2000 = 2000 + (index-min_index)*(2100-2000)/(max_index-min_index)
+  # ) 
+
+### Explore index ####
+
+# ggplot(data = Index_data) +
+#   geom_point(
+#     aes(
+#       x = toe,
+#       y = imp,
+#       color = index_2000
+#     ),
+#     size = 4
+#   ) +
+#    scale_color_viridis(option="magma", discrete = F)
+
+#### ------------  ####
+
+# Value_map_data <- Index_data %>%
+  # select(sau_fishing_entity,fishing_entity_id,
+         # tresh,
+         # variable,
+         # participation = index_2000)
+
+### ----------------- ###
 
 
 # Per fishing entity
@@ -2554,17 +2280,26 @@ fish_d_hist <- Eme_Res %>%
   filter(!is.na(sau_fishing_entity))
 
 World_map_nemer <- World_map %>%
-  left_join(Value_map_data,
+  full_join(Value_map_data,
             by = c("sau_fishing_entity","fishing_entity_id")
   ) %>% 
   filter(!is.na(participation))
 
+# These are regions without transboundary species
 grey_land <- World_map %>% 
-  filter(!fishing_entity_id %in% World_map_nemer$fishing_entity_id) %>% 
-  filter(sovereignt != "Antarctica")
+  filter(!fishing_entity_id %in% Value_map_data$fishing_entity_id) %>% 
+  filter(!sovereignt %in% c("Antarctica","Brazil"))
 
 grey_eez <- World_eez_sf %>% 
-  filter(!eezid %in% Eez_d_hist$eezid)
+  filter(!eezid %in% Eez_d_hist$eezid,
+         !eez_name %in% Neighbours$eez_name)
+
+Brazil_land <- World_map %>% 
+  filter(sovereignt == "Brazil") 
+
+Brazil_eez <- World_eez_sf %>% 
+  filter(eez_name %in% c("Brazil","USA (Alaska, Arctic)"))
+
 
 
 for(i in 1:2){
@@ -2578,67 +2313,67 @@ for(i in 1:2){
   
   ### Random plot
 
-Eez_hist <- Eme_Res %>% 
-  group_by(eezid,eez_name = sf_eez_name) %>% 
-  left_join(Eez_centroid) %>% 
-  filter(tresh == tresh_list[i]) %>% 
-  group_by(latitude) %>% 
-  summarise(
-    number = n()
-  ) %>% 
-  group_by() %>% 
-  mutate(RMean = rollmean(x = number, 
-                          10, 
-                          align = "center", 
-                          fill = number
-  )
-  ) %>% 
-  mutate(lab="lab") %>% 
-  ggplot() +
-  geom_area(
-    aes(
-      x = latitude,
-      y = RMean,
-      fill = lab,
-      color = lab
-    )
-  ) +
-  coord_flip() +
-  scale_x_continuous("",
-    limits = c(-50,80),
-    breaks = c(-50,0,50,80)
-  ) +
-  scale_y_continuous(
-    "Emerging stocks",
-    limits = c(0, 124),
-    breaks = c(0,62,124)
-    
-  ) +
-  scale_fill_viridis(option="magma", discrete = T, begin = 0.7) +
-  scale_color_viridis(option="magma", discrete = T, begin = 0.7) +
-  theme_minimal() + 
-  theme(
-    panel.background = element_rect(fill = "white", colour = "white"),
-    panel.grid.major.y = element_blank(),
-    panel.grid.minor.y = element_blank(),
-    panel.grid.major.x = element_blank(),
-    panel.grid.minor.x = element_blank(),
-    axis.text.y = element_blank(),
-    axis.ticks.y = element_blank(),
-    axis.text = element_text(size = 12, colour="black"),
-    axis.title.x = element_text(size = 12, colour="black", face = "bold"),
-    legend.position = ""
-  );Eez_hist
-  
+# Eez_hist <- Eme_Res %>% 
+#   group_by(eezid,eez_name = sf_eez_name) %>% 
+#   left_join(Eez_centroid) %>% 
+#   filter(tresh == tresh_list[i]) %>% 
+#   group_by(latitude) %>% 
+#   summarise(
+#     number = n()
+#   ) %>% 
+#   group_by() %>% 
+#   mutate(RMean = rollmean(x = number, 
+#                           10, 
+#                           align = "center", 
+#                           fill = number
+#   )
+#   ) %>% 
+#   mutate(lab="lab") %>% 
+#   ggplot() +
+#   geom_area(
+#     aes(
+#       x = latitude,
+#       y = RMean,
+#       fill = lab,
+#       color = lab
+#     )
+#   ) +
+#   coord_flip() +
+#   scale_x_continuous("",
+#     limits = c(-50,80),
+#     breaks = c(-50,0,50,80)
+#   ) +
+#   scale_y_continuous(
+#     "Emerging stocks",
+#     limits = c(0, 124),
+#     breaks = c(0,62,124)
+#     
+#   ) +
+#   scale_fill_viridis(option="magma", discrete = T, begin = 0.7) +
+#   scale_color_viridis(option="magma", discrete = T, begin = 0.7) +
+#   theme_minimal() + 
+#   theme(
+#     panel.background = element_rect(fill = "white", colour = "white"),
+#     panel.grid.major.y = element_blank(),
+#     panel.grid.minor.y = element_blank(),
+#     panel.grid.major.x = element_blank(),
+#     panel.grid.minor.x = element_blank(),
+#     axis.text.y = element_blank(),
+#     axis.ticks.y = element_blank(),
+#     axis.text = element_text(size = 12, colour="black"),
+#     axis.title.x = element_text(size = 12, colour="black", face = "bold"),
+#     legend.position = ""
+#   )
+#   
   ## --------------- ##
   # Map
   ## --------------- ##
 
-  World_map_part <- World_map_nemer %>% 
-    filter(
-      tresh ==  tresh_list[i], 
-      variable == "value"
-    )
+  World_map_part <- World_map_nemer# %>% 
+    # filter(
+    #   tresh ==  tresh_list[i], 
+    #   variable == "value"
+    # )
   
   map <- World_eez_sf %>% 
     left_join(Eez_d_hist,
@@ -2648,32 +2383,37 @@ Eez_hist <- Eme_Res %>%
     ggplot() +
     geom_sf(
       aes(
-        fill = reverse
+        fill = reverse #original map
+        # fill = value
       ),
       color =  "white",
       size = 0.1
     ) +
     # Inlcude the participation of species
     geom_sf(data = World_map_part,
-            aes(fill = participation+2000),
+            # aes(fill = participation+2000), #original map
+            aes(fill = participation),
             color =  "white",
             size = 0.1
             ) +
     # grey maps
-    geom_sf(data = grey_land, aes(),fill = "grey50", color =  "white",size = 0.1) +
-    geom_sf(data = grey_eez, aes(),fill = "grey50", color =  "white",size = 0.1) +
+    # ggplot() +
+    geom_sf(data = grey_land, aes(), fill = "grey50", color =  "white",size = 0.1) +
+    geom_sf(data = grey_eez, aes(), fill = "white", color =  "grey50",size = 0.1) +
+    geom_sf(data = Brazil_eez, aes(), fill = "lightblue", color =  "white",size = 0.1) +
+    geom_sf(data = Brazil_land, aes(), fill = "lightblue", color =  "white",size = 0.1) +
     # Set Participation labels
-    annotate("text", 
+    annotate("text",
              x =-135,
              y = -69,
-             label = "Participation (%)", 
-             color="black", 
-             size=4, 
-             angle=0, 
+             label = "Participation (%)",
+             color="black",
+             size=4,
+             angle=0,
              fontface="bold",
              hjust=0) +
     annotate("text", 
-             x = c(-76,-35,6,48,88),
+             x = c(-72,-35,5,46,82),
              y = -69,
              # x =(c(-8500000,-3000000,2500000,7500000,12800000)),
              # y = -9050000,
@@ -2694,9 +2434,10 @@ Eez_hist <- Eme_Res %>%
              fontface="bold",
              hjust=0) +
     annotate("text", 
-             x = c(-79,-39,3,45,87),
+             x = c(-79,-39,2,42,81),
              y = -85,
-             label = seq(2100,2000,-25), 
+             label = seq(2100,2000,-25), # original
+             # label = c(">2100",seq(2075,2000,-25)), # not inluding the > because we dont know
              color="black", 
              size=4, 
              angle=0, 
@@ -2708,14 +2449,60 @@ Eez_hist <- Eme_Res %>%
       labels = c("","","","","")#,
       # direction = -1
     ) +
+    # scale_fill_gradientn("",
+    #                      limits = c(2000,2100),
+    #                      breaks = seq(2000,2100,25),
+    #                       labels = c("","","","",""),
+    #                      colours = pal
+    # ) +
     # geom_hline(yintercept = c(-50,0,50,80)) +
     my_ggtheme_m() +
     theme(
-      legend.box.margin = margin(t = -64, l = 229),
+      legend.box.margin = margin(t = -64, l = 249),
       legend.text = element_blank(),
       legend.key.width = unit(5, "line")
     )
   
+  
+  
+  ## --------------- ##
+  # Regional Boxplot
+  ## --------------- ##
+  
+  boxplot <- Eme_Res %>% 
+    filter(tresh == "Tresh_one",
+           !is.na(un_sub_region)) %>%
+    group_by(un_sub_region) %>% 
+    summarise(order = median(emerging_yr)) %>% 
+    left_join(Eme_Res) %>% 
+    filter(tresh == "Tresh_one",
+           !is.na(un_sub_region)) %>% 
+    mutate(un_sub_region = ifelse(str_detect(un_sub_region,"Latin"),"Ltn. Ame. and the Car.",paste(un_sub_region))) %>% 
+    ggplot() +
+    geom_boxplot(
+      aes(
+        # x = un_sub_region,
+        x = reorder(un_sub_region,order),
+        y = emerging_yr#,
+        # fill = un_geo_region
+      ),
+      fill = "grey"
+    ) +
+    facet_wrap(~un_geo_region,
+               scales = "free_x",
+               nrow = 1) +
+    scale_fill_viridis("UN Sub region",
+                       discrete = T) +
+    scale_color_grey("") +
+    xlab("") +
+    ylab("Time of Emergence") +
+    my_ggtheme_p() +
+    theme(
+      axis.text.x = element_text(size = 10, angle = 45, face = "plain", hjust = 1), 
+      strip.text.x = element_text(size = 14, colour = "black"), 
+      # axis.ticks.x = element_blank(),
+      legend.position = "right"
+    )
   
   ## --------------- ##
   # Combine plots and save them
@@ -2723,14 +2510,23 @@ Eez_hist <- Eme_Res %>%
   
   p <- ggdraw() +
     # ToE Latitudinal plot
-    draw_plot(Eez_hist, x = 0.873, y = 0.13, width = 0.124, height = 0.77) +
+    # draw_plot(Eez_hist, x = 0.873, y = 0.53, width = 0.124, height = 0.37) +
     # Time of Emergence Map
-    draw_plot(map, x = 0, y = 0, width = 0.95, height = 1)
+    draw_plot(map, x = 0, y = 0.4, width = 1, height = 0.6) +
+    # Regional boxplot
+    draw_plot(boxplot, x = 0, y = -0.03, width = 1, height = 0.44) +
+    # Labels
+    draw_plot_label(label = c("A", "B"), 
+                      size = 20,
+                      x = c(0, 0), 
+                      y = c(0.95, 0.46)
+      )
+  
   
   save_plot(
     name_save,
     p,
-    base_height = 6,
+    base_height = 11,
     base_width = 12
   )
 
@@ -2762,9 +2558,9 @@ Buble_data <- Eez_d_hist %>%
             by = c("sau_fishing_entity","fishing_entity_id")) %>% 
   distinct(sau_fishing_entity,.keep_all = TRUE) %>% 
   filter(!is.na(un_geo_region)) %>% 
-  ungroup() %>% 
-  mutate(
-    sau_fishing_entity = ifelse(sum_value_bi >= 1 & !sau_fishing_entity %in% c("Spain"), paste(sau_fishing_entity,"*",sep = ""),sau_fishing_entity))
+  ungroup()# %>%  # no more asterisk
+  # mutate(
+  #   sau_fishing_entity = ifelse(sum_value_bi >= 1 & !sau_fishing_entity %in% c("Spain"), paste(sau_fishing_entity,"*",sep = ""),sau_fishing_entity))
 
 ### Fucntion for estimating percentile
 
@@ -2799,7 +2595,8 @@ ggplot(Buble_data) +
       x = mean_yr,
       y = log_value,
       size = n_taxa,
-      colour = un_geo_region
+      colour = un_geo_region,
+      shape = un_geo_region
     ),
     alpha = 0.7
   ) +
@@ -2809,19 +2606,43 @@ ggplot(Buble_data) +
              aes(yintercept = x),
              color = "grey90"
   )  +
-  geom_label_repel(data = subset(Buble_data, sum_value_bi >= 1),
-                   aes(
-                     x = mean_yr,
-                     y = log_value,
-                     label = sau_fishing_entity
-                   ),
-                   arrow = arrow(length = unit(0.009, "npc"),
-                                 type = "closed",
-                                 ends = "first"),
-                   force = 2,
-                   box.padding = 1,
-                   fill = "NA"
-                   
+  # right side labels
+  geom_label_repel(data = subset(Buble_data, mean_yr > 2035 & sum_value_bi >= 1),
+                  aes(
+                    x = mean_yr,
+                    y = log_value,
+                    label = sau_fishing_entity
+                  ),
+                  arrow = arrow(length = unit(0.009, "npc"),
+                                type = "closed",
+                                ends = "first"),
+                  force = 2,
+                  box.padding = 0.2,
+                  fill = "NA",
+                  nudge_x = 2050 + subset(Buble_data, mean_yr > 2035 & sum_value_bi >= 1)$mean_yr,
+                  segment.size  = 0.2,
+                  segment.color = "grey50",
+                  direction     = "y",
+                  hjust         = 1
+  ) +
+  # right side labels
+  geom_label_repel(data = subset(Buble_data, mean_yr < 2035 & sum_value_bi >= 1),
+                  aes(
+                    x = mean_yr,
+                    y = log_value,
+                    label = sau_fishing_entity
+                  ),
+                  arrow = arrow(length = unit(0.009, "npc"),
+                                type = "closed",
+                                ends = "first"),
+                  force = 1,
+                  box.padding = 0.2,
+                  fill = "NA",
+                  nudge_x = 2010 - subset(Buble_data, mean_yr < 2035 & sum_value_bi >= 1)$mean_yr,
+                  segment.size  = 0.2,
+                  segment.color = "grey50",
+                  direction     = "y",
+                  hjust         = 1
   ) +
   geom_text(data = Labels_data,
             aes(
@@ -2832,6 +2653,7 @@ ggplot(Buble_data) +
             size = 3,
             color = "grey30"
   ) +
+  scale_shape("Region") +
   scale_color_viridis(name="Region",
                       discrete = T) +
   scale_x_continuous("Average time of emergence",
@@ -2843,9 +2665,9 @@ ggplot(Buble_data) +
                      breaks = seq(-6,2,2),
                      expand = c(0,0)
   ) +
-  scale_size("Number of\nemerging taxa") +
+  scale_size("Number of\nemerging stock") +
   ggsave("./Figures/bubble_plot.png",
-         width = 8,
+         width = 12,
          height = 8,
          units = "in"
   )
@@ -2854,63 +2676,50 @@ ggplot(Buble_data) +
 
 ### Species level analysis
 
-#### Fig. 5 Boxplot
+#### Fig. 5 Species Boxplot
 
 ```{r deme_pela, eval = F, echo =F}
 
-Dem_pel <- Eme_Res %>% 
-  filter(tresh == "Tresh_one",
-         !is.na(un_sub_region)) %>% 
-  left_join(Spp_env_pref) %>% 
-  mutate(DemersPelag = ifelse(is.na(DemersPelag),"other",
-                              ifelse(DemersPelag %in% c("bathypelagic","benthopelagic"), "bathy-bentho-pelagic",paste(DemersPelag)
-                              )
-  ),
-    un_sub_region = ifelse(str_detect(un_sub_region,"Latin"),"Ltn. Ame. and the Car.",paste(un_sub_region)))
-
-## Averages 
-
-Average_data <- Dem_pel %>% 
-  group_by(un_sub_region) %>% 
-  summarise(mean_toe = mean(emerging_yr,na.rm=T)) %>% 
-  mutate(regional_average="regional average")
-  
-
 # Dem Pelagic boxplot
-ggplot(Dem_pel) +
-  geom_hline(data = Average_data,
-             aes(
-               yintercept = mean_toe,
-               colour = regional_average
-             ),
-             linetype = "dashed"
-             ) +
+Eme_Res %>% 
+  left_join(Spp_env_pref) %>% 
+  mutate(DemersPelag = ifelse(is.na(DemersPelag),"other",DemersPelag)) %>% 
+  group_by(DemersPelag) %>% 
+  summarise(mean_toe = median(emerging_yr,na.rm=T),
+            n_spp = length(unique(taxon_key))) %>% 
+  left_join(Dem_pel) %>% 
+  mutate(
+    label = paste0(DemersPelag, "\n(n=",n_spp,")")
+  ) %>% 
+  filter(tresh == "Tresh_one",
+         DemersPelag != "pelagic") %>% # just one spp.
+  ggplot() +
   geom_boxplot(
-    aes(
-      x = reorder_within(DemersPelag,emerging_yr,un_sub_region),
-      y = emerging_yr,
-      fill = DemersPelag
+    aes(x = reorder(label,mean_toe),
+        # aes(x = DemersPelag,
+        y = emerging_yr,
+        # fill = DemersPelag
     ),
-    alpha = 0.8
+    alpha = 0.8,
+    fill = "grey"
   ) +
-  facet_wrap(~un_sub_region,scales = "free_x") +
-  scale_fill_viridis("Habitat preference",
-                     discrete = T) +
-  scale_color_grey("") +
+  # scale_fill_viridis("Habitat preference",
+                     # discrete = T) +
   xlab("") +
   ylab("Time of emergence") +
   my_ggtheme_p() +
   theme(
-    axis.text.x = element_blank(),
-    axis.ticks.x = element_blank(),
+    axis.text.x = element_text(size = 10, angle = 45, face = "plain", hjust = 1), 
+    # axis.ticks.x = element_blank(),
     legend.position = "right"
   ) +
   scale_x_reordered() +
   ggsave("./Figures/regional_hab_boxplot.png",
-         width = 14,
-         height = 8,
+         width = 10,
+         height = 5,
          units = "in"
   )
+
 ```
 
 ### Statistics
@@ -2961,7 +2770,11 @@ Reg_kw
 # data:  un_sub_region by emerging_yr
 # Kruskal-Wallis chi-squared = 287.23, df = 93, p-value < 2.2e-16
 
-kruskalmc(emerging_yr~un_sub_region, data = Reg_diff_data)
+kruskalmc(emerging_yr~un_sub_region, data = Reg_diff_data) %>% 
+  as.data.frame() %>% 
+  rownames_to_column("comparrison") %>% 
+  # head()
+  write_csv("kw_regional.csv")
 
 # Multiple differences but Eastern Asia, Lat. Ame. Car. and Polinesia are the nes who differe the most (e.g. differe with more revions).
 
@@ -3004,7 +2817,11 @@ Hab_kw
 # data:  DemersPelag by emerging_yr
 # Kruskal-Wallis chi-squared = 286.48, df = 93, p-value < 2.2e-16
 
-kruskalmc(emerging_yr~DemersPelag, data = Hab_diff_data)
+kruskalmc(emerging_yr~DemersPelag, data = Hab_diff_data) %>% 
+  as.data.frame() %>% 
+  rownames_to_column("comparrison") %>% 
+  # head()
+  write_csv("kw_habitat.csv")
 
 # Multiple differences but main differences for pelagic-ocenaic and reefs
 
@@ -3025,124 +2842,722 @@ TukeyHSD(Hab_aov) %>%
 
 ```
 
-## Table.1 Multy linear model
 
-```{r multiple_reg, eval = F, echo = F}
+####  Prooportion Analysis
 
-# Possible explanatory variables
+##### Fig. 1 and S1. (Netowrk)
 
-## Habitat association (DemersPelag)
-## Dem Vs Pelagic (Dem_pel)
-## SST time of Emer (Toe_sst)
-## Stock Status [FishForVisa] (Catch_trend)
-## Biogeographic location (Biogeo_reg)
+```{r fig_map_Juan, eval = F, echo =F}
+# Figure made thanks to Juanito!
+# http://jsmayorga.com/post/mapping-the-global-network-of-transnational-fisheries/
 
+### Median number
 
-# AIC value; model between predictive capacity and complexity (i.e., number of explanatory variables) is given by the model with lowest AIC value
-
-
-
-# -------------------------------- #
-#### Build models
-# -------------------------------- #
-
-# Model 1; all variables
-M1 <- lm(emerging_yr ~ sst_toe + bot_toe + status + biome + dem_pel + DemersPelag, data = Lm_data)
-
-M1_sum <- summary(M1)
-M1_aic <- AIC(M1)
-M1_r <-  M1_sum$adj.r.squared
-
-# Model 2; non demPel
-M2 <- lm(emerging_yr ~ sst_toe + bot_toe + status + biome + dem_pel, data = Lm_data)
-
-M2_sum <- summary(M2)
-M2_aic <- AIC(M2)
-M2_r <-  M2_sum$adj.r.squared
+Prop_results %>% 
+  filter(variable == "n_spp") %>% 
+  group_by() %>% 
+  summarise(
+    median(early,na.rm=T),
+    sd(early,na.rm=T)
+  )
 
 
-# Model 3; non biome
-M3 <- lm(emerging_yr ~ sst_toe + bot_toe + status + dem_pel + DemersPelag, data = Lm_data)
+# Prepare data from results
+Data <- Prop_results %>% 
+  # get coords for sources
+  left_join(Eez_centroid,
+            by = "eez_name") %>%
+  rename(source = eez_name,
+         start_lon = longitude,
+         start_lat = latitude,
+         eez_name=eez_neighbour) %>% 
+  # get coords for targets
+  left_join(Eez_centroid,
+            by = "eez_name") %>% 
+  rename(target = eez_name,
+         end_lon = longitude,
+         end_lat = latitude) %>% 
+  ungroup() %>% 
+  # Plot miscs
+  mutate(
+    per_early = ifelse(is.na(per_early),0,per_early),
+    per_mid = ifelse(is.na(per_mid),0,per_mid)
+  ) %>% 
+  drop_na() %>%
+  # gather("variable","value",per_early:per_early_plot) %>% 
+  filter(
+    variable %in% c("mean_eez","n_spp")#,
+    # source %in% c("Brazil","Argentina","Chile","Peru","Uruguay")
+  )
 
-M3_sum <- summary(M3)
-M3_aic <- AIC(M3)
-M3_r <-  M3_sum$adj.r.squared
-
-# Model 4; non status
-M4 <- lm(emerging_yr ~ sst_toe + bot_toe + biome + dem_pel + DemersPelag, data = Lm_data)
-
-M4_sum <- summary(M4)
-M4_aic <- AIC(M4)
-M4_r <-  M4_sum$adj.r.squared
-
-# Model 5; non sst
-M5 <- lm(emerging_yr ~ status + bot_toe + biome + dem_pel + DemersPelag, data = Lm_data)
-
-M5_sum <- summary(M5)
-M5_aic <- AIC(M5)
-M5_r <-  M5_sum$adj.r.squared
-
-# Model 6; all + basin
-M6 <- lm(emerging_yr ~ sst_toe + bot_toe + status + biome + dem_pel + DemersPelag, data = Lm_data)
-
-M6_sum <- summary(M6)
-M6_aic <- AIC(M6)
-M6_r <-  M6_sum$adj.r.squared
-
-# Model 7; Categories instead of status
-M7 <- lm(emerging_yr ~ sst_toe + bot_toe + category + biome + dem_pel + DemersPelag, data = Lm_data)
-
-M7_sum <- summary(M7)
-M7_aic <- AIC(M7)
-M7_r <-  M7_sum$adj.r.squared
-
-# Model 8; All variables + ccentroid lat
-M8 <- lm(emerging_yr ~ sst_toe + bot_toe + category + as.factor(biome) + DemersPelag + latitude, data = Lm_data)
-
-M8_sum <- summary(M8)
-M8_aic <- AIC(M8)
-M8_r <-  M8_sum$adj.r.squared
-
-# Model 9; Include UN regions
-M9 <- lm(emerging_yr ~ sst_toe + bot_toe + category + biome + DemersPelag + latitude + un_region, data = Lm_data)
-
-M9_sum <- summary(M9)
-M9_aic <- AIC(M9)
-M9_r <-  M9_sum$adj.r.squared
+# Convert to data to spatial
+network_data_sf <- Data %>%
+  select(start_lon, start_lat, end_lon, end_lat) %>% 
+  purrr::transpose() %>% 
+  purrr::map(~ matrix(flatten_dbl(.), nrow = 2, byrow = TRUE)) %>% 
+  purrr::map(st_linestring) %>%
+  st_sfc(crs = 4326) %>%
+  # st_sfc(crs = "+proj=eck4") %>% # for tbular plot
+  st_sf(geometry = .)%>%
+  bind_cols(Data) %>%
+  select(everything(), geometry) %>% 
+  # Set circles ('cus the world is not flat!)
+  st_segmentize(units::set_units(100, km)) %>% 
+  mutate(geometry = (geometry + c(180,90)) %% c(360) - c(180,90)) %>%
+  st_wrap_dateline(options = c("WRAPDATELINE=YES",  "DATELINEOFFSET=180"), quiet = TRUE) %>%
+  sf::st_sf(crs = 4326)
+  # sf::st_sf(crs = "+proj=eck4") # for tbular plot
 
 
+#  unpack the coordinates of each feature 
+coord_data <- as.data.frame( st_coordinates(st_cast(network_data_sf,"MULTILINESTRING")$geometry))
 
-tibble(
-  "model" = paste("M",seq(1,9,1),sep=""),
-  "AIC" = c(M1_aic,M2_aic,M3_aic,M4_aic,M5_aic,M6_aic,M7_aic,M8_aic, M9_aic),
-  "rsquared" = c(M1_r,M2_r,M3_r,M4_r,M5_r,M6_r,M7_r,M8_r,M9_r)
+c(network_data_sf$line_id, network_data_sf$coords) %<-% (
+  coord_data %>% 
+    rename(subline_id = L1) %>%   
+    nest(-L2)
 )
 
-# The Winner is M9    49283.   0.0765
+# Create data path for line connections
+paths <- network_data_sf %>% 
+  sf::st_set_geometry(NULL) %>% 
+  unnest() %>%
+  mutate_at(vars(X,Y), round,2) %>% 
+  gather("time_step","per_chng",per_early:per_mid) %>% 
+  mutate(per_plot = ifelse(per_chng > 100,100,per_chng),
+         direction = ifelse(per_chng > 0,"positive","negative")
+         )
+  
+# Plot it!
 
-#Table for paper
-M9_sum %>% 
-  tidy() %>% 
-  filter(p.value < 0.05) %>% 
-  mutate(p.value = ifelse(p.value < 0.001,0.001,round(p.value,3))) %>% 
-  # stargazer(title = "Multiple regression results for time of emergence of Transboundary stocks. Only showing explanatory variables. The model significantly predicts time of emergencec (F(31,5270) = 15.38, p < 0.001, R2 = 0.06).",
-            # align=TRUE)
-  # knitr::kable() %>% 
-  write_csv(.,
-            "./Tables/mlr_result.csv")
+# Proportion map data 
+Map_data <- Data %>% 
+  gather("time_step","per_chng",per_early:per_mid) %>% 
+  mutate(per_plot = ifelse(per_chng > 100,100,per_chng))
 
-#Table for supplements
-M9_sum %>% 
-  tidy() %>% 
-  # filter(p.value < 0.05) %>% 
-  # mutate(p.value = ifelse(p.value < 0.001,0.001,round(p.value,3))) %>% 
-  # stargazer(title = "Multiple regression results for time of emergence of Transboundary stocks. Only showing explanatory variables. The model significantly predicts time of emergencec (F(18,6155) = 20.68, p < 0.001, R2 = 0.05).",
-            # align=TRUE)
-  # knitr::kable() %>% 
-  write_csv(.,
-            "./Tables/mlr_result_sup.csv")
+# Average number of taxa to change per eez
+
+# Total number of transboundary stocks per EEZ
+n_trans_eez <- Transboundary_spp %>% 
+  group_by(eez_name) %>% 
+  summarise(
+    n_trans = unique(length(taxon_key))
+  )
+
+# Estimate the percentage changing
+n_taxa_data <- Prop_results %>% 
+  filter(variable == "n_spp") %>%
+  select(eez_name,early,mid) %>% 
+  left_join(n_trans_eez) %>% 
+  # mutate(per = (early/n_trans)*100) %>% 
+  mutate_at(vars(early,mid),
+            .funs = ~(./n_trans)*100) %>% 
+  rename(sf_eez_name = eez_name) %>% 
+  left_join(Matching_names) %>% 
+  select(sau_fishing_entity,fishing_entity_id,early,mid) %>% 
+  gather("time_step","avrg_spp_per",early:mid) %>% 
+  group_by(sau_fishing_entity,fishing_entity_id,time_step) %>%
+  summarise(avrg_spp_per = mean(avrg_spp_per,na.rm=T)) %>% 
+  mutate(time_step = ifelse(time_step == "early","per_early","per_mid"))
+
+# Paper numbers
+mean(n_taxa_data$avrg_spp_per,na.rm=T)
+sd(n_taxa_data$avrg_spp_per,na.rm=T)
+
+# Included in map
+n_taxa_map <- World_map %>% 
+  full_join(n_taxa_data,
+            by = c("sau_fishing_entity","fishing_entity_id")
+            )
+
+# Rectangles dataset
+# coord_sf(xlim = c(-3, 35),ylim = c(30, 45)) +
+Rectangles <- tibble(
+    x1=c(-100,-3,-14), #LatAm, Med, NE
+    x2=c(-55,35,23),
+    y1=c(9,31,50), 
+    y2=c(30,44,67)
+  )
+
+
+time_sets <- c("per_early","per_mid")
+# i = 1
+for(i in 1:2){
+  gc()# clean ram
+  
+  time <- time_sets[i]
+  
+  ## ------------------- ##
+  # Global Plot
+  ## ------------------- ##
+  
+  
+  
+  Prop_map <- ggplot() +
+    geom_sf(data = subset(n_taxa_map, sovereignt != "Antarctica" & time_step == time),
+            aes(fill = avrg_spp_per),
+            size = 0.1,
+            col = "white") +
+    geom_sf(data = World_eez_sf, size = 0.1, fill = "white", col = "gray30") +
+    geom_sf(data = grey_land, size = 0.1, fill = "grey50", col = "gray30") + # created for figure 2
+    geom_point(data = subset(Map_data, time_step == time & per_plot < 0),
+               aes(start_lon,
+                   start_lat
+               ),
+               size = 0.05,
+               col = "gray80",
+               shape = 20,
+               stroke = 1.5) +
+    geom_path(data = subset(paths, time_step == time & per_plot > 0),
+              aes(X,
+                  Y,
+                  group = interaction(line_id,subline_id),
+                  col = per_plot
+              ),
+              size = 0.3,
+              lineend = "round",
+              arrow = arrow(length = unit(0.008, "npc"),
+                            ends = "first"),
+              show.legend = NA) +
+    # Closeup Rectangles 
+    geom_rect(data=Rectangles,
+              aes(xmin=x1, 
+                  xmax=x2,
+                  ymin=y1,
+                  ymax=y2),
+              color="grey50", 
+              fill = NA,
+              linetype = "dashed"
+    ) +
+    my_ggtheme_m() +
+    scale_colour_viridis(
+      name="Stock share ratio gain \nand changing stocks (%)",
+      limits = c(0,max(Map_data$per_plot)),
+      breaks = seq(0,max(Map_data$per_plot),10)#,
+      # option="magma",
+      # direction = -1
+    ) +
+    scale_fill_viridis(
+      name="Stock share ratio gain \nand changing stocks (%)",
+      limits = c(0,max(Map_data$per_plot)),
+      breaks = seq(0,max(Map_data$per_plot),10),
+      # alpha = 0.8
+      # option="magma",
+      # direction = -1
+    ) #+
+  # ggsave("./Figures/fig_sup_1.png",
+  # width = 12,
+  # height = 8,
+  # units = "in"
+  # )
+  
+  ## ------------------- ##
+  # Regional Plots
+  ## ------------------- ##
+  
+  Lat_am_land <- World_map %>% 
+    filter(region_wb %in% c("Latin America & Caribbean") |
+             sau_fishing_entity %in% c("USA","Mexico")
+    )
+  
+  Lat_am_eez <- World_eez_sf %>% 
+    rename(sf_eez_name = eez_name) %>% 
+    left_join(Matching_names) %>% 
+    filter(
+      !str_detect(sf_eez_name,"Pacific"),
+      !sf_eez_name %in% c("USA (East Coast)","Suriname","Guyana","French Guiana","Bermuda (UK)","Brazil","El Salvador")
+    )
+  
+  Lat_am_data <- Map_data %>% 
+    filter(source %in% Lat_am_eez$sf_eez_name)
+  
+  Lat_am_paths <- paths %>% 
+    filter(source %in% Lat_am_eez$sf_eez_name,
+           target %in% Lat_am_eez$sf_eez_name)
+  
+  
+  Lat_am_map <- ggplot() +
+    geom_sf(data = Lat_am_eez, size = 0.1, fill = "white", col = "gray30") +
+    geom_sf(data = grey_land, size = 0.1, fill = "grey50", col = "gray30") +
+    geom_sf(data = subset(n_taxa_map, sovereignt != "Antarctica" & time_step == time),
+            aes(fill = avrg_spp_per),
+            size = 0.1,col = "white") +
+    geom_point(data = subset(Lat_am_data, time_step == time & per_plot < 0 ),
+               aes(start_lon,
+                   start_lat,
+                   col = per_plot),
+               size = 1,
+               col = "gray30",
+               shape = 20,
+               stroke = 1.5) +
+    geom_path(data = subset(Lat_am_paths, time_step == time & per_plot > 0),
+              aes(X, Y,
+                  group = interaction(line_id,subline_id),
+                  col = per_plot
+              ),
+              size = 1,
+              arrow = arrow(length = unit(0.05, "npc"),
+                            ends = "first"),
+              show.legend = NA) +
+    coord_sf(xlim = c(-100, -55),ylim = c(9, 30)) + 
+    labs(x = "", y = "") +
+    scale_x_continuous(breaks = seq(-100,60,10)) +
+    scale_y_continuous(breaks = seq(10,30,10)) +
+    my_ggtheme_m() +
+    theme(legend.position = "",
+          panel.background = element_rect(fill = "white", color = "white"),
+          panel.grid.major =  element_line(color = "white")
+    ) +
+    scale_colour_viridis(
+      name="Average Gain of\nStock-Share Ratio (%)",
+      limits = c(0,max(Lat_am_data$per_plot)),
+      breaks = seq(0,max(Lat_am_data$per_plot),10),
+      # option="magma",
+      # direction = -1
+    )+
+    scale_fill_viridis(
+      name="Average Gain of\nStock-Share Ratio (%)",
+      limits = c(0,max(Lat_am_data$per_plot)),
+      breaks = seq(0,max(Lat_am_data$per_plot),10),
+      # option="magma",
+      # direction = -1
+    )
+  
+  
+  ## ------------------- ##
+  # The Med
+  ## ------------------- ##
+  
+  # Land polygon
+  Med_land <- World_map %>% 
+    filter(region_wb %in% c("Europe & Central Asia","Middle East & North Africa") |
+             sau_fishing_entity %in% c("Spain","France")
+    )
+  
+  # EEZ polygon
+  Med_eez <- World_eez_sf %>% 
+    rename(sf_eez_name = eez_name) %>% 
+    left_join(Matching_names) %>% 
+    filter(sau_fishing_entity %in% Med_land$sau_fishing_entity,
+           sf_eez_name != "Spain (Northwest)")
+  
+  # Med data
+  Med_data <- Map_data %>% 
+    filter(source %in% Med_eez$sf_eez_name)
+  
+  # Med paths
+  Med_paths <- paths %>% 
+    filter(source %in% Med_eez$sf_eez_name,
+           target %in% Med_eez$sf_eez_name)
+  
+  # Med plot
+  Med_map <- ggplot() +
+    geom_sf(data = Med_eez, size = 0.5, fill = "white", col = "gray30") +
+    geom_sf(data = grey_land, size = 0.1, fill = "grey50", col = "gray30") + # created for figure 2
+    geom_sf(data = subset(n_taxa_map, sovereignt != "Antarctica" & time_step == time),
+            aes(fill = avrg_spp_per),
+            size = 0.1,col = "white") +
+    geom_point(data = subset(Med_data, time_step == time & per_plot < 0 ),
+               aes(start_lon,
+                   start_lat,
+                   col = per_plot),
+               size = 1,
+               col = "gray30",
+               shape = 20,
+               stroke = 1.5) +
+    geom_path(data = subset(Med_paths, time_step == time & per_plot > 0),
+              aes(X, Y,
+                  group = interaction(line_id,subline_id),
+                  col = per_plot
+              ),
+              size = 1,
+              arrow = arrow(length = unit(0.05, "npc"),
+                            ends = "first"),
+              show.legend = NA) +
+    coord_sf(xlim = c(-3, 35),ylim = c(30, 45)) +
+    labs(x = "", y = "") +
+    scale_x_continuous(breaks = seq(-5,35,10)) +
+    scale_y_continuous(breaks = seq(30,50,5)) +
+    my_ggtheme_m() +
+    theme(legend.position = "",
+          panel.background = element_rect(fill = "white", color = "white"),
+          panel.grid.major =  element_line(color = "white")
+    ) +
+    scale_colour_viridis(
+      name="Average Gain of\nStock-Share Ratio (%)",
+      limits = c(0,max(Med_data$per_plot)),
+      breaks = seq(0,max(Med_data$per_plot),5),
+      # option="magma",
+      # direction = -1
+    )+
+    scale_fill_viridis(
+      name="Average Gain of\nStock-Share Ratio (%)",
+      limits = c(0,max(Med_data$per_plot)),
+      breaks = seq(0,max(Med_data$per_plot),5),
+      # option="magma",
+      # direction = -1
+    )#;Med_map
+  
+  
+  ## ------------------- ##
+  # Northern Europe
+  ## ------------------- ##
+  
+  Eu_land <- World_map %>% 
+    filter(
+      continent == "Europe",
+      sau_fishing_entity != "Iceland"
+    )
+  
+  # 
+  # ggplot(N_Eu_land) +
+  #   geom_sf() 
+  
+  
+  Eu_eez <- World_eez_sf %>% 
+    rename(sf_eez_name = eez_name) %>% 
+    left_join(Matching_names) %>% 
+    filter(
+      !sf_eez_name %in% c("Iceland", "Norway","Italy","Greece","Croatia","Bulgaria","Romania"),
+      !str_detect(sf_eez_name,"Spain")
+    )
+  
+  # Eu_eez %>% filter(str_detect(sf_eez_name,"Romania"))
+  
+  Eu_data <- Map_data %>% 
+    filter(source %in% Eu_eez$sf_eez_name)
+  
+  Eu_paths <- paths %>% 
+    filter(source %in% Eu_eez$sf_eez_name,
+           target %in% Eu_eez$sf_eez_name)
+  
+  
+  Eu_map <- ggplot() +
+    geom_sf(data = Eu_eez, size = 0.5, fill = "white", col = "gray30") +
+    geom_sf(data = grey_land, size = 0.1, fill = "grey50", col = "gray30") + # created for figure 2
+    geom_sf(data = subset(n_taxa_map, sovereignt != "Antarctica" & time_step == time),
+            aes(fill = avrg_spp_per),
+            size = 0.1,col = "white") +
+    geom_point(data = subset(Med_data, time_step == time & per_plot < 0 ),
+               aes(start_lon,
+                   start_lat,
+                   col = per_plot),
+               size = 1,
+               col = "gray30",
+               shape = 20,
+               stroke = 1.5) +
+    geom_path(data = subset(Eu_paths, time_step == time & per_plot > 0),
+              aes(X, Y,
+                  group = interaction(line_id,subline_id),
+                  col = per_plot
+              ),
+              size = 1,
+              arrow = arrow(length = unit(0.05, "npc"),
+                            ends = "first"),
+              show.legend = NA) +
+    coord_sf(xlim = c(-15, 30), ylim = c(45, 65)) +
+    labs(x = "", y = "") +
+    scale_y_continuous(breaks = seq(45,65,10)) +
+    # scale_x_continuous(breaks = seq(45,65,5)) +
+    my_ggtheme_m() +
+    theme(legend.position = "",
+          panel.background = element_rect(fill = "white", color = "white"),
+          panel.grid.major =  element_line(color = "white")
+    ) +
+    scale_colour_viridis(
+      name="Average Gain of\nStock-Share Ratio (%)",
+      limits = c(0,max(Eu_data$per_plot)),
+      breaks = seq(0,max(Eu_data$per_plot),5),
+      # option="magma",
+      # direction = -1
+    )+
+    scale_fill_viridis(
+      name="Average Gain of\nStock-Share Ratio (%)",
+      limits = c(0,max(Med_data$per_plot)),
+      breaks = seq(0,max(Med_data$per_plot),5),
+      # option="magma",
+      # direction = -1
+    )#;Eu_map
+  
+  # Legend
+  map_plot <- get_legend(Prop_map)
+  
+  Prop_map <- Prop_map + 
+    theme(legend.position = "")
+  
+  ## ------------------- ##
+  # Render final plot
+  ## ------------------- ##
+  
+  
+  # Clean memory
+  gc()
+  
+  # Draw figure
+  plot_all <- ggdraw() +
+    # Main map
+    draw_plot(Prop_map, x = 0, y = 0.40, width = 1, height = 0.6) +
+    # Latin America and the Car.
+    draw_plot(Lat_am_map, x = 0.01, y = 0.02, width = 0.33, height = 0.45) +
+    # Europe
+    draw_plot(Eu_map, x = 0.33, y = 0.01, width = 0.33, height = 0.45) +
+    # The Med
+    draw_plot(Med_map, x = 0.66, y = 0.02 , width = 0.33, height = 0.45) +
+    # Legend
+    draw_plot(map_plot, x = 0.3, y = 0, width = 0.59, height = 0.1) +
+    # Labels
+    draw_plot_label(label = c("A", "B", "The Caribbean","Northwestern Europe","The Mediterranean"),
+                    size = c(20,20,15,15,15),
+                    x = c(0.01,0.01,0.058,0.33,0.68),
+                    y = c(1,0.45,0.44,0.44,0.44)
+    )
+  
+  
+  name <- paste0("./Figures/prop_",time,".png")
+  
+  # Save plot
+  save_plot(
+    name,
+    plot_all,
+    base_height = 10,
+    base_width = 12
+  )
+  
+}
 ```
 
+##### Fig S2 (Histogram of change)
+
+```{r hist_change}
+
+ Prop_results %>% 
+  gather("time_step","change",per_early,per_mid) %>% 
+  filter(variable == "mean_eez" & 
+           !is.na(change)
+         ) %>%
+ggplot() +
+  geom_density(
+               aes(
+                 x = ifelse(change >= 100,100,change),
+                 # x = change,
+                 fill = ifelse(time_step == "per_early","q",time_step)
+                 # fill = time_step,
+                 
+               ),
+               # stat = "count",
+               # alpha= 0.8,
+               size=0.1,
+               # position = "stack"
+  ) +
+  scale_y_continuous("Density",
+                     # breaks = seq(0,90,10),
+                     # limits = c(0,100)
+  ) +
+  scale_x_continuous("Percentage Change",
+                     breaks = seq(-75,500,25)
+  ) +
+  my_ggtheme_p() +
+  theme(legend.position = "right") +
+  scale_fill_viridis(discrete = T, 
+                     option = "plasma",
+                     alpha = 0.5,
+                     name = "Time Step", labels = c("Middle", "Early")
+                     ) +
+  coord_flip() +
+  ggsave("./Figures/hist_change.png",
+         width = 6,
+         height = 6,
+         units = "in"
+  )
+
+```
+
+
+
+## Sensitivity analysis
+
+Testing different Per values for the centroids 
+
+```{r data_loading, eval = T, echo = F}
+
+# Get taxon list
+Taxon_list_sens <- list.files(my_path("R",extra_path = "Toe_Sens_per/Emergence_2005_p20"))
+
+# clean names for function
+Taxon_list_sens <- gsub("_.*","",Taxon_list_sens) 
+
+# SAU exploited species list
+Exploited_spp_list <- my_path("G","SAU","exploited_species_list.csv",read = T) %>%
+  clean_names() %>% 
+  pull(taxon_name)
+
+# Load all sp in one table
+sen_list <- c(20,50,90,95)
+
+
+read_sen <- function(sen){
+  
+  if(sen != 95){
+  
+  level <- paste0("Emergence_2005_p",sen)
+  extra_path <- paste0("Toe_Sens_per/",level)
+  
+  # Get taxon list
+  Taxon_list_sens <- list.files(my_path("R",extra_path = extra_path))
+  
+  Paths_sen <- paste(my_path("R",extra_path = extra_path),Taxon_list_sens,sep="")
+  
+  }else{
+    
+  Taxon_list_sens <- list.files(my_path("R",extra_path = "Toe_Sens_per/Emergence_2005_p20"))
+  
+  Paths <- paste(my_path("R",extra_path = "Emergence_2005"),Taxon_list_emer,"_emergence.txt",sep="")
+
+  }
+  
+  Eme_sen <- bind_rows(lapply(Paths_sen, fread)) %>% 
+    mutate(sen = sen) %>% 
+    filter(
+      n_ens == 10
+    ) %>% 
+    left_join(Neighbours,
+              by = c("eez_name","eez_neighbour")
+    ) %>% 
+    rename(sf_eez_name=eez_name) %>% 
+    left_join(Matching_names,
+              by=  "sf_eez_name") %>% 
+    clean_names()
+  
+  return(Eme_sen)
+  
+}
+
+Sen_data <- bind_rows(
+  lapply(sen_list,read_sen)
+) %>% 
+  filter(
+    tresh== "tresh_one"
+  )
+
+```
+
+```{r data_analysis, eval = T, echo = F}
+
+# Per Stock
+sen_stock_d <-  
+  Sen_data %>% 
+  left_join(Neighbours) %>%
+  group_by(taxon_key,neighbour_id,sen) %>% 
+  summarise(
+    taxon_emer = min(emerging_yr)
+  ) %>% 
+  group_by(taxon_emer,sen) %>% 
+  summarise(
+    n_tax = n()
+  ) %>% 
+  group_by(sen) %>% 
+  mutate(
+    com_sum = cumsum(n_tax),
+    level = "stock"
+  )
+
+
+#  EEZ data
+sen_eez_d <-  Sen_data %>% 
+  left_join(Neighbours) %>% 
+  filter(n_ens == 10) %>% 
+  group_by(sf_eez_name,sen) %>% 
+  summarise(
+    taxon_emer = min(emerging_yr)
+  ) %>% 
+  group_by(taxon_emer,sen) %>% 
+  summarise(
+    n_tax = n()
+  ) %>% 
+  group_by(sen) %>% 
+  mutate(
+    com_sum = cumsum(n_tax),
+    level = "eez"
+  )
+
+
+# Plot Data
+sen_plot_data <- sen_stock_d %>% 
+  bind_rows(sen_eez_d) %>% 
+  mutate(
+    # total = ifelse(level == "stock",length(unique(Eme_Res$taxon_key)),length(unique(Eme_Res$sf_eez_name))),
+    total = ifelse(level == "stock",max(stock_d$com_sum),max(eez_d$com_sum)),
+    per = com_sum/total*100
+  ) %>% 
+  gather("metric","value",com_sum,per) %>% 
+  ungroup() %>% 
+  mutate(
+    my_facet = ifelse(metric == "per","Percentage (%)","Cumulative sum (n stocks)"),
+    label = ifelse(total == max(stock_d$com_sum),"Total number of emerging stocks","Total number of EEZs"),
+  sen = paste("Percentile above",sen,"%") 
+  )
+
+# Plot me
+ggplot() +
+  geom_area(data = subset(sen_plot_data, level == "stock"),
+            aes(
+              x = as.numeric(taxon_emer),
+              y = value,
+              fill = level
+            ),
+            size=0.5,
+            colour="black"
+  )  +
+  geom_area(data = subset(sen_plot_data, level == "eez"),
+            aes(
+              x = as.numeric(taxon_emer),
+              y = value,
+              fill = level
+            ),
+            size=0.5,
+            colour="black"
+  )  +
+  # Shameslly plot it again to fix colors
+  geom_area(data = subset(sen_plot_data, level == "stock" & my_facet == "Percentage (%)"),
+            aes(
+              x = as.numeric(taxon_emer),
+              y = value,
+              fill = level
+            ),
+            size=0.5,
+            colour="black"
+            ) +
+  facet_wrap(~my_facet + sen,
+             scales = "free",
+             nrow=2) + 
+  scale_y_continuous("",
+                     expand = c(0,0)
+                     ) +
+  scale_x_continuous("Time of emergence",
+                     breaks = seq(2000,2100,25),
+                     limits = c(2005,2100),
+                     label = c(seq(2000,2075,25),">2100"),
+                     expand = c(0,0)
+  ) +
+  my_ggtheme_p() +
+  theme(
+    legend.position = "right",
+    # strip.text.x = element_blank(),
+    panel.spacing = unit(3, "lines") # space between plots
+  ) +
+  guides(fill=guide_legend(title= "Level", reverse=FALSE)) +
+  scale_fill_viridis(discrete = T,
+                     begin = 0.1, 
+                     end = 0.7,
+                     labels = c("EEZs","Stocks")
+  ) +
+  ggsave("./Figures/toe_sen.png",
+  width = 14,
+  height = 10,
+  units = "in"
+  )
+
+```
 
 # END PAPER
 
@@ -3317,8 +3732,70 @@ ggtheme_map() +
 
 ```
 
+### Arctic and Brasil missing species
+
+```{r arctic, eval = F, echo =F}
+
 
 # Old Code
+
+###### Table.1 Multy linear model
+
+```{r multiple_reg, eval = F, echo = F}
+
+Arctic <- c("Canada (Arctic)","USA (Alaska, Arctic)", "Russia (Laptev to Chukchi Sea)")
+
+
+can_us_arctic <- Transboundary_spp %>% 
+  filter(eez_name == "Canada (Arctic)",
+         eez_neighbour == "USA (Alaska, Arctic)")
+
+arctic_spp <- Transboundary_spp %>% 
+  filter(eez_name %in% Arctic,
+         eez_neighbour %in% Arctic)
+
+
+
+arctic_spp <- Spp_depth %>% 
+  filter(taxon_key %in% can_us_arctic$taxon_key)
+
+
+# Transbounudary species that will see no change
+# 600252 Mallotus villosus  (Capelin)
+# 600315 Eleginus gracilis (Safforn cod)
+# 601520 Clupea pallasii  (Pacific herring)
+
+Eme_Res %>% 
+  filter(taxon_key %in% can_us_arctic$taxon_key) %>% 
+  # filter(sau_eez_name %in% arctic_spp$eez_name) %>% 
+  View(.)
+
+
+```
+
+
+```{r Brasa, eval = F, echo =F}
+
+brasil <- Transboundary_spp %>% 
+  filter(eez_name == "Brazil")
+
+brasil_spp <- Spp_depth %>% 
+  filter(taxon_key %in% brasil$taxon_key)
+
+# Transbounudary species that will see no change
+# 601590  Brevoortia pectinata  
+# 690022  Pleoticus muelleri 
+# 690023  Illex argentinus  
+# 690338  Penaeus paulensis 
+
+
+Eme_Res %>% 
+  filter(taxon_key %in% brasil_spp$taxon_key) %>% 
+  View(.)
+
+
+```
+
 
 
 ```{r TransIndex, eval = F, echo = F}

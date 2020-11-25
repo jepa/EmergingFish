@@ -1,0 +1,117 @@
+---
+output:
+  bookdown::pdf_book:
+    toc : no
+    keep_tex: no
+    number_sections: yes
+header-includes: #allows you to add in your own Latex packages
+- \usepackage{float} #use the 'float' package
+- \floatplacement{figure}{H} #make every figure with caption = h
+- \floatplacement{table}{H}
+- \usepackage{caption}
+- \captionsetup[figure]{name = Figure A3}
+- \captionsetup[table]{name = Table A3}
+---
+
+```{r setup, eval = T, echo=F, warning=F,message=F, results='hide'}
+library(MyFunctions)
+#### Library ####
+packages <- c(
+  "dplyr", # Data manipulation
+  "knitr",
+  "kableExtra",
+  "png",
+  "grid",
+  "janitor"
+)
+my_lib(packages)
+```
+
+
+```{r toeFigureS1, eval = T,  echo = F, fig.width=9, fig.height=4, fig.cap =  "World Exclusive Economic Zones used in this study as devided by the Sea Around Us and their centroids (points)."}
+
+img <- readPNG("../Figures/Supp1.png")
+grid.raster(img)
+
+```
+
+```{r toeFigureS2, eval = T,  echo = F, fig.width=9, fig.height=4, fig.cap = "Graphical representation of the transboundary index (TI) to determine the time of emergence of transboundary stocks. The index is based on the distance between the distributional centroid of the transboundary stock and the geographic centroid of the neighbouring Exclusive Economic Zones sharing the stock (Top panel). Time of emergence is defined as the first year when the TI overpasses historical values (Bottom panel)."}
+
+img <- readPNG("../Figures/Supp2.png")
+grid.raster(img)
+
+```
+
+```{r toeFigureS3, eval = T,  echo = F, fig.width=14, fig.height=7, fig.cap ="Sensitivity analysis of the number of grid cells with projected stock abundance within the neighbouring EEZs sharing the stock. The level used in this article was the top 95th percentile (e.g., far right column)."}
+
+img <- readPNG("../Figures/Supp3.png")
+grid.raster(img)
+
+```
+
+
+```{r toeFigureS4, eval = T,  echo = F, fig.width=4, fig.height=4, fig.cap =  "Average Time  of Emergence and standar dviation for a 64% confidence treshold  (purple) and a 98% confidence teshold (yellow)"}
+
+img <- readPNG("../Figures/Supp4.png")
+grid.raster(img)
+
+```
+
+
+
+```{r toeFigureS5, eval = T,  echo = F, fig.width=4, fig.height=4, fig.cap =  "Distribution of Stock Share Ratio percentage change by the early (2021-2040) and middle (2040-2060) 21st centurury relative to today (1951-2005)"}
+
+img <- readPNG("../Figures/Supp5.png")
+grid.raster(img)
+
+```
+
+<!-- ![Figure S2. Distribution of Stock Share Ratio percentage change by the early (2021-2040) and middle (2040-2060) $21^{st}$ centurury relative to today (1951-2005))](../Figures/Supp2.png) -->
+
+
+
+```{r toeFigureS6, eval = T,  echo = F, fig.width=9, fig.height=12, fig.cap =  "Changes in Stock Share Ration by 2050 (2041-2060) relative to 1951-2005. Lines represent the average gain of transboundary stock share ratio with srrows going from the losing EEZ (point) to the winner (arrowhead). Polygons represent the percentage of initial species that will see a shift. Panel B zooms in to specific areas shown in grey boxes of A."}
+
+img <- readPNG("../Figures/Supp6.png")
+grid.raster(img)
+
+```
+
+
+
+```{r toeTableS1, eval = T, echo = F}
+
+read.csv("~/GitHub/TransEmergence/Tables/kw_regional.csv") %>% 
+  select(-statistic,
+         "Habitat preference comparrison" = comparrison,
+         "Significan level" = signif.level,
+         "Observation difference" = dif.com.obs.dif,
+         "Critical difference" = dif.com.critical.dif,
+          "K-W Difference" = dif.com.difference) %>% 
+  kable("latex",
+        booktabs = T,
+        caption = "Statistical results for multiple comparison test after Kruskal-Wallis on time of emergence across United Nations sub regions"
+  ) %>% 
+  kable_styling(full_width = F,
+                position = "center")
+
+```
+
+
+```{r toeTableS2, eval = T, echo = F}
+
+read.csv("~/GitHub/TransEmergence/Tables/kw_habitat.csv") %>% 
+  select(-statistic,
+         "Sub region comparrison" = comparrison,
+         "Significan level" = signif.level,
+         "Observation difference" = dif.com.obs.dif,
+         "Critical difference" = dif.com.critical.dif,
+          "K-W Difference" = dif.com.difference) %>% 
+  kable("latex",
+        booktabs = T,
+        caption = "Statistical results for multiple comparison test after Kruskal-Wallis on time of emergence across United Nations sub regions"
+  ) %>% 
+  kable_styling(full_width = F,
+                position = "center")
+
+```
