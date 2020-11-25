@@ -2027,89 +2027,135 @@ summary(lm(lm_eez$taxon_emer~lm_eez$value))
 ```
 
 
-```{r Time_lapse_plot}
+```{r Time_lapse_plot, eval = T, echo = F}
 
-#### Both plots for tresh one
-#  Embarrasing coding Juliano! 
+### Three plots
 
-ggplot() +
-  geom_area(data = subset(plot_data, level == "stock"),
+count_eez_plot <- ggplot() +
+  geom_area(data = subset(plot_data, metric == "com_sum" & level == "eez"),
             aes(
               x = as.numeric(taxon_emer),
               y = value,
               fill = level
             ),
-            # alpha= 1,
             size=0.5,
             colour="black"
   )  +
-  geom_area(data = subset(plot_data, level == "eez"),
+  scale_y_continuous("Cumulative number of EEZs (n)",
+                     expand = c(0,0)
+                     ) +
+  scale_x_continuous("",
+                     breaks = seq(2000,2100,25),
+                     limits = c(2005,2100),
+                     # label = c(seq(2000,2075,25),">2100"),
+                     expand = c(0, 0)
+  ) +
+  my_ggtheme_p() +
+  theme(legend.position = "") +
+  guides(fill=guide_legend(title= "Level", reverse=FALSE)) +
+  scale_fill_viridis(discrete = T,
+                     begin = 0.1, 
+                     end = 0.1
+  )
+
+
+
+#### Count stock plot 
+count_stock_plot <- ggplot() +
+  geom_area(data = subset(plot_data, metric == "com_sum" & level == "stock"),
             aes(
               x = as.numeric(taxon_emer),
               y = value,
               fill = level
             ),
-            # alpha= 0.8,
             size=0.5,
             colour="black"
   )  +
-  # Shameslly plot it again to fix colors
+  scale_y_continuous("Cumulative number of stocks (n)",
+                     expand = c(0,0)
+                     ) +
+  scale_x_continuous("Time of emergence of transboundary index",
+                     breaks = seq(2000,2100,25),
+                     limits = c(2005,2100),
+                     # label = c(seq(2000,2075,25),">2100"),
+                     expand = c(0, 0)
+  ) +
+  my_ggtheme_p() +
+  theme(legend.position = "") +
+  guides(fill=guide_legend(title= "Level", reverse=FALSE)) +
+  scale_fill_viridis(discrete = T,
+                     begin = 0.7, 
+                     end = 0.7
+  )
+
+
+# Percentage plot
+percentage_plot <- ggplot() +
+  geom_area(data = subset(plot_data, level == "eez" & my_facet == "Percentage (%)"),
+            aes(
+              x = as.numeric(taxon_emer),
+              y = value,
+              fill = level
+            ),
+            size=0.5,
+            colour="black"
+  ) + 
   geom_area(data = subset(plot_data, level == "stock" & my_facet == "Percentage (%)"),
             aes(
               x = as.numeric(taxon_emer),
-              # x = reorder(as.numeric(taxon_emer),level),
               y = value,
               fill = level
             ),
-            # alpha= 1,
             size=0.5,
             colour="black"
-  )  +
-  # geom_line(data = subset(plot_data, metric == "com_sum"),
-  #           aes(
-  #             x = as.numeric(taxon_emer),
-  #             y = total,
-  #             fill = level
-  #           ),
-  #           colour="grey30",
-  # )  +
-  # geom_text(data = subset(plot_data, metric == "com_sum"),
-  #           aes(
-  #             x = 2037,
-  #             y = total+5,
-  #             label = label
-  #           ),
-  #           size = 3,
-  #           colour="grey30",
-  #           hjust=0.6,
-  # )  +
-  facet_wrap(~my_facet,
-             scales = "free") + 
-  scale_y_continuous("",
+  ) + 
+  scale_y_continuous("Cumulative proportion of the total (%)",
                      expand = c(0,0)
-                     ) +
-  scale_x_continuous("Time of emergence",
+  ) +
+  scale_x_continuous("",
                      breaks = seq(2000,2100,25),
                      limits = c(2005,2100),
-                     label = c(seq(2000,2075,25),">2100"),
+                     # label = c(seq(2000,2075,25),">2100"),
                      expand = c(0, 0)
   ) +
   my_ggtheme_p() +
   theme(
     legend.position = "right",
-    strip.text.x = element_blank(),
-    panel.spacing = unit(3, "lines") # space between plots
+    strip.text.x = element_blank()
   ) +
   guides(fill=guide_legend(title= "Level", reverse=FALSE)) +
   scale_fill_viridis(discrete = T,
                      begin = 0.1, 
                      end = 0.7,
                      labels = c("EEZs","Stocks")
-  ) +
-  ggsave("./Figures/cumu_per_freq.png",
-  width = 10,
-  height = 5,
-  units = "in"
+  )
+
+
+# Legend
+  legend <- get_legend(percentage_plot)
+  
+  percentage_plot <- percentage_plot + 
+    theme(legend.position = "")
+  
+
+# Draw figure
+  plot_all <- ggdraw() +
+    # Latin America and the Car.
+    draw_plot(count_eez_plot, x = 0.01, y = 0, width = 0.28, height = 1) +
+    # Europe
+    draw_plot(count_stock_plot, x = 0.28, y = 0, width = 0.28, height = 1) +
+    # Percentage plot
+    draw_plot(percentage_plot, x = 0.56, y = 0 , width = 0.28, height = 1) +
+    # legend
+    draw_plot(legend, x = 0.84, y = 0 , width = 0.28, height = 1)
+  
+  
+  # Save plot
+  save_plot(
+    "./Figures/cumu_per_freq.png",
+    plot_all,
+    base_height = 5,
+    base_width = 12
   )
 
 
@@ -2621,7 +2667,7 @@ ggplot(Buble_data) +
   ) +
   scale_size("Number of\nemerging stock") +
   ggsave("./Figures/bubble_plot.png",
-         width = 8,
+         width = 12,
          height = 8,
          units = "in"
   )
