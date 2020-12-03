@@ -19,7 +19,7 @@ library(MyFunctions)
 packages <- c(
   "dplyr", # Data manipulation
   "knitr",
-  "kableExtra",
+  # "kableExtra",
   "png",
   "grid",
   "janitor"
@@ -88,12 +88,13 @@ read.csv("~/GitHub/TransEmergence/Tables/kw_regional.csv") %>%
          "Observation difference" = dif.com.obs.dif,
          "Critical difference" = dif.com.critical.dif,
           "K-W Difference" = dif.com.difference) %>% 
-  kable("latex",
-        booktabs = T,
-        caption = "Statistical results for multiple comparison test after Kruskal-Wallis on time of emergence across United Nations sub regions"
-  ) %>% 
-  kable_styling(full_width = F,
-                position = "center")
+  kable(caption = "Statistical results for multiple comparison test after Kruskal-Wallis on time of emergence across United Nations sub regions")
+  # kable("latex",
+        # booktabs = T,
+        # caption = "Statistical results for multiple comparison test after Kruskal-Wallis on time of emergence across United Nations sub regions"
+  # ) %>% 
+  # kable_styling(full_width = F,
+                # position = "center")
 
 ```
 
@@ -107,11 +108,15 @@ read.csv("~/GitHub/TransEmergence/Tables/kw_habitat.csv") %>%
          "Observation difference" = dif.com.obs.dif,
          "Critical difference" = dif.com.critical.dif,
           "K-W Difference" = dif.com.difference) %>% 
-  kable("latex",
+  kable(
         booktabs = T,
         caption = "Statistical results for multiple comparison test after Kruskal-Wallis on time of emergence across United Nations sub regions"
-  ) %>% 
-  kable_styling(full_width = F,
-                position = "center")
+  )  
+  # kable("latex",
+  #       booktabs = T,
+  #       caption = "Statistical results for multiple comparison test after Kruskal-Wallis on time of emergence across United Nations sub regions"
+  # ) %>% 
+  # kable_styling(full_width = F,
+  #               position = "center")
 
 ```
