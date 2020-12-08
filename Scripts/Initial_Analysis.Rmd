@@ -2408,7 +2408,7 @@ for(i in 1:2){
              y = -69,
              label = "Participation (%)",
              color="black",
-             size=4,
+             size=5,
              angle=0,
              fontface="bold",
              hjust=0) +
@@ -2429,7 +2429,7 @@ for(i in 1:2){
              y = -85,
              label = "Time of Emergence",
              color="black", 
-             size=4, 
+             size=5, 
              angle=0, 
              fontface="bold",
              hjust=0) +
@@ -2458,7 +2458,7 @@ for(i in 1:2){
     # geom_hline(yintercept = c(-50,0,50,80)) +
     my_ggtheme_m() +
     theme(
-      legend.box.margin = margin(t = -64, l = 249),
+      legend.box.margin = margin(t = -80, l = 40),
       legend.text = element_blank(),
       legend.key.width = unit(5, "line")
     )
@@ -2469,7 +2469,7 @@ for(i in 1:2){
   # Regional Boxplot
   ## --------------- ##
   
-  boxplot <- Eme_Res %>% 
+  boxplot_data <- Eme_Res %>% 
     filter(tresh == "Tresh_one",
            !is.na(un_sub_region)) %>%
     group_by(un_sub_region) %>% 
@@ -2477,8 +2477,22 @@ for(i in 1:2){
     left_join(Eme_Res) %>% 
     filter(tresh == "Tresh_one",
            !is.na(un_sub_region)) %>% 
-    mutate(un_sub_region = ifelse(str_detect(un_sub_region,"Latin"),"Ltn. Ame. and the Car.",paste(un_sub_region))) %>% 
-    ggplot() +
+    mutate(un_sub_region = ifelse(str_detect(un_sub_region,"Latin"),"Ltn. Ame. and\nthe Car.",
+                                  ifelse(str_detect(un_sub_region,"Australia"),"Aus. and New Z.",
+                                         ifelse(str_detect(un_sub_region,"Sub-Saharan"),"Sub-Saharan\nAfrica",
+                                         paste(un_sub_region)))
+    )
+    )
+    
+    
+    boxplot_data$un_sub_region <- boxplot_data$un_sub_region %>% 
+  gsub("Northern","N.",.) %>% 
+  gsub("Southern","S.",.) %>% 
+  gsub("Western","W.",.) %>% 
+  gsub("Eastern","E.",.) %>% 
+  gsub("South-eastern","S.E.",.)
+    
+  boxplot <- ggplot(boxplot_data) +
     geom_boxplot(
       aes(
         # x = un_sub_region,
@@ -2498,8 +2512,10 @@ for(i in 1:2){
     ylab("Time of Emergence") +
     my_ggtheme_p() +
     theme(
-      axis.text.x = element_text(size = 10, angle = 45, face = "plain", hjust = 1), 
-      strip.text.x = element_text(size = 14, colour = "black"), 
+      axis.text.x = element_text(size = 16, angle = 45, face = "plain", hjust = 1), 
+      strip.text.x = element_text(size = 18, colour = "black"), 
+      axis.title.y = element_text(size = 18),
+      axis.text.y = element_text(size = 16), 
       # axis.ticks.x = element_blank(),
       legend.position = "right"
     )
