@@ -28,14 +28,14 @@ my_lib(packages)
 ```
 
 
-```{r toeFigureS1, eval = T,  echo = F, fig.width=9, fig.height=4, fig.cap =  "World Exclusive Economic Zones used in this study as devided by the Sea Around Us and their centroids (points)."}
+```{r toeFigureS1, eval = T,  echo = F, fig.width=12, fig.height=7, fig.cap =  "World Exclusive Economic Zones used in this study as defined by the Sea Around Us and their centroids (points)."}
 
 img <- readPNG("../Figures/Supp1.png")
 grid.raster(img)
 
 ```
 
-```{r toeFigureS2, eval = T,  echo = F, fig.width=9, fig.height=4, fig.cap = "Graphical representation of the transboundary index (TI) to determine the time of emergence of transboundary stocks. The index is based on the distance between the distributional centroid of the transboundary stock and the geographic centroid of the neighbouring Exclusive Economic Zones sharing the stock (Top panel). Time of emergence is defined as the first year when the TI overpasses historical values (Bottom panel)."}
+```{r toeFigureS2, eval = T,  echo = F, fig.width=12, fig.height=5, fig.cap = "Graphical representation of the transboundary index (TI) to determine the time of emergence of transboundary stocks. The index is based on the distance between the distributional centroid of the transboundary stock and the geographic centroid of the neighbouring Exclusive Economic Zones sharing the stock (Top panel). Time of emergence is defined as the first year when the TI overpasses historical values (Bottom panel)."}
 
 img <- readPNG("../Figures/Supp2.png")
 grid.raster(img)
@@ -88,13 +88,13 @@ read.csv("~/GitHub/TransEmergence/Tables/kw_regional.csv") %>%
          "Observation difference" = dif.com.obs.dif,
          "Critical difference" = dif.com.critical.dif,
           "K-W Difference" = dif.com.difference) %>% 
-  kable(caption = "Statistical results for multiple comparison test after Kruskal-Wallis on time of emergence across United Nations sub regions")
-  # kable("latex",
-        # booktabs = T,
-        # caption = "Statistical results for multiple comparison test after Kruskal-Wallis on time of emergence across United Nations sub regions"
-  # ) %>% 
-  # kable_styling(full_width = F,
-                # position = "center")
+  # kable(caption = "Statistical results for multiple comparison test after Kruskal-Wallis on time of emergence across United Nations sub regions")
+  kable("latex",
+        booktabs = T,
+        caption = "Statistical results for multiple comparison test after Kruskal-Wallis on time of emergence across United Nations sub regions"
+  ) %>%
+  kable_styling(full_width = T,
+                position = "center")
 
 ```
 
@@ -108,15 +108,15 @@ read.csv("~/GitHub/TransEmergence/Tables/kw_habitat.csv") %>%
          "Observation difference" = dif.com.obs.dif,
          "Critical difference" = dif.com.critical.dif,
           "K-W Difference" = dif.com.difference) %>% 
-  kable(
-        booktabs = T,
-        caption = "Statistical results for multiple comparison test after Kruskal-Wallis on time of emergence across United Nations sub regions"
-  )  
-  # kable("latex",
+  # kable(
   #       booktabs = T,
   #       caption = "Statistical results for multiple comparison test after Kruskal-Wallis on time of emergence across United Nations sub regions"
-  # ) %>% 
-  # kable_styling(full_width = F,
-  #               position = "center")
+  # )  
+  kable("latex",
+        booktabs = T,
+        caption = "Statistical results for multiple comparison test after Kruskal-Wallis on time of emergence across United Nations sub regions"
+  ) %>%
+  kable_styling(full_width = F,
+                position = "center")
 
 ```
