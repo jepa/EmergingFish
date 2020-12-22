@@ -28,21 +28,22 @@ my_lib(packages)
 ```
 
 
-```{r toeFigureS1, eval = T,  echo = F, fig.width=12, fig.height=7, fig.cap =  "World Exclusive Economic Zones used in this study as defined by the Sea Around Us and their centroids (points)."}
+```{r toeFigureS1, eval = T,  echo = F, fig.width=12, fig.height=5, fig.cap =  "World Exclusive Economic Zones used in this study as defined by the Sea Around Us and their centroids (points)."}
 
 img <- readPNG("../Figures/Supp1.png")
 grid.raster(img)
 
 ```
 
-```{r toeFigureS2, eval = T,  echo = F, fig.width=12, fig.height=5, fig.cap = "Graphical representation of the transboundary index (TI) to determine the time of emergence of transboundary stocks. The index is based on the distance between the distributional centroid of the transboundary stock and the geographic centroid of the neighbouring Exclusive Economic Zones sharing the stock (Top panel). Time of emergence is defined as the first year when the TI overpasses historical values (Bottom panel)."}
+```{r toeFigureS2, eval = T,  echo = F, fig.width=12, fig.height=5, fig.cap = "Graphical representation of the transboundary index (TI) to determine the time of emergence of transboundary stocks. The index is based on the distance between the distributional centroid of the transboundary stock and the geographic centroid of the neighbouring Exclusive Economic Zones sharing the stock (Top panel). Time of emergence is defined as the first year when the TI overpasses historical values (Bottom panel).", fig.scap="Graphical representation of the transboundary index (TI) to determine the time of emergence of transboundary stocks.",out.extra=''}
+
 
 img <- readPNG("../Figures/Supp2.png")
 grid.raster(img)
 
 ```
 
-```{r toeFigureS3, eval = T,  echo = F, fig.width=14, fig.height=7, fig.cap ="Sensitivity analysis of the number of grid cells with projected stock abundance within the neighbouring EEZs sharing the stock. The level used in this article was the top 95th percentile (e.g., far right column)."}
+```{r toeFigureS3, eval = T,  echo = F, fig.width=14, fig.height=7, fig.cap ="Sensitivity analysis of the number of grid cells with projected stock abundance within the neighbouring EEZs sharing the stock. The level used in this article was the top 95th percentile (e.g., far right column).", fig.scap="Sensitivity analysis of the number of grid cells with projected stock abundance within the neighbouring EEZs sharing the stock",out.extra=''}
 
 img <- readPNG("../Figures/Supp3.png")
 grid.raster(img)
@@ -70,7 +71,7 @@ grid.raster(img)
 
 
 
-```{r toeFigureS6, eval = T,  echo = F, fig.width=9, fig.height=12, fig.cap =  "Changes in Stock Share Ration by 2050 (2041-2060) relative to 1951-2005. Lines represent the average gain of transboundary stock share ratio with srrows going from the losing EEZ (point) to the winner (arrowhead). Polygons represent the percentage of initial species that will see a shift. Panel B zooms in to specific areas shown in grey boxes of A."}
+```{r toeFigureS6, eval = T,  echo = F, fig.width=9, fig.height=12, fig.cap =  "Changes in Stock Share Ration by 2050 (2041-2060) relative to 1951-2005. Lines represent the average gain of transboundary stock share ratio with srrows going from the losing EEZ (point) to the winner (arrowhead). Polygons represent the percentage of initial species that will see a shift. Panel B zooms in to specific areas shown in grey boxes of A.", fig.scap="Changes in Stock Share Ration by 2050 (2041-2060) relative to 1951-2005.", out.extra=''}
 
 img <- readPNG("../Figures/Supp6.png")
 grid.raster(img)
