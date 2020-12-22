@@ -889,7 +889,8 @@ TransIndex <- function(Centroids, # Expecting the results from the GetCentroids 
       gather("tresh","YesNo",tresh_one,tresh_two) %>% 
       filter(!is.na(YesNo)) %>% 
       group_by(taxon_key,neighbour_id,n_ens,tresh) %>%
-      summarise(emerging_yr= min(year)) %>%
+      # summarise(emerging_yr= min(year)) %>% # First year that treshold is crossed
+      summarise(emerging_yr= max(year)) %>% # Last year that treshold is crossed
       left_join(EEZ_ids,
                 by = "neighbour_id") %>%
       ungroup() %>%
