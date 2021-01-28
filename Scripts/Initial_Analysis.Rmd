@@ -214,7 +214,7 @@ This part of the analysis estimates the Stock Share Ratio and its change under c
 
 ### Fun `EstPropChange`
 
-```{r EstPropChange, eval = T, echo = F}
+```{r EstPropChange, eval = F, echo = F}
 
 EstPropChange <- function(taxon_key,
                           year,
@@ -380,7 +380,7 @@ EstPropChange <- function(taxon_key,
 
 ### Proportion Control Panel
 
-```{r Proportion_control_panel, eval = T, echo = F}
+```{r Proportion_control_panel, eval = F, echo = F}
 
 ## ----------------- ##
 # Data needed for estimating year of emergence
@@ -425,7 +425,7 @@ spp_list <- spp_list[!spp_list %in% modeled_spp]
 
 ### Proportion routine
 
-```{r Proportion_routine, eval = T, echo = F}
+```{r Proportion_routine, eval = F, echo = F}
 
 ####_______________________ ####
 # Estimating proportion change
@@ -919,6 +919,7 @@ GetTransIndex <- function(taxon_key,
                           ensemble_list,
                           Neighbours,
                           eez_centroid,
+                          p = NA,
                           Plot = F){
   t_start <- Sys.time()
   print("Starting Step One")
@@ -932,7 +933,8 @@ GetTransIndex <- function(taxon_key,
              year = year_df$year,
              data_type = data_type,
              Neighbours = Neighbours,
-             eez_centroid = eez_centroid
+             eez_centroid = eez_centroid,
+             p = p
              )
     )
   
@@ -1063,12 +1065,12 @@ rand_plot <- sample(spp_reman,5)
 
 ### Emerging Routine
 
-```{r Emerging_routine, eval = F, echo = F}
+```{r Emerging_routine, eval = T, echo = F}
 
 ####_______________________ ####
 # Estimating year of eergence
 ####_______________________ ####
-n_cores <- 24
+# n_cores <- 24
 t_start <- Sys.time()
 
 gc()
@@ -1082,6 +1084,7 @@ gc()
                ensemble_list = ensemble_list,
                Neighbours = Neighbours,
                eez_centroid = eez_centroid,
+               p = 0.90,
                Plot = F
       )
     )
@@ -1132,7 +1135,7 @@ stopCluster(cl)
 
 ##### Fun `GetEnvData`
 
-```{r get_env_data, eval = T, echo = T}
+```{r get_env_data, eval = F, echo = T}
 
 getEnvVar=function(yr,ensemble,variable){
   
@@ -1896,7 +1899,7 @@ Main_data <- Eme_Res %>% # 19728
 ###  Year of Eergence Analysis
 
 
-```{r ToE_generals,  eval = T, echo = T}
+```{r ToE_generals,  eval = F, echo = T}
 
 # Total number of emerging stocks
 
@@ -1930,7 +1933,7 @@ Eme_Res %>%
 
 ##### Fig. 1. Accumulative plots
 
-```{r Time_lapse_data,  eval = T, echo = T}
+```{r Time_lapse_data,  eval = F, echo = T}
 
 # Per Stock
 stock_d <-  
@@ -2028,7 +2031,7 @@ summary(lm(lm_eez$taxon_emer~lm_eez$value))
 ```
 
 
-```{r Time_lapse_plot, eval = T, echo = F}
+```{r Time_lapse_plot, eval = F, echo = F}
 
 ### Three plots
 
@@ -2167,7 +2170,7 @@ percentage_plot <- ggplot() +
 
 ###### Mean ToE and vulnerabillity Index
 
-```{r emergence_map, eval = T}
+```{r emergence_map, eval = F}
 
 # Per EEZs
 Eez_d_hist <- Eme_Res %>% 
@@ -3395,7 +3398,7 @@ ggplot() +
 
 Testing different Per values for the centroids 
 
-```{r data_loading, eval = T, echo = F}
+```{r data_loading, eval = F, echo = F}
 
 # Get taxon list
 Taxon_list_sens <- list.files(my_path("R",extra_path = "Toe_Sens_per/Emergence_2005_p20"))
@@ -3458,7 +3461,7 @@ Sen_data <- bind_rows(
 
 ```
 
-```{r data_analysis, eval = T, echo = F}
+```{r data_analysis, eval = F, echo = F}
 
 # Per Stock
 sen_stock_d <-  
@@ -4095,7 +4098,7 @@ if(file.exists("~/Desktop/spp_df.csv") == FALSE){
 
 ###### With relation to neighbours
 
-```{r time_emergence_map,  eval = T, echo = T}
+```{r time_emergence_map,  eval = F, echo = T}
 
 
 ##_----------------------- #
@@ -4356,7 +4359,7 @@ ggplot() +
 
 
 
-```{r histo,  eval = T, echo = T}
+```{r histo,  eval = F, echo = T}
 
 # First time a Species becomes emergent
 Eme_Res %>% 
@@ -4484,7 +4487,7 @@ stock_d_hist %>%
 
 ##### Fun `GetEnvData`
 
-```{r get_env_data, eval = T, echo = T}
+```{r get_env_data, eval = F, echo = T}
 
 getEnvVar=function(yr,ModelRCP,RCP,Variable){
   
@@ -4572,7 +4575,7 @@ F_BData <- F_BData %>%
 ```
 
 
-```{r temp_plot, eval = T, echo = T}
+```{r temp_plot, eval = F, echo = T}
 
 ### NEED TO RUN TIME LAPSE CHUNK FIRST TO GET ACCUMULATIVE DATA
 
@@ -4626,7 +4629,7 @@ stock_d %>%
 ```
 
 
-```{r Scatter_plot,  eval = T, echo = T}
+```{r Scatter_plot,  eval = F, echo = T}
 
 
 
