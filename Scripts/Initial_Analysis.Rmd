@@ -21,7 +21,7 @@ library(MyFunctions)
 packages <- c(
   "dbemImport",
   "tidyverse",
-  "here", # for dbem_import `here()`
+  "here", # for dbem_import `here()`da
   "data.table", #dbem_import `fread()`
   "readxl", # for reading excell files
   "janitor", # for clearing names
@@ -467,7 +467,7 @@ GetCentroids <- function(taxon_key,
                          path,
                          Neighbours,
                          eez_centroid,
-                         p = 0.95 # percentile of data for central distribution
+                         p # percentile of data for central distribution
                          ){
   
   # ----------------- #
@@ -880,23 +880,32 @@ TransIndex <- function(Centroids, # Expecting the results from the GetCentroids 
     
   }else{
   
-    Final_Result <- mean_sd_index %>%
+    Raw_Result <- mean_sd_index %>%
       filter(year > Hist_y) %>%
       mutate(
         tresh_one = ifelse(trend > (historic_sd$hist_mean+historic_sd$noise) | trend < (historic_sd$hist_mean-historic_sd$noise),"One",NA),
         tresh_two = ifelse(trend > (historic_sd$hist_mean+(2*historic_sd$noise)) | trend < (historic_sd$hist_mean-(2*historic_sd$noise)),"Two",NA)
       ) %>%
-      gather("tresh","YesNo",tresh_one,tresh_two) %>% 
-      filter(!is.na(YesNo)) %>% 
-      group_by(taxon_key,neighbour_id,n_ens,tresh) %>%
-      # summarise(emerging_yr= min(year)) %>% # First year that treshold is crossed
-      summarise(emerging_yr= max(year)) %>% # Last year that treshold is crossed
+      gather("tresh","emerged",tresh_one,tresh_two) 
+    
+    
+    taxon <- unique(Raw_Result$taxon_key)
+    name_raw <- paste(my_path("R",extra_path = "/Emergence_last_raw_p90/"),taxon,"_emergence_raw.csv",sep="")
+    
+    write_csv(Raw_Result,
+              name_raw)
+    
+    ToE_Result <- Raw_Result %>% 
+    # Method the last year when the index overshoots and never goes back
+      filter(is.na(emerged)) %>% 
+      group_by(taxon_key, neighbour_id,n_ens,tresh) %>% 
+      summarize(emerging_yr = max(year)+1) %>% # last year of NA + 1 makes it the first year of overshooting
       left_join(EEZ_ids,
                 by = "neighbour_id") %>%
       ungroup() %>%
       select(taxon_key,eez_name,eez_neighbour,n_ens,emerging_yr,tresh)
   
-  return(Final_Result)
+  return(ToE_Result)
   }
 }
   
@@ -953,7 +962,7 @@ GetTransIndex <- function(taxon_key,
              Centroid = Step_one)
     )
     
-    name <- paste(my_path("R",extra_path = "/Emergence_2005/"),taxon_key,"_emergence.txt",sep="")
+    name <- paste(my_path("R",extra_path = "/Emergence_last_p90/"),taxon_key,"_emergence.txt",sep="")
     
     write_csv(Step_two,
               name)
@@ -1065,7 +1074,7 @@ rand_plot <- sample(spp_reman,5)
 
 ### Emerging Routine
 
-```{r Emerging_routine, eval = T, echo = F}
+```{r Emerging_routine, eval = F, echo = F}
 
 ####_______________________ ####
 # Estimating year of eergence
@@ -1089,7 +1098,7 @@ gc()
       )
     )
 
-```
+``` 
 
 
 ```{r Emerging_routine_DoPar, eval = F, echo = F}
@@ -4267,7 +4276,7 @@ ggplot() +
 
 ### Non selected Results
 
-```{r, olda_acumulative}
+```{r, olda_acumulative, eval = F}
 
 # filter(emerging_yr >= 2020) %>% 
   ggplot() +
