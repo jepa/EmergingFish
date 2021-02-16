@@ -2013,15 +2013,16 @@ plot_data <- stock_d %>%
   filter(tresh == selected_tresh)
 
 
-# Manually include rest of EEZs
-
+# Manually include rest of data untill 2100
 cont_eez <- plot_data %>% 
   filter(level == "eez") %>% 
-  slice(1:36) %>%
+  arrange(taxon_emer) %>% 
+  slice(1:24) %>%
   select(-1) %>% 
+  arrange(metric) %>% 
   mutate(
-    value = ifelse(metric == "per",100,232),
-    taxon_emer = c(seq(2082,2099,1),seq(2082,2099,1))
+    value = ifelse(metric == "per",100,228),
+    taxon_emer = c(seq(2088,2099,1),seq(2088,2099,1))
   )
 
 plot_data <- plot_data %>% 
@@ -2042,14 +2043,6 @@ plot_data %>%
     mean(taxon_emer),
     sd(taxon_emer)
   )
-
-# Percentage increase of EEZ after 2020
-lm_eez <- plot_data %>% 
-  filter(taxon_emer <= 2020,
-         tresh == "tresh_one",
-         metric == "per")
-
-summary(lm(lm_eez$taxon_emer~lm_eez$value))
 
 ```
 
