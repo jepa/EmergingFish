@@ -1466,8 +1466,8 @@ SummaryProp <- function(taxon_key,links="NA"){
   proportion_tresh <- proportion_data %>% 
     filter(time_step == "historical") %>% 
     mutate(
-      top_tresh = ensemble_mean+ensemble_sd,
-      low_tresh = ensemble_mean-ensemble_sd
+      top_tresh = ensemble_mean+(2*ensemble_sd), # two s.d.
+      low_tresh = ensemble_mean-(2*ensemble_sd) # two.s.d
     ) %>% 
     select(taxon_key:eez_neighbour,top_tresh:low_tresh) %>% 
     left_join(proportion_data) %>% 
@@ -1494,7 +1494,7 @@ SummaryProp <- function(taxon_key,links="NA"){
     country_summary <- proportion_tresh %>% 
       group_by(taxon_key,eez_name,eez_neighbour,time_step) %>% 
       summarise(
-        mean_spp = mean(ensemble_mean,na.rm=T) # average spp change from all countries sharing
+        mean_spp = mean(ensemble_mean,na.rm=T) # average spp change from all countries sharing that speceies
       ) %>% 
       filter(!is.na(mean_spp))
     }
@@ -1509,7 +1509,7 @@ SummaryProp <- function(taxon_key,links="NA"){
 
 The next step is to summarize all species per eez so our results shows average change of all species within an EEZ towards a neighbour. 
 
-**Note: Contains step to filter out changes less than +-1 s.d.**
+**Note: Contains step to filter out changes less than +-2 s.d.**
 
 ```{r fun_EEZProp, eval = F, echo = F}
 
@@ -1522,13 +1522,14 @@ EEZProp <- function(taxon_list,links="NA"){
   
   if(links == "y"){
     
-    # Number of SSR stocks
+    # Percentage of SSR stocks changing
     n_ssr <- spp %>% 
       group_by(eez_name,time_step) %>% 
       summarise(
-        n_spp = length(unique(taxon_key))
+        # n_spp = length(unique(taxon_key)),
+        n_stock = n(),
       ) %>% 
-      spread(time_step,n_spp) %>% 
+      spread(time_step,n_stock) %>% 
       mutate_at(vars(early,mid),
                 .funs = ~(./historical)*100
       ) %>% 
@@ -1539,12 +1540,14 @@ EEZProp <- function(taxon_list,links="NA"){
     eez_summary <- spp %>% 
       group_by(eez_name,eez_neighbour,time_step) %>% 
       summarise(
+        n_spp = length(unique(taxon_key)),
+        n_stock = n(),
         min_eez = min(mean_spp, na.rm=T),
         max_eez = max(mean_spp, na.rm=T),
         sd_eez = sd(mean_spp, na.rm=T), # for some weird reason it wont work if the order is fliped
         mean_eez = median(mean_spp,na.rm=T)
         ) %>% 
-      select(eez_name:max_eez,mean_eez,sd_eez) %>% 
+      select(eez_name:max_eez,mean_eez,sd_eez,n_spp,n_stock) %>% 
       left_join(n_ssr)
         
   }else{
@@ -1553,13 +1556,13 @@ EEZProp <- function(taxon_list,links="NA"){
       group_by(eez_name,time_step) %>% 
       summarise(
         n_spp = length(unique(taxon_key)),
-        # n_spp = n(),
+        n_stock = n(),
         min_eez = min(mean_spp, na.rm=T),
         max_eez = max(mean_spp, na.rm=T),
         sd_eez = sd(mean_spp, na.rm=T), # for some weird reason it wont work if the order is fliped
         mean_eez = mean(mean_spp,na.rm=T)
         ) %>% 
-      select(eez_name:max_eez,mean_eez,sd_eez)
+      select(eez_name:max_eez,mean_eez,sd_eez,n_spp,n_stock)
         
         
   }
@@ -1581,18 +1584,22 @@ PropChange <- function(taxon_list,links="NA"){
   eez <- EEZProp(taxon_list,links)
   
   proportion_change <- eez %>% 
-    gather("variable","value",min_eez:n_per) %>% 
+    gather("variable","value",n_spp:n_per) %>% 
     spread(time_step,value) %>% 
     mutate_at(vars(
       "per_early" = early,
       "per_mid" = mid
     ),
-    funs(round((((.-historical)/historical))*100,2))
+    # funs(round(((.-historical)/(abs(historical)))*100,2)
+    funs(ifelse(variable == "n_per",.,round(((.-historical)/(abs(historical)))*100,2)
+                )
+         )
     )
   
   return(proportion_change)
   
 }
+
 
 ```
 
@@ -1755,11 +1762,11 @@ Taxon_list <- gsub(".csv","",Taxon_list)
 # Read proportion results
 Prop_results <- PropChange(Taxon_list, links="y") %>%
   filter(!is.na(eez_neighbour)) %>%
-  mutate(per_mid_plot =ifelse(per_mid >= 50, 50,
-                              ifelse(per_mid <= -50,-50,per_mid)
+  mutate(per_mid_plot =ifelse(per_mid >= 100, 100,
+                              ifelse(per_mid <= -100,-100,per_mid)
   ),
-  per_early_plot =ifelse(per_early >= 50, 50,
-                         ifelse(per_early <= -50,-50,per_early)
+  per_early_plot =ifelse(per_early >= 100, 100,
+                         ifelse(per_early <= -100,-100,per_early)
   )
   )
 
@@ -1768,7 +1775,7 @@ Prop_results <- PropChange(Taxon_list, links="y") %>%
           # "proportion_change_2005.csv")
 
 
-Prop_results <- my_path("R",name="proportion_change_2005.csv", read=T)
+# Prop_resultsb <- my_path("R",name="proportion_change_2005.csv", read=T)
 
 # --------------- #
 # Load year of emergence results
@@ -1787,7 +1794,8 @@ Eme_Res <- bind_rows(lapply(Paths, fread)) %>%
   rename(sf_eez_name=eez_name) %>% 
   left_join(Matching_names,
             by=  "sf_eez_name") %>% 
-  clean_names()
+  clean_names() %>% 
+  mutate(tresh = str_to_lower(tresh))
 
 # warnings() for empty data species
 
@@ -1820,6 +1828,7 @@ Sau_data <-fread(paste(my_path("D"),"SAU/sau_catch_value_country_taxon_JEPA.csv"
 
 # The path
 path_world <- my_path("G", extra_path = "Spatial/SAU/SAU_Shapefile")
+path_world <- "/Volumes/Enterprise"
 
 # The File
 fnam_world <- "SAUEEZ_July2015.shp"
@@ -1834,11 +1843,11 @@ World_eez_sf <- st_read(dsn = path_world,
   clean_names()
 
 
-World_eez_sf %>% 
-  filter(str_detect(eez_name,"Russia")) %>% 
-  ggplot() +
-  geom_sf() +
-  aes(fill = eez_name)
+# World_eez_sf %>% 
+#   filter(str_detect(eez_name,"Russia")) %>% 
+#   ggplot() +
+#   geom_sf() +
+#   aes(fill = eez_name)
 
 
 # Call world map from natural earth
@@ -1909,6 +1918,11 @@ Main_data <- Eme_Res %>% # 19728
 
 
 ```{r ToE_generals,  eval = F, echo = T}
+
+### ------------ ##
+# Select a trshold
+selected_tresh <- "tresh_two"
+### ------------ ##
 
 # Total number of emerging stocks
 
@@ -1996,7 +2010,7 @@ plot_data <- stock_d %>%
     per = com_sum/total*100
   ) %>% 
   gather("metric","value",com_sum,per) %>% 
-  filter(tresh == "Tresh_one")
+  filter(tresh == selected_tresh)
 
 
 # Manually include rest of EEZs
@@ -2020,19 +2034,19 @@ plot_data <- plot_data %>%
 # How many between 2006 and 2020?
 plot_data %>% 
   filter(taxon_emer <= 2020,
-         tresh == "Tresh_one") %>% 
+         tresh == selected_tresh) %>%  # Presenting results for the second treshold
   group_by(level,metric) %>% 
   summarise(
     max(taxon_emer),
     min(taxon_emer),
-    max(taxon_emer),
-    min(taxon_emer)
+    mean(taxon_emer),
+    sd(taxon_emer)
   )
 
 # Percentage increase of EEZ after 2020
 lm_eez <- plot_data %>% 
   filter(taxon_emer <= 2020,
-         tresh == "Tresh_one",
+         tresh == "tresh_one",
          metric == "per")
 
 summary(lm(lm_eez$taxon_emer~lm_eez$value))
@@ -2301,99 +2315,50 @@ World_map_nemer <- World_map %>%
 # These are regions without transboundary species
 grey_land <- World_map %>% 
   filter(!fishing_entity_id %in% Value_map_data$fishing_entity_id) %>% 
-  filter(!sovereignt %in% c("Antarctica","Brazil"))
+  filter(!sovereignt %in% c("Antarctica"))
 
-grey_eez <- World_eez_sf %>% 
-  filter(!eezid %in% Eez_d_hist$eezid,
-         !eez_name %in% Neighbours$eez_name)
+# grey_eez <- World_eez_sf %>% 
+#   filter(!eezid %in% Eez_d_hist$eezid,
+#          !eez_name %in% Neighbours$eez_name)
 
-Brazil_land <- World_map %>% 
-  filter(sovereignt == "Brazil") 
-
-Brazil_eez <- World_eez_sf %>% 
-  filter(eez_name %in% c("Brazil","USA (Alaska, Arctic)"))
-
-
-
+# -------------------------- #
+# Call plot for both tresholds
+# -------------------------- #
 for(i in 1:2){
   
-  tresh_list <- c("Tresh_one","Tresh_two")
+  tresh_list <- c("tresh_one","tresh_two")
   name_save <- paste("./Figures/emer_map_lat_",tresh_list[i],".png",sep = "")
   
-  ## --------------- ##
-  # Latitudinal plot
-  ## --------------- ##
+  # Value Map
+  World_map_part <- World_map_nemer %>% 
+  filter(
+    tresh ==  tresh_list[i],
+    variable == "value"
+  )
   
-  ### Random plot
-
-# Eez_hist <- Eme_Res %>% 
-#   group_by(eezid,eez_name = sf_eez_name) %>% 
-#   left_join(Eez_centroid) %>% 
-#   filter(tresh == tresh_list[i]) %>% 
-#   group_by(latitude) %>% 
-#   summarise(
-#     number = n()
-#   ) %>% 
-#   group_by() %>% 
-#   mutate(RMean = rollmean(x = number, 
-#                           10, 
-#                           align = "center", 
-#                           fill = number
-#   )
-#   ) %>% 
-#   mutate(lab="lab") %>% 
-#   ggplot() +
-#   geom_area(
-#     aes(
-#       x = latitude,
-#       y = RMean,
-#       fill = lab,
-#       color = lab
-#     )
-#   ) +
-#   coord_flip() +
-#   scale_x_continuous("",
-#     limits = c(-50,80),
-#     breaks = c(-50,0,50,80)
-#   ) +
-#   scale_y_continuous(
-#     "Emerging stocks",
-#     limits = c(0, 124),
-#     breaks = c(0,62,124)
-#     
-#   ) +
-#   scale_fill_viridis(option="magma", discrete = T, begin = 0.7) +
-#   scale_color_viridis(option="magma", discrete = T, begin = 0.7) +
-#   theme_minimal() + 
-#   theme(
-#     panel.background = element_rect(fill = "white", colour = "white"),
-#     panel.grid.major.y = element_blank(),
-#     panel.grid.minor.y = element_blank(),
-#     panel.grid.major.x = element_blank(),
-#     panel.grid.minor.x = element_blank(),
-#     axis.text.y = element_blank(),
-#     axis.ticks.y = element_blank(),
-#     axis.text = element_text(size = 12, colour="black"),
-#     axis.title.x = element_text(size = 12, colour="black", face = "bold"),
-#     legend.position = ""
-#   )
-#   
-  ## --------------- ##
-  # Map
-  ## --------------- ##
-
-  World_map_part <- World_map_nemer# %>% 
-    # filter(
-    #   tresh ==  tresh_list[i], 
-    #   variable == "value"
-    # )
-  
-  map <- World_eez_sf %>% 
+  # ToE Map 
+  toe_map_data <- World_eez_sf %>% 
     left_join(Eez_d_hist,
               by = "eezid") %>% 
     filter(tresh == tresh_list[i],
-           metric == "mean_yr") %>% 
-    ggplot() +
+           metric == "mean_yr")
+  
+  # Map with countries without ToE
+  
+  russia_churchil <- World_eez_sf %>% 
+    filter(eez_name %in% c("Russia (Kara Sea)","Russia (Laptev to Chukchi Sea)"))
+  
+  no_toe_eez <- World_eez_sf %>% 
+    filter(eez_name %in% Neighbours$eez_name, # Filter EEZs without Transboundary spp
+           !eez_name %in% toe_map_data$eez_name) %>%  # Filter EEZs with ToE stocks
+    rbind(russia_churchil)
+  
+  no_toe_land <- World_map %>% 
+    filter(name %in% Neighbours$eez_name, # Filter EEZs without Transboundary spp
+           !name %in% World_map_part$name) # Filter EEZs with ToE stocks
+    
+    
+  map <- ggplot(toe_map_data) +
     geom_sf(
       aes(
         fill = reverse #original map
@@ -2408,16 +2373,16 @@ for(i in 1:2){
             aes(fill = participation),
             color =  "white",
             size = 0.1
-            ) +
+    ) +
     # grey maps
     # ggplot() +
     geom_sf(data = grey_land, aes(), fill = "grey50", color =  "white",size = 0.1) +
-    geom_sf(data = grey_eez, aes(), fill = "white", color =  "grey50",size = 0.1) +
-    geom_sf(data = Brazil_eez, aes(), fill = "lightblue", color =  "white",size = 0.1) +
-    geom_sf(data = Brazil_land, aes(), fill = "lightblue", color =  "white",size = 0.1) +
+    # geom_sf(data = grey_eez, aes(), fill = "white", color =  "grey50",size = 0.1) +
+    geom_sf(data = no_toe_eez, aes(), fill = "lightblue", color =  "white",size = 0.1) +
+    geom_sf(data = no_toe_land, aes(), fill = "lightblue", color =  "white",size = 0.1) +
     # Set Participation labels
     annotate("text",
-             x =-135,
+             x =-150,
              y = -69,
              label = "Participation (%)",
              color="black",
@@ -2438,9 +2403,9 @@ for(i in 1:2){
              hjust=0) +
     # Set ToE labels
     annotate("text", 
-             x =-135,
+             x =-150,
              y = -85,
-             label = "Time of Emergence",
+             label = "Year of range shift",
              color="black", 
              size=5, 
              angle=0, 
@@ -2449,18 +2414,28 @@ for(i in 1:2){
     annotate("text", 
              x = c(-79,-39,2,42,81),
              y = -85,
-             label = seq(2100,2000,-25), # original
-             # label = c(">2100",seq(2075,2000,-25)), # not inluding the > because we dont know
+             # label = seq(2100,2000,-25), # original
+             label = c(">2100",seq(2075,2000,-25)), # not inluding the > because we dont know
              color="black", 
              size=4, 
              angle=0, 
              # fontface="bold",
              hjust=0) +
+    # Set No emergence label
+    annotate("text",
+             x =110,
+             y = -77,
+             label = "No shift",
+             color="black",
+             size=5,
+             angle=0,
+             fontface="bold",
+             hjust=0) +
     scale_fill_viridis("",
-      limits = c(2000,2100),
-      breaks = seq(2000,2100,25),
-      labels = c("","","","","")#,
-      # direction = -1
+                       limits = c(2000,2100),
+                       breaks = seq(2000,2100,25),
+                       labels = c("","","","","")#,
+                       # direction = -1
     ) +
     # scale_fill_gradientn("",
     #                      limits = c(2000,2100),
@@ -2471,7 +2446,7 @@ for(i in 1:2){
     # geom_hline(yintercept = c(-50,0,50,80)) +
     my_ggtheme_m() +
     theme(
-      legend.box.margin = margin(t = -80, l = 40),
+      legend.box.margin = margin(t = -62, l = 252),
       legend.text = element_blank(),
       legend.key.width = unit(5, "line")
     )
@@ -2483,46 +2458,78 @@ for(i in 1:2){
   ## --------------- ##
   
   boxplot_data <- Eme_Res %>% 
-    filter(tresh == "Tresh_one",
+    filter(tresh == tresh_list[i],
            !is.na(un_sub_region)) %>%
     group_by(un_sub_region) %>% 
     summarise(order = median(emerging_yr)) %>% 
     left_join(Eme_Res) %>% 
-    filter(tresh == "Tresh_one",
+    filter(tresh == tresh_list[i],
            !is.na(un_sub_region)) %>% 
     mutate(un_sub_region = ifelse(str_detect(un_sub_region,"Latin"),"Ltn. Ame. and\nthe Car.",
                                   ifelse(str_detect(un_sub_region,"Australia"),"Aus. and New Z.",
                                          ifelse(str_detect(un_sub_region,"Sub-Saharan"),"Sub-Saharan\nAfrica",
-                                         paste(un_sub_region)))
+                                                paste(un_sub_region)))
     )
     )
-    
-    
-    boxplot_data$un_sub_region <- boxplot_data$un_sub_region %>% 
-  gsub("Northern","N.",.) %>% 
-  gsub("Southern","S.",.) %>% 
-  gsub("Western","W.",.) %>% 
-  gsub("Eastern","E.",.) %>% 
-  gsub("South-eastern","S.E.",.)
-    
+  
+  
+  boxplot_data$un_sub_region <- boxplot_data$un_sub_region %>% 
+    gsub("Northern","N.",.) %>% 
+    gsub("Southern","S.",.) %>% 
+    gsub("Western","W.",.) %>% 
+    gsub("Eastern","E.",.) %>% 
+    gsub("South-eastern","S.E.",.)
+  
+  # ---------- #
+  # Summary data
+  # ---------- #
+  
+  medians_data <- boxplot_data %>% 
+    group_by(un_sub_region,un_geo_region) %>% 
+    summarise(mean = mean(emerging_yr,na.rm = T),
+              sd = sd(emerging_yr,na.rm = T),
+              min = min(emerging_yr,na.rm = T),
+              max = max(emerging_yr,na.rm = T),
+              n_stocks = n()
+    )
+  
+  boxplot_data <- boxplot_data %>% 
+    left_join(medians_data,
+              by = c("un_sub_region","un_geo_region")
+              )
+
+
   boxplot <- ggplot(boxplot_data) +
-    geom_boxplot(
+    geom_violin(
       aes(
         # x = un_sub_region,
         x = reorder(un_sub_region,order),
         y = emerging_yr#,
-        # fill = un_geo_region
+        # fill = mean,
+        # colour = mean
       ),
       fill = "grey"
-    ) +
+    ) + 
     facet_wrap(~un_geo_region,
                scales = "free_x",
                nrow = 1) +
-    scale_fill_viridis("UN Sub region",
-                       discrete = T) +
-    scale_color_grey("") +
+    # scale_fill_viridis("",
+    #                    limits = c(2000,2100),
+    #                    breaks = seq(2000,2100,25),
+    #                    labels = c("","","","","")#,
+    #                    # direction = -1
+    # ) +
+    # scale_colour_viridis("",
+    #                    limits = c(2000,2100),
+    #                    breaks = seq(2000,2100,25),
+    #                    labels = c("","","","","")#,
+    #                    # direction = -1
+    # ) +
     xlab("") +
-    ylab("Time of Emergence") +
+    ylab("Year of range shift") +
+    scale_y_continuous(
+                   labels = c(2000,2025, 2050, 2075, ">2100"), # not inluding the > because we dont know
+    ) +
     my_ggtheme_p() +
     theme(
       axis.text.x = element_text(size = 16, angle = 45, face = "plain", hjust = 1), 
@@ -2530,7 +2537,7 @@ for(i in 1:2){
       axis.title.y = element_text(size = 18),
       axis.text.y = element_text(size = 16), 
       # axis.ticks.x = element_blank(),
-      legend.position = "right"
+      legend.position = ""
     )
   
   ## --------------- ##
@@ -2546,10 +2553,10 @@ for(i in 1:2){
     draw_plot(boxplot, x = 0, y = -0.03, width = 1, height = 0.44) +
     # Labels
     draw_plot_label(label = c("A", "B"), 
-                      size = 20,
-                      x = c(0, 0), 
-                      y = c(0.95, 0.46)
-      )
+                    size = 20,
+                    x = c(0, 0), 
+                    y = c(0.95, 0.46)
+    )
   
   
   save_plot(
@@ -2558,7 +2565,7 @@ for(i in 1:2){
     base_height = 11,
     base_width = 12
   )
-
+  
 }
 
 
@@ -2576,7 +2583,7 @@ Buble_data <- Eez_d_hist %>%
   summarise(mean_yr = mean(value)) %>% 
   left_join(Eme_value_data,
             by = c("sau_fishing_entity","tresh")) %>% 
-  filter(tresh == "Tresh_one",
+  filter(tresh == selected_tresh, # tresh hold selection
          variable == "value") %>% 
   mutate(
     weight_toe = sum_value/mean_yr,
@@ -2613,7 +2620,7 @@ Buble_data %>%
 Labels_data <- tibble(
   x = c(2020,2040,2007),
   y = c(-5.8,-5.8,Percentile_value$x+.1),
-  label = c("Early emergence", "Late emergence","Fisheries > 75th percentile")
+  label = c("Early shift", "Late shift","Fisheries > 75th percentile")
 )
 
 
@@ -2636,26 +2643,7 @@ ggplot(Buble_data) +
              color = "grey90"
   )  +
   # right side labels
-  geom_label_repel(data = subset(Buble_data, mean_yr > 2035 & sum_value_bi >= 1),
-                  aes(
-                    x = mean_yr,
-                    y = log_value,
-                    label = sau_fishing_entity
-                  ),
-                  arrow = arrow(length = unit(0.009, "npc"),
-                                type = "closed",
-                                ends = "first"),
-                  force = 2,
-                  box.padding = 0.2,
-                  fill = "NA",
-                  nudge_x = 2050 + subset(Buble_data, mean_yr > 2035 & sum_value_bi >= 1)$mean_yr,
-                  segment.size  = 0.2,
-                  segment.color = "grey50",
-                  direction     = "y",
-                  hjust         = 1
-  ) +
-  # right side labels
-  geom_label_repel(data = subset(Buble_data, mean_yr < 2035 & sum_value_bi >= 1),
+  geom_label_repel(data = subset(Buble_data, mean_yr > 2045 & sum_value_bi >= 0.90),
                   aes(
                     x = mean_yr,
                     y = log_value,
@@ -2667,8 +2655,27 @@ ggplot(Buble_data) +
                   force = 1,
                   box.padding = 0.2,
                   fill = "NA",
-                  nudge_x = 2010 - subset(Buble_data, mean_yr < 2035 & sum_value_bi >= 1)$mean_yr,
-                  segment.size  = 0.2,
+                  nudge_x = 2075 - subset(Buble_data, mean_yr > 2045 & sum_value_bi >= 0.90)$mean_yr,
+                  segment.size  = 0.1,
+                  segment.color = "grey50",
+                  direction     = "y",
+                  hjust         = 1
+  ) +
+  # LEFT side labels
+  geom_label_repel(data = subset(Buble_data, mean_yr < 2045 & sum_value_bi >= 0.90),
+                  aes(
+                    x = mean_yr,
+                    y = log_value,
+                    label = sau_fishing_entity
+                  ),
+                  arrow = arrow(length = unit(0.009, "npc"),
+                                type = "closed",
+                                ends = "first"),
+                  force = 1,
+                  box.padding = 0.2,
+                  fill = "NA",
+                  nudge_x = 2025 - subset(Buble_data, mean_yr < 2045 & sum_value_bi >= 0.90)$mean_yr,
+                  segment.size  = 0.1,
                   segment.color = "grey50",
                   direction     = "y",
                   hjust         = 1
@@ -2679,13 +2686,13 @@ ggplot(Buble_data) +
               y = y,
               label = label
             ),
-            size = 3,
+            size = 5,
             color = "grey30"
   ) +
   scale_shape("Region") +
   scale_color_viridis(name="Region",
                       discrete = T) +
-  scale_x_continuous("Average time of emergence",
+  scale_x_continuous("Average year of range shift",
                      limits = c(2000,2080),
                      breaks = seq(2000,2080,10)
   ) +
@@ -2694,7 +2701,7 @@ ggplot(Buble_data) +
                      breaks = seq(-6,2,2),
                      expand = c(0,0)
   ) +
-  scale_size("Number of\nemerging stock") +
+  scale_size("Number of\nshifting stocks") +
   ggsave("./Figures/bubble_plot.png",
          width = 12,
          height = 8,
@@ -2703,26 +2710,53 @@ ggplot(Buble_data) +
 
 ```
 
+
+```{r participation_text, eval = T, echo=F}
+
+Value_map_data %>% 
+  group_by(tresh,variable) %>% 
+  summarise(m = mean(participation)-2000,
+            sd = sd(participation-2000)
+            )
+
+```
+
+
+
 ### Species level analysis
 
 #### Fig. 5 Species Boxplot
 
 ```{r deme_pela, eval = F, echo =F}
 
+Dem_pel <- Eme_Res %>% 
+  filter(tresh == selected_tresh,
+         !is.na(un_sub_region)) %>% 
+  left_join(Spp_env_pref) %>% 
+  mutate(DemersPelag = ifelse(is.na(DemersPelag),"other",paste(DemersPelag)
+  #                             ifelse(DemersPelag %in% c("bathypelagic","benthopelagic"), "bathy-bentho-pelagic",paste(DemersPelag)
+  #                             )
+   ),
+    un_sub_region = ifelse(str_detect(un_sub_region,"Latin"),"Ltn. Ame. and the Car.",paste(un_sub_region)))
+
+
 # Dem Pelagic boxplot
 Eme_Res %>% 
   left_join(Spp_env_pref) %>% 
   mutate(DemersPelag = ifelse(is.na(DemersPelag),"other",DemersPelag)) %>% 
-  group_by(DemersPelag) %>% 
+  group_by(DemersPelag,tresh) %>%
   summarise(mean_toe = median(emerging_yr,na.rm=T),
-            n_spp = length(unique(taxon_key))) %>% 
-  left_join(Dem_pel) %>% 
+            n_spp = length(unique(taxon_key)),
+            n_stock = n()
+  ) %>%
+  left_join(Dem_pel) %>%
   mutate(
-    label = paste0(DemersPelag, "\n(n=",n_spp,")")
-  ) %>% 
-  filter(tresh == "Tresh_one",
+    label = paste0(DemersPelag, "\n(n=",n_stock,")")
+  ) %>%
+  filter(tresh == selected_tresh,
          DemersPelag != "pelagic") %>% # just one spp.
   ggplot() +
+  # geom_violin(
   geom_boxplot(
     aes(x = reorder(label,mean_toe),
         # aes(x = DemersPelag,
@@ -2730,12 +2764,22 @@ Eme_Res %>%
         # fill = DemersPelag
     ),
     alpha = 0.8,
-    fill = "grey"
+    fill = "grey",
+    coef = 0, # to have dotted error bars
+    outlier.shape = NA # to have dotted error bars
   ) +
-  # scale_fill_viridis("Habitat preference",
-                     # discrete = T) +
+  # to have dotted error bars
+  stat_boxplot(
+    aes(x = reorder(label,mean_toe),
+        # aes(x = DemersPelag,
+        y = emerging_yr,
+        # fill = DemersPelag
+    ),
+    geom ='errorbar',
+    width = 0.3,
+    linetype = "dashed") + 
   xlab("") +
-  ylab("Time of emergence") +
+  ylab("Year of range shift") +
   my_ggtheme_p() +
   theme(
     axis.text.x = element_text(size = 10, angle = 45, face = "plain", hjust = 1), 
@@ -2759,7 +2803,7 @@ Eme_Res %>%
 # Test for normality
 
 Stats_data <- Eme_Res %>% 
-  filter(tresh == "Tresh_one",
+  filter(tresh == selected_tresh,
          n_ens == 10)
   
 
@@ -2783,7 +2827,7 @@ kurtosis(Stats_data$emerging_yr) #2.82
 ```{r multiple_reg, eval = F, echo = F}
 
 Reg_diff_data <- Eme_Res %>% 
-  filter(tresh == "Tresh_one",
+  filter(tresh == selected_tresh,
          !is.na(un_sub_region)
          )
 
@@ -2803,6 +2847,7 @@ kruskalmc(emerging_yr~un_sub_region, data = Reg_diff_data) %>%
   as.data.frame() %>% 
   rownames_to_column("comparrison") %>% 
   # head()
+  View()
   write_csv("kw_regional.csv")
 
 # Multiple differences but Eastern Asia, Lat. Ame. Car. and Polinesia are the nes who differe the most (e.g. differe with more revions).
@@ -2828,7 +2873,7 @@ TukeyHSD(Reg_aov) %>%
 ```{r multiple_reg, eval = F, echo = F}
 
 Hab_diff_data <- Eme_Res %>% 
-  filter(tresh == "Tresh_one",
+  filter(tresh == selected_tresh,
          !is.na(un_sub_region)
          ) %>% 
   left_join(Spp_env_pref,
@@ -2850,6 +2895,7 @@ kruskalmc(emerging_yr~DemersPelag, data = Hab_diff_data) %>%
   as.data.frame() %>% 
   rownames_to_column("comparrison") %>% 
   # head()
+  View()
   write_csv("kw_habitat.csv")
 
 # Multiple differences but main differences for pelagic-ocenaic and reefs
@@ -2874,22 +2920,24 @@ TukeyHSD(Hab_aov) %>%
 
 ####  Prooportion Analysis
 
-##### Fig. 1 and S1. (Netowrk)
+##### Fig. 5 and S5. (Proportion + Netowrk)
 
 ```{r fig_map_Juan, eval = F, echo =F}
 # Figure made thanks to Juanito!
 # http://jsmayorga.com/post/mapping-the-global-network-of-transnational-fisheries/
 
-### Median number
+### Median numbef of stocks changing in each time step
 
 Prop_results %>% 
-  filter(variable == "n_spp") %>% 
+  filter(variable == "n_per") %>% 
   group_by() %>% 
-  summarise(
-    median(early,na.rm=T),
-    sd(early,na.rm=T)
-  )
-
+  summarise_at(vars(early,mid),funs(
+    median(.,na.rm=T),
+    sd(.,na.rm=T),
+    length(unique(eez_name)),
+    length(unique(eez_name))/280*100
+    )
+    )
 
 # Prepare data from results
 Data <- Prop_results %>% 
@@ -2953,7 +3001,7 @@ paths <- network_data_sf %>%
   unnest() %>%
   mutate_at(vars(X,Y), round,2) %>% 
   gather("time_step","per_chng",per_early:per_mid) %>% 
-  mutate(per_plot = ifelse(per_chng > 100,100,per_chng),
+  mutate(per_plot = ifelse(per_chng > 50,50,per_chng),
          direction = ifelse(per_chng > 0,"positive","negative")
          )
   
@@ -2962,7 +3010,7 @@ paths <- network_data_sf %>%
 # Proportion map data 
 Map_data <- Data %>% 
   gather("time_step","per_chng",per_early:per_mid) %>% 
-  mutate(per_plot = ifelse(per_chng > 100,100,per_chng))
+  mutate(per_plot = ifelse(per_chng > 50,50,per_chng))
 
 # Average number of taxa to change per eez
 
@@ -2970,7 +3018,8 @@ Map_data <- Data %>%
 n_trans_eez <- Transboundary_spp %>% 
   group_by(eez_name) %>% 
   summarise(
-    n_trans = unique(length(taxon_key))
+    # n_trans = unique(length(taxon_key))
+    n_trans = n()
   )
 
 # Estimate the percentage changing
@@ -2987,17 +3036,20 @@ n_taxa_data <- Prop_results %>%
   gather("time_step","avrg_spp_per",early:mid) %>% 
   group_by(sau_fishing_entity,fishing_entity_id,time_step) %>%
   summarise(avrg_spp_per = mean(avrg_spp_per,na.rm=T)) %>% 
-  mutate(time_step = ifelse(time_step == "early","per_early","per_mid"))
-
-# Paper numbers
-mean(n_taxa_data$avrg_spp_per,na.rm=T)
-sd(n_taxa_data$avrg_spp_per,na.rm=T)
+  mutate(time_step = ifelse(time_step == "early","per_early","per_mid")) %>% 
+  mutate(avrg_spp_per = ifelse(avrg_spp_per > 50,50,avrg_spp_per))
 
 # Included in map
 n_taxa_map <- World_map %>% 
   full_join(n_taxa_data,
             by = c("sau_fishing_entity","fishing_entity_id")
             )
+
+# Grey land
+grey_land <- World_map %>% 
+  filter(is.na(fishing_entity_id)) %>% 
+  filter(!sovereignt %in% c("Antarctica"))
+
 
 # Rectangles dataset
 # coord_sf(xlim = c(-3, 35),ylim = c(30, 45)) +
@@ -3062,7 +3114,8 @@ for(i in 1:2){
     scale_colour_viridis(
       name="Stock share ratio gain \nand changing stocks (%)",
       limits = c(0,max(Map_data$per_plot)),
-      breaks = seq(0,max(Map_data$per_plot),10)#,
+      breaks = seq(0,max(Map_data$per_plot),10),
+      labels = c(seq(0,max(Map_data$per_plot-10),10),">50")
       # option="magma",
       # direction = -1
     ) +
@@ -3070,6 +3123,7 @@ for(i in 1:2){
       name="Stock share ratio gain \nand changing stocks (%)",
       limits = c(0,max(Map_data$per_plot)),
       breaks = seq(0,max(Map_data$per_plot),10),
+      labels = c(seq(0,max(Map_data$per_plot-10),10),">50")
       # alpha = 0.8
       # option="magma",
       # direction = -1
@@ -3587,6 +3641,9 @@ ggplot() +
   )
 
 ```
+
+
+
 
 # END PAPER
 
