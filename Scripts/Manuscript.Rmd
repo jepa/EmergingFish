@@ -268,7 +268,7 @@ Changes of stock share ratio are largely related to regional changes in biogeogr
 
 ## Discussion
 
-In this paper, we investigate the timing and intensity of changes in the sharing of transboundary stocks between countries. Our findings highlight the early emergence of transboundary distribution shifts from historical variations for most of the shared stocks in the world. Such early emergences of range shifts indicate the urgency of the challenges that climate change is posing on international fisheries management. Moreover, we identify regional patterns of high climate risk to important fish stocks and associated fisheries at the present-day that will require immediate responses from transboundary fisheries management. Finally, we show that in many instances around the world, countries’ fisheries will experience changes in the sharing of many transboundary stocks to level below that conduce cooperative resource management between countries. Adaptation measures are needed to reduce the impacts of species range shifts on current international transboundary fisheries treaties.
+In this paper, we investigate the timing and intensity associated with changes in the share distribution of transboundary stocks between countries. Our findings highlight an early distributional shift from historical variations for most transboundary stocks in the world. Such early shifts point to the urgency of addressing the challenges that climate change presents for international fisheries management. Moreover, we identify regional patterns of high climate risk to important fish stocks and associated fisheries that would benefit from immediate policy responses to support sustainability into the future. Finally, we show that for many countries changes in the distribution of transboundary stocks are likely to undermine joint resource management between countries [@Bailey:2010ga; @Munro:1979dg; @PalaciosAbrantes:2020vt; @Bailey:2016eh]. Thus, our findings emphasize recent calls for the urgent adoption of adaptation measures in support of more adaptive, flexible fisheries management and governance to support resilient fisheries and durable management systems [@Pinsky:2018cb; @Pinsky:2020jx; @CisnerosMata:2019ks; @Oremus:2020id; @Free:2019jq].
 
 
 #### High present-day climate risk of on transboundary fisheries management
@@ -349,6 +349,27 @@ grid.raster(img)
 
 ```
 
+
+
+```{r TableS0, eval = T, echo = F}
+
+tibble(
+  "Habitat preference" = unique(Dem_pel$DemersPelag)[1:7],
+  Description = c(
+    "The shallow pelagic zone over the continental shelf; nearshore ocean ecosystems; i.e., those associated with the coasts because the waters are overlying continental shelves and/or the waters are < 200 m deep in areas of coastal submarine slopes",
+    "A largely consolidated wave resistant feature; the upper surface is within 0-20 m of the ocean surface; in the tropics, the upper portion is typically composed mainly of living and non-living remains of coral and coralline algae; rock lying at or near the surface and which may pose a danger to navigation",
+    "Living and feeding on the bottom below 200 m",
+    "Living and feeding near the bottom as well as in midwaters or near the surface. Feeding on benthic as well as free swimming organisms. Many freshwater fish are opportunistic feeders that forage on the bottom as well as in midwater and near the surface, also pertaining to forms which hover or swim just over the floor of the sea, e.g. Halosauridae, Macrouridae, Moridae, Brotulidae; the depth zone about 100 metres off the bottom at all depths below the edge of the continental shelf",
+    "Sinking to or lying on the bottom; living on or near the bottom and feeding on benthic organisms",
+    "Region of the oceanic zone between 1,000 m to 4,000 m; between the mesopelagic layer above and the abyssopelagic layer below. Living or feeding in open waters at depths between 1,000 and 4,000 m. In FishBase this term is used to include the depth range from 200 m to the bottom and thus the zones mesopelagic, bathypelagic and abyssopelagic",
+    
+    "Living and feeding in the open sea; associated with the surface or middle depths of a body of water; free swimming in the seas, oceans or open waters; not in association with the bottom. Many pelagic fish feed on plankton. In FishBase, referring to surface or mid water from 0 to 200 m depth."
+  )
+) %>% 
+ kable()
+
+
+```
 
 
 ```{r TableS1, eval = F, echo = F}
