@@ -273,13 +273,15 @@ EstPropChange <- function(taxon_key,
   # The number of species' cells present within each country's EEZ
   # -------------------- #
   
-  #Determines the amount of grids present in each country
+  #Determines the amount of catch present in each country
   Spp_Grid <- Trans_Spp %>% 
     group_by(taxon_key,
              eez_name,
              year,
              ensemble) %>% 
-    summarise(n_spp_eez = length(unique(index))) %>% 
+    summarise(n_spp_eez = length(unique(index)),
+              total_mcp = sum(value)
+              ) %>% 
     left_join(Neighbours_List,
               by = "eez_name")
   
@@ -290,6 +292,7 @@ EstPropChange <- function(taxon_key,
       taxon_key,
       Name=eez_name,
       n_spp_eez,
+      total_mcp,
       year,
       ensemble
     )
@@ -299,6 +302,7 @@ EstPropChange <- function(taxon_key,
     select(
       taxon_key,
       n_spp_eez,
+      total_mcp,
       Name=eez_neighbour,
       eez_name,
       year,
@@ -311,13 +315,17 @@ EstPropChange <- function(taxon_key,
                             by = c("Name","taxon_key","year","ensemble")
   ) %>%
     rowwise() %>%
-    mutate(Spp_Total = sum(n_spp_eez.x,n_spp_eez.y,na.rm=T)) %>% # Total gridcelles per Neighbours
+    mutate(Spp_Total = sum(n_spp_eez.x,n_spp_eez.y,na.rm=T),
+           MCP_Total = sum(total_mcp.x,total_mcp.y,na.rm=T)) %>% # Total gridcelles per Neighbours
     distinct() %>% # Removes false duplicates from `full_join()`
     rename(eez_name = Name,
            eez_neighbour =eez_name,
            n_spp_Country = n_spp_eez.x,
-           n_spp_Neighbour = n_spp_eez.y) %>% 
-    mutate(area_index = n_spp_Country/Spp_Total) %>% 
+           n_spp_Neighbour = n_spp_eez.y,
+           mcp_Country = total_mcp.x,
+           mcp_Neighbour = total_mcp.y) %>% 
+    mutate(area_index = n_spp_Country/Spp_Total,
+           catch_proportion = mcp_Country/MCP_Total) %>% 
     # Determine the three time frames for comparrison
     mutate(
       time_step = ifelse(year < hist_y,"historical",
@@ -330,16 +338,16 @@ EstPropChange <- function(taxon_key,
     # Time mean and sd
     ungroup() %>% 
     group_by(taxon_key,ensemble,eez_name,eez_neighbour,time_step) %>% 
-    summarise_at(vars("area_index"),
-                 c(temporal_mean=mean,
-                   temporal_sd=sd)
+    summarise_at(vars("area_index","catch_proportion"),
+                 c(temp_mean=mean,
+                   tempo_sd=sd)
     ) %>% 
     # ensemble mean and sd
     group_by(taxon_key,eez_name,eez_neighbour,time_step) %>%
-    summarise(
-      ensemble_mean = mean(temporal_mean, na.rm = T),
-      ensemble_sd = sd(temporal_mean, na.rm = T),
-      ensemble_n = n()
+    summarise_at(vars("area_index_temp_mean","catch_proportion_temp_mean"),
+                 c(ensemble_mean = mean,
+                   ensemble_sd = sd
+                   )
     )
   
   # --------------- #
@@ -366,14 +374,14 @@ EstPropChange <- function(taxon_key,
   # return(Per_Ghange_D)
 }
 
-# EstPropChange(taxon_key = 600004,
-#               year = year_df$year,
-#               hist_y = 2000,
-#               data_type = "Catch",
-#               ensemble_list = 102,
-#               path = path,
-#               neighbours = neighbours)
-# 
+EstPropChange(taxon_key = 600004,
+              year = year_df$year,
+              hist_y = 2000,
+              data_type = "Catch",
+              ensemble_list = c(102,103,104),
+              # path = path,
+              neighbours = neighbours)
+
 
 
 ```
