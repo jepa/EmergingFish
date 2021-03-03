@@ -2298,66 +2298,6 @@ Value_map_data <- Eme_value_data %>%
             by = c("fishing_entity_id","variable")) %>% 
   mutate(participation = (sum_value/tot_value)*100+2000)
 
-### ----------------- ###
-### Index alternative ###
-### ----------------- ###
-
-# Index_data <- Eez_d_hist %>% 
-#   left_join(Value_map_data) %>% 
-#   filter(
-#     tresh == "Tresh_one",
-#     metric == "mean_yr"
-#   ) %>% 
-#   group_by(sau_fishing_entity,fishing_entity_id,variable) %>% 
-#   summarise(
-#     toe = mean(value,na.rm=T),
-#     # sum_value = sum(sum_value),
-#     mean_part = mean(participation,na.rm=T)
-#   ) %>% 
-#   filter(!is.na(variable)) %>% 
-#   # spread(variable,sum_value) %>% 
-#   spread(variable,mean_part) %>% 
-#   mutate(
-#     imp = catch+value,
-#     index = imp/toe
-#   )
-
-##### Normalize index
-# https://www.datanovia.com/en/blog/how-to-normalize-and-standardize-data-in-r-for-great-heatmap-visualization/
-
-# Get min and maximums
-# min_index <- min(Index_data$index)
-# max_index <- max(Index_data$index)
-
-# Index_data <- Index_data %>% 
-#   mutate(
-    # index_norm =(index-min_index)/(max_index-min_index),
-  #   index_2000 = 2000 + (index-min_index)*(2100-2000)/(max_index-min_index)
-  # ) 
-
-### Explore index ####
-
-# ggplot(data = Index_data) +
-#   geom_point(
-#     aes(
-#       x = toe,
-#       y = imp,
-#       color = index_2000
-#     ),
-#     size = 4
-#   ) +
-#    scale_color_viridis(option="magma", discrete = F)
-
-#### ------------  ####
-
-# Value_map_data <- Index_data %>%
-  # select(sau_fishing_entity,fishing_entity_id,
-         # tresh,
-         # variable,
-         # participation = index_2000)
-
-### ----------------- ###
-
 
 # Per fishing entity
 
