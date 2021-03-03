@@ -2387,7 +2387,7 @@ for(i in 1:2){
     annotate("text",
              x =-150,
              y = -69,
-             label = "Participation (%)",
+             label = "% Of fishing revenue",
              color="black",
              size=5,
              angle=0,
@@ -2493,6 +2493,7 @@ for(i in 1:2){
               sd = sd(emerging_yr,na.rm = T),
               min = min(emerging_yr,na.rm = T),
               max = max(emerging_yr,na.rm = T),
+              med = median(emerging_yr,na.rm = T),
               n_stocks = n()
     )
   
@@ -2505,29 +2506,31 @@ for(i in 1:2){
   boxplot <- ggplot(boxplot_data) +
     geom_violin(
       aes(
-        # x = un_sub_region,
         x = reorder(un_sub_region,order),
-        y = emerging_yr#,
-        # fill = mean,
-        # colour = mean
+        y = emerging_yr
       ),
       fill = "grey"
     ) + 
     facet_wrap(~un_geo_region,
                scales = "free_x",
                nrow = 1) +
-    # scale_fill_viridis("",
-    #                    limits = c(2000,2100),
-    #                    breaks = seq(2000,2100,25),
-    #                    labels = c("","","","","")#,
-    #                    # direction = -1
-    # ) +
-    # scale_colour_viridis("",
-    #                    limits = c(2000,2100),
-    #                    breaks = seq(2000,2100,25),
-    #                    labels = c("","","","","")#,
-    #                    # direction = -1
-    # ) +
+    # Median points
+    geom_point(
+      aes(
+        x = reorder(un_sub_region,order),
+        y = med,
+        colour = med
+      ),
+      size = 5
+    ) + 
+    # h line
+    geom_hline(yintercept = 2030, color = "grey", size = 0.5, linetype="dashed") +
+    scale_colour_viridis("",
+                       limits = c(2000,2100),
+                       breaks = seq(2000,2100,25),
+                       labels = c("","","","",""),
+                       direction = -1
+    ) +
     xlab("") +
     ylab("Year of range shift") +
     scale_y_continuous(
@@ -2578,6 +2581,10 @@ for(i in 1:2){
 
 ```{r, buble_plot, eval = F, echo = F}
 
+dashed_lines <- tibble(
+  x = c(2030,2050,2080),
+  label = c("SDGs target date","Early range shift  ","Late range shift   ")
+)
 # Needs previous chunk
 
 Buble_data <- Eez_d_hist %>% 
@@ -2614,16 +2621,15 @@ Percentile_value <- Buble_data %>%
 
 ## Top fishing nations
 Buble_data %>% 
-  filter(log_value > Percentile_value$x) %>% 
+  filter(log_value > Percentile_value$x & mean_yr < 2036) %>% 
   View()
-
 
 # Labels Data
 
 Labels_data <- tibble(
-  x = c(2020,2040,2007),
-  y = c(-5.8,-5.8,Percentile_value$x+.1),
-  label = c("Early shift", "Late shift","Fisheries > 75th percentile")
+  x = c(2030,2045,2055,2007),
+  y = c(-5.8,-5.8,-5.8,Percentile_value$x+.1),
+  label = c("SDGs target", "Early shift","Late shift","Fisheries > 75th percentile")
 )
 
 
@@ -2639,14 +2645,8 @@ ggplot(Buble_data) +
     ),
     alpha = 0.7
   ) +
-  # Divisory lines
-  geom_vline(xintercept = 2030, color = "grey90", size = 0.5) +
-  geom_hline(data = Percentile_value,
-             aes(yintercept = x),
-             color = "grey90"
-  )  +
-  # right side labels
-  geom_label_repel(data = subset(Buble_data, mean_yr > 2045 & sum_value_bi >= 0.90),
+  # Right side labels
+  geom_label_repel(data = subset(Buble_data, log_value > Percentile_value$x & mean_yr < 2036 & mean_yr > 2034),
                   aes(
                     x = mean_yr,
                     y = log_value,
@@ -2658,14 +2658,15 @@ ggplot(Buble_data) +
                   force = 1,
                   box.padding = 0.2,
                   fill = "NA",
-                  nudge_x = 2075 - subset(Buble_data, mean_yr > 2045 & sum_value_bi >= 0.90)$mean_yr,
+                  nudge_x = 2066 - subset(Buble_data,log_value > Percentile_value$x & mean_yr < 2036 & mean_yr > 2034)$mean_yr, # set distance from point
+                  nudge_y = subset(Buble_data, log_value > Percentile_value$x & mean_yr < 2034)$log_value  +1.1 , # set vertical position
                   segment.size  = 0.1,
                   segment.color = "grey50",
                   direction     = "y",
                   hjust         = 1
   ) +
   # LEFT side labels
-  geom_label_repel(data = subset(Buble_data, mean_yr < 2045 & sum_value_bi >= 0.90),
+  geom_label_repel(data = subset(Buble_data, log_value > Percentile_value$x & mean_yr < 2034),
                   aes(
                     x = mean_yr,
                     y = log_value,
@@ -2677,12 +2678,19 @@ ggplot(Buble_data) +
                   force = 1,
                   box.padding = 0.2,
                   fill = "NA",
-                  nudge_x = 2025 - subset(Buble_data, mean_yr < 2045 & sum_value_bi >= 0.90)$mean_yr,
+                  nudge_x = 2025 - subset(Buble_data, log_value > Percentile_value$x & mean_yr < 2034)$mean_yr, # set horizontal position
+                  nudge_y = subset(Buble_data, log_value > Percentile_value$x & mean_yr < 2034)$log_value  +1.1 , # set vertical position
                   segment.size  = 0.1,
                   segment.color = "grey50",
                   direction     = "y",
                   hjust         = 1
   ) +
+  # Divisory lines and labels
+  geom_vline(xintercept = c(2030,2050), color = "grey90", size = 0.5, linetype = "dashed") +
+  geom_hline(data = Percentile_value,
+             aes(yintercept = x),
+             color = "grey90"
+  )  +
   geom_text(data = Labels_data,
             aes(
               x = x,
