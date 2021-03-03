@@ -2619,10 +2619,24 @@ Percentile_value <- Buble_data %>%
         do(quibble(.$log_value, 0.75))
 
 
-## Top fishing nations
+## Top fishing nations close to SDGs
 Buble_data %>% 
   filter(log_value > Percentile_value$x & mean_yr < 2036) %>% 
-  View()
+  # View()
+  group_by() %>% 
+  summarise(sum(sum_value_bi),
+            sum(n_taxa))
+
+## All fishing nations close to SDGs
+Buble_data %>% 
+  filter(mean_yr < 2036) %>% 
+  # nrow() # 76  coutries
+  # View()
+  group_by() %>% 
+  summarise(sum(sum_value_bi),
+            sum(n_taxa))
+
+76/length(unique(Buble_data$sau_fishing_entity))
 
 # Labels Data
 
