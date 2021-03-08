@@ -1727,23 +1727,23 @@ Eez_biogeo <- EEZ_CellID %>%
   top_n(1,nbiom) %>% 
   ungroup() %>% 
   select(-nbiom) %>% 
-  distinct(eezid, .keep_all = T) # Croatia is 1/2. We arbritary allocated the first one
+  distinct(eezid, .keep_all = T) # Croatia is 1/2. We arbitrary allocated the first one
 
 # Species catch trend (from FishForVisa)
 
-Catch_trend <- my_path("D","Species","Catch_trend.csv", read = T) %>% 
-  clean_names() %>% 
-  filter(taxon_key %in% Taxon_list_emer) %>% 
-  rename(sau_fishing_entity = territory) %>% 
-  left_join(Fishing_names,
-            by = "sau_fishing_entity") %>% 
-  filter(status != "No Trend") %>% 
-  mutate(category = ifelse(status %in% c("Developing","Rebuilding"),"Category A",
-                         ifelse(status == "Max Exploited","Category B",
-                                ifelse(status %in% c("Over Exploited","Collapsed","Category C"),"Category C", "No Category")
-                         )
-         )
-  )
+# Catch_trend <- my_path("D","Species","Catch_trend.csv", read = T) %>% 
+#   clean_names() %>% 
+#   filter(taxon_key %in% Taxon_list_emer) %>% 
+#   rename(sau_fishing_entity = territory) %>% 
+#   left_join(Fishing_names,
+#             by = "sau_fishing_entity") %>% 
+#   filter(status != "No Trend") %>% 
+#   mutate(category = ifelse(status %in% c("Developing","Rebuilding"),"Category A",
+#                          ifelse(status == "Max Exploited","Category B",
+#                                 ifelse(status %in% c("Over Exploited","Collapsed","Category C"),"Category C", "No Category")
+#                          )
+#          )
+#   )
 
 
 # --------------- #
@@ -1770,12 +1770,9 @@ Prop_results <- PropChange(Taxon_list, links="y") %>%
   )
   )
 
-# For dat availabillity
+# For dat availability
  # write_csv(prop_results,
           # "proportion_change_2005.csv")
-
-
-# Prop_resultsb <- my_path("R",name="proportion_change_2005.csv", read=T)
 
 # --------------- #
 # Load year of emergence results
@@ -1797,7 +1794,7 @@ Eme_Res <- bind_rows(lapply(Paths, fread)) %>%
   clean_names() %>% 
   mutate(tresh = str_to_lower(tresh))
 
-# warnings() for empty data species
+# warnings() for empty data species # New version of package being a pain in the arse
 
 # View(Eme_Res)
 
@@ -3488,12 +3485,6 @@ Testing different Per values for the centroids
 
 ```{r data_loading, eval = F, echo = F}
 
-# Get taxon list
-Taxon_list_sens <- list.files(my_path("R",extra_path = "Toe_Sens_per/Emergence_2005_p20"))
-
-# clean names for function
-Taxon_list_sens <- gsub("_.*","",Taxon_list_sens) 
-
 # SAU exploited species list
 Exploited_spp_list <- my_path("G","SAU","exploited_species_list.csv",read = T) %>%
   clean_names() %>% 
@@ -3502,7 +3493,7 @@ Exploited_spp_list <- my_path("G","SAU","exploited_species_list.csv",read = T) %
 # Load all sp in one table
 sen_list <- c(20,50,90,95)
 
-
+sen <- 95
 read_sen <- function(sen){
   
   if(sen != 95){
@@ -3517,9 +3508,9 @@ read_sen <- function(sen){
   
   }else{
     
-  Taxon_list_sens <- list.files(my_path("R",extra_path = "Toe_Sens_per/Emergence_2005_p20"))
+  Taxon_list <- gsub("_.*","",Taxon_list_sens) 
   
-  Paths <- paste(my_path("R",extra_path = "Emergence_2005"),Taxon_list_emer,"_emergence.txt",sep="")
+  Paths_sen <- paste(my_path("R",extra_path = "Emergence_2005"),Taxon_list_sens,"_emergence.txt",sep="")
 
   }
   
@@ -3544,8 +3535,10 @@ Sen_data <- bind_rows(
   lapply(sen_list,read_sen)
 ) %>% 
   filter(
-    tresh== "tresh_one"
+    tresh== "tresh_two"
   )
+
+unique(Sen_data$sen)
 
 ```
 
@@ -3594,16 +3587,23 @@ sen_plot_data <- sen_stock_d %>%
   bind_rows(sen_eez_d) %>% 
   mutate(
     # total = ifelse(level == "stock",length(unique(Eme_Res$taxon_key)),length(unique(Eme_Res$sf_eez_name))),
-    total = ifelse(level == "stock",max(stock_d$com_sum),max(eez_d$com_sum)),
+    total = ifelse(level == "stock",max(sen_stock_d$com_sum),max(sen_eez_d$com_sum)),
     per = com_sum/total*100
   ) %>% 
   gather("metric","value",com_sum,per) %>% 
   ungroup() %>% 
   mutate(
     my_facet = ifelse(metric == "per","Percentage (%)","Cumulative sum (n stocks)"),
-    label = ifelse(total == max(stock_d$com_sum),"Total number of emerging stocks","Total number of EEZs"),
+    label = ifelse(total == max(sen_stock_d$com_sum),"Total number of emerging stocks","Total number of EEZs"),
   sen = paste("Percentile above",sen,"%") 
   )
+
+
+# Lines data
+dashed_lines <- tibble(
+  x = c(2030,2050,2080),
+  label = c("Agenda 2030","Early range shift  ","Late range shift   ")
+)
 
 # Plot me
 ggplot() +
@@ -3634,35 +3634,44 @@ ggplot() +
             ),
             size=0.5,
             colour="black"
-            ) +
+  ) +
   facet_wrap(~my_facet + sen,
              scales = "free",
              nrow=2) + 
   scale_y_continuous("",
                      expand = c(0,0)
-                     ) +
-  scale_x_continuous("Time of emergence",
+  ) +
+  scale_x_continuous("Year of range shift",
                      breaks = seq(2000,2100,25),
                      limits = c(2005,2100),
                      label = c(seq(2000,2075,25),">2100"),
                      expand = c(0,0)
   ) +
+  # Add dashed lines and labels
+  geom_vline(
+    data = dashed_lines,
+    aes(
+      xintercept = x,
+      linetype = label,
+    ),
+    color = "grey"
+  ) + 
   my_ggtheme_p() +
   theme(
     legend.position = "right",
-    # strip.text.x = element_blank(),
     panel.spacing = unit(3, "lines") # space between plots
   ) +
-  guides(fill=guide_legend(title= "Level", reverse=FALSE)) +
+  guides(fill=guide_legend(title= "", reverse=FALSE),
+         linetype = guide_legend(title = "Time step")) +
   scale_fill_viridis(discrete = T,
                      begin = 0.1, 
                      end = 0.7,
                      labels = c("EEZs","Stocks")
   ) +
-  ggsave("./Figures/toe_sen.png",
-  width = 14,
-  height = 10,
-  units = "in"
+  ggsave("./Figures/Supp3.png",
+         width = 14,
+         height = 10,
+         units = "in"
   )
 
 ```
