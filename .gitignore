@@ -44,6 +44,7 @@ vignettes/*.pdf
 # Rendered documents do not need to be sync
 ./Scripts/*.pdf 
 ./Scripts/*.docx 
+/Sci_Adv
 
 # Ignore Documents folder
 Documents 
