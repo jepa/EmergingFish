@@ -3476,8 +3476,7 @@ ggplot() +
   scale_x_continuous("Percentage Change",
                      breaks = seq(-75,500,25)
   ) +
-  my_ggtheme_p() +
-  theme(legend.position = "right") +
+  my_ggtheme_p(leg_pos = "right") +
   scale_fill_viridis(discrete = T, 
                      option = "plasma",
                      alpha = 0.5,
