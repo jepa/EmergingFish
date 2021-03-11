@@ -42,8 +42,8 @@ vignettes/*.pdf
 /Temporal_Data
 
 # Rendered documents do not need to be sync
-./Scripts/*.pdf 
-./Scripts/*.docx 
+/Scripts/*.pdf 
+/Scripts/*.docx 
 
 # Ignore Documents folder
 Documents 
