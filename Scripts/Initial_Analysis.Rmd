@@ -2047,8 +2047,8 @@ plot_data <- plot_data %>%
 
 
 dashed_lines <- tibble(
-  x = c(2030,2050,2080),
-  label = c("UN 2030 Agenda","Early range shift  ","Late range shift   ")
+  x = c(2030,2050,2070),
+  label = c("UN 2030 Agenda","Mid range shift   ","Late range shift   ")
 )
 
 
@@ -2106,8 +2106,7 @@ count_eez_plot <- ggplot() +
   scale_x_continuous("Year of range shift",
                      breaks = seq(2000,2100,25),
                      limits = c(2005,2100),
-                     # label = c(seq(2000,2075,25),">2100"),
-                     expand = c(0, 0)
+                     label = c(seq(2000,2075,25),">2100")
   ) +
   my_ggtheme_p() +
   theme(legend.position = "") +
@@ -2155,8 +2154,7 @@ count_stock_plot <- ggplot() +
   scale_x_continuous("",
                      breaks = seq(2000,2100,25),
                      limits = c(2005,2100),
-                     # label = c(seq(2000,2075,25),">2100"),
-                     expand = c(0, 0)
+                     label = c(seq(2000,2075,25),">2100")
   ) +
   my_ggtheme_p(leg_pos = "") +
   guides(fill=guide_legend(title= "Level", reverse=FALSE)) +
@@ -2211,16 +2209,12 @@ percentage_plot <- ggplot() +
   scale_x_continuous("",
                      breaks = seq(2000,2100,25),
                      limits = c(2005,2100),
-                     # label = c(seq(2000,2075,25),">2100"),
-                     expand = c(0, 0)
+                     label = c(seq(2000,2075,25),">2100")
   ) +
   my_ggtheme_p(leg_pos = "right") +
-  theme(
-    strip.text.x = element_blank()
-  ) +
   guides(fill=guide_legend(title= "", reverse=FALSE)) +
   scale_fill_viridis(discrete = T,
-                     begin = 0.1, 
+                     begin = 0.1,
                      end = 0.7,
                      labels = c("EEZs","Stocks")
   )
@@ -2236,13 +2230,13 @@ percentage_plot <- ggplot() +
 # Draw figure
   plot_all <- ggdraw() +
     # Latin America and the Car.
-    draw_plot(count_stock_plot, x = 0.01, y = 0, width = 0.28, height = 0.90) +
+    draw_plot(count_stock_plot, x = 0.01, y = 0, width = 0.29, height = 0.90) +
     # Europe
-    draw_plot(count_eez_plot, x = 0.28, y = 0, width = 0.28, height = 0.90) +
+    draw_plot(count_eez_plot, x = 0.31, y = 0, width = 0.29, height = 0.90) +
     # Percentage plot
-    draw_plot(percentage_plot, x = 0.56, y = 0 , width = 0.28, height = 0.90) +
+    draw_plot(percentage_plot, x = 0.61, y = 0 , width = 0.29, height = 0.90) +
     # legend
-    draw_plot(legend, x = 0.77, y = 0 , width = 0.28, height = 1) +
+    draw_plot(legend, x = 0.84, y = 0 , width = 0.20, height = 1) +
     # Labels
     draw_plot_label(label = c("A", "B","C"), 
                     size = 20,
@@ -2338,9 +2332,9 @@ grey_land <- World_map %>%
 # -------------------------- #
 # Call plot for both tresholds
 # -------------------------- #
+tresh_list <- c("tresh_one","tresh_two")
 for(i in 1:2){
   
-  tresh_list <- c("tresh_one","tresh_two")
   name_save <- paste("./Figures/emer_map_lat_",tresh_list[i],".png",sep = "")
   
   # Value Map
@@ -2471,20 +2465,50 @@ for(i in 1:2){
   # Regional Boxplot
   ## --------------- ##
   
+  # Weighted verion
   boxplot_data <- Eme_Res %>% 
+    # Get the order of boxes
     filter(tresh == tresh_list[i],
            !is.na(un_sub_region)) %>%
-    group_by(un_sub_region) %>% 
-    summarise(order = median(emerging_yr)) %>% 
-    left_join(Eme_Res) %>% 
+    group_by(un_sub_region) %>%
+    summarise(n_eezs = length(unique(sf_eez_name))) %>%
+    # Get the rest of the data
+    left_join(Eme_Res) %>%
     filter(tresh == tresh_list[i],
-           !is.na(un_sub_region)) %>% 
+           !is.na(un_sub_region)) %>%
+    mutate(weight = )
     mutate(un_sub_region = ifelse(str_detect(un_sub_region,"Latin"),"Ltn. Ame. and\nthe Car.",
                                   ifelse(str_detect(un_sub_region,"Australia"),"Aus. and New Z.",
                                          ifelse(str_detect(un_sub_region,"Sub-Saharan"),"Sub-Saharan\nAfrica",
                                                 paste(un_sub_region)))
+    )#,
+    # For number labels
+    # un_sub_region = paste(un_sub_region," (n = ",n_eezs,")",sep="")
     )
-    )
+  
+  
+  
+  # Non-weighted verion
+
+  # boxplot_data <- Eme_Res %>% 
+  #   # Get the order of boxes
+  #   filter(tresh == tresh_list[i],
+  #          !is.na(un_sub_region)) %>%
+  #   group_by(un_sub_region) %>% 
+  #   summarise(order = median(emerging_yr),
+  #             n_eezs = length(unique(sf_eez_name))) %>% 
+  #   # Get the rest of the data
+  #   left_join(Eme_Res) %>% 
+  #   filter(tresh == tresh_list[i],
+  #          !is.na(un_sub_region)) %>% 
+  #   mutate(un_sub_region = ifelse(str_detect(un_sub_region,"Latin"),"Ltn. Ame. and\nthe Car.",
+  #                                 ifelse(str_detect(un_sub_region,"Australia"),"Aus. and New Z.",
+  #                                        ifelse(str_detect(un_sub_region,"Sub-Saharan"),"Sub-Saharan\nAfrica",
+  #                                               paste(un_sub_region)))
+  #   ),
+  #   # For number labels
+  #   un_sub_region = paste(un_sub_region," (n = ",n_eezs,")",sep="")
+  #   )
   
   
   boxplot_data$un_sub_region <- boxplot_data$un_sub_region %>% 
@@ -2555,7 +2579,7 @@ for(i in 1:2){
       axis.text.y = element_text(size = 16), 
       # axis.ticks.x = element_blank(),
       legend.position = ""
-    )
+    );boxplot
   
   ## --------------- ##
   # Combine plots and save them
