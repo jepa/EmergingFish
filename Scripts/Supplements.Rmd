@@ -112,6 +112,15 @@ We tested the results for normality (e.g., skewness, kurtosis) and performed two
 
 _**Figures**_
 
+```{r toeFigure4, eval = T,  echo = F, fig.width=12, fig.height=7,fig.pos= "H", fig.cap =  "Comparison of shifts in the shared distribution of transboundary stocks by species’ habitat association. Classification is based on the habitat preference information obtained from FishBase and SeaLifeBase (see Table S1). The category “Other” consists of species that have no “habitat preference” classification. The number of stocks included in this analysis for each habitat type is noted in parentheses. Dashed whiskers represent the 1.5* interquartile range. Box represents interquartile range as distance between first and third quartiles. Solid line represents the median time of emergence per habitat preference."}
+
+img <- readPNG("../Figures/Fig4.png")
+grid.raster(img)
+
+```
+
+<!-- ![toeFigure 4. Comparison of shifts in the shared distribution of transboundary stocks by species’ habitat association. Classification is based on the habitat preference information obtained from FishBase and SeaLifeBase (see Table S1). The category “Other” consists of species that have no “habitat preference” classification. The number of stocks included in this analysis for each habitat type is noted in parentheses. Dashed whiskers represent the 1.5* interquartile range. Box represents interquartile range as distance between first and third quartiles. Solid line represents the median time of emergence per habitat preference.](../Figures/Fig5.png) -->
+
 
 ```{r toeFigureS1, eval = T,  echo = F, fig.width=9, fig.height=4, fig.cap ="World Exclusive Economic Zones used in this study as divided by the Sea Around Us and their centroids (points)."}
 

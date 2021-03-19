@@ -2617,8 +2617,8 @@ for(i in 1:2){
 ```{r, buble_plot, eval = F, echo = F}
 
 dashed_lines <- tibble(
-  x = c(2030,2050,2080),
-  label = c("UN 2030 Agenda","Early range shift  ","Late range shift   ")
+  x = c(2030,2050,2070),
+  label = c("UN 2030 Agenda","Mid range shift  ","Late range shift   ")
 )
 # Needs previous chunk
 
@@ -2676,9 +2676,9 @@ Buble_data %>%
 # Labels Data
 
 Labels_data <- tibble(
-  x = c(2030,2045,2055,2007),
+  x = c(2030,2050,2070,2007),
   y = c(-5.8,-5.8,-5.8,Percentile_value$x+.1),
-  label = c("UN 2030 Agenda", "Early shift","Late shift","Fisheries > 75th percentile")
+  label = c("UN 2030 Agenda", "Mid shift","Late shift","Fisheries > 75th percentile")
 )
 
 
@@ -2735,7 +2735,7 @@ ggplot(Buble_data) +
                   hjust         = 1
   ) +
   # Divisory lines and labels
-  geom_vline(xintercept = c(2030,2050), color = "grey50", size = 0.5, linetype = "dashed") +
+  geom_vline(xintercept = c(2030,2050,2070), color = "grey50", size = 0.5, linetype = "dashed") +
   geom_hline(data = Percentile_value,
              aes(yintercept = x),
              color = "grey50"
@@ -2762,7 +2762,7 @@ ggplot(Buble_data) +
                      expand = c(0,0)
   ) +
   scale_size("Number of\nshifting stocks") +
-  my_ggtheme_p(legend.position = "right") +
+  my_ggtheme_p(leg_pos = "right") +
   ggsave("./Figures/bubble_plot.png",
          width = 12,
          height = 8,
