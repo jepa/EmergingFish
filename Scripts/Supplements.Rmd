@@ -37,7 +37,7 @@ my_lib(packages)
 
 _**Databases and species selection**_
 
-The analyses detailed herein are based on 633 exploited marine transboundary species that account for 80% of the catch taken from the world’s EEZs between 2005 and 2014 [@PalaciosAbrantes:2020tv]. When a species was shared by a pair of neighboring EEZs it was considered a transboundary stock [@PalaciosAbrantes:2020tv; @Teh:2015gd], resulting in a total of 9,132 transboundary stocks. Using the transboundary species Atlantic cod (*Gadus morhua*) as an example and this study’s definition of transboundary stock, the United States and Canada share a stock of Atlantic cod, and Canada and Greenland share a separate stock of Atlantic cod, but the United States and Greenland do not as they do not have juxtaposing EEZs. We defined the boundaries of the world’s EEZs using the Sea Around Us spatial division (updated 1 July 2015; http://www.seaaroundus.org), noting that it subdivides the EEZs of 198 coastal states into 280 regions (Fig. \@ref(fig:toeFigureS5)) including island territories. . We determined the intersections between polygons using the R package sf [@PackagesfSimpleF:2018vp]. Each EEZ was categorized by geopolitical region according to the United Nations (https://population.un.org/wpp/DefinitionOfRegions/) and biome [@Reygondeau:2019uh]. The habitat preference of each species was determined following FishBase (http://www.fishbase.org) for fish species and SeaLifeBase (http://www.fishbase.org) for invertebrates (Fig. \@ref(tab:toeTableS1)). For each stock and EEZ, we used Sea Around Us data to estimate catch and fishing revenue from fishing activities. We report both average catch and revenue for the last available decade (2005-2014) [@Zeller2016; @Tai2017; @Sumaila:2015uc].
+The analyses detailed herein are based on 633 exploited marine transboundary species that account for 80% of the catch taken from the world’s EEZs between 2005 and 2014 [@PalaciosAbrantes:2020tv]. When a species was shared by a pair of neighboring EEZs it was considered a transboundary stock [@PalaciosAbrantes:2020tv; @Teh:2015gd], resulting in a total of 9,132 transboundary stocks. Using the transboundary species Atlantic cod (*Gadus morhua*) as an example and this study’s definition of transboundary stock, the United States and Canada share a stock of Atlantic cod, and Canada and Greenland share a separate stock of Atlantic cod, but the United States and Greenland do not as they do not have juxtaposing EEZs. We defined the boundaries of the world’s EEZs using the Sea Around Us spatial division (updated 1 July 2015; http://www.seaaroundus.org), noting that it subdivides the EEZs of 198 coastal states into 280 regions (Fig. \@ref(fig:toeFigureS5)) including island territories. . We determined the intersections between polygons using the R package sf [@PackagesfSimpleF:2018vp]. Each EEZ was categorized by geopolitical region according to the United Nations (https://population.un.org/wpp/DefinitionOfRegions/) and biome [@Reygondeau:2019uh]. The habitat preference of each species was determined following FishBase (http://www.fishbase.org) for fish species and SeaLifeBase (http://www.fishbase.org) for invertebrates (Table S\@ref(tab:toeTableS1)). For each stock and EEZ, we used Sea Around Us data to estimate catch and fishing revenue from fishing activities. We report both average catch and revenue for the last available decade (2005-2014) [@Zeller2016; @Tai2017; @Sumaila:2015uc].
 
 _**Projecting species distributions under climate change**_
 
@@ -118,7 +118,6 @@ grid.raster(img)
 
 ```
 
-<!-- ![toeFigure 4. Comparison of shifts in the shared distribution of transboundary stocks by species’ habitat association. Classification is based on the habitat preference information obtained from FishBase and SeaLifeBase (see Table S1). The category “Other” consists of species that have no “habitat preference” classification. The number of stocks included in this analysis for each habitat type is noted in parentheses. Dashed whiskers represent the 1.5* interquartile range. Box represents interquartile range as distance between first and third quartiles. Solid line represents the median time of emergence per habitat preference.](../Figures/Fig5.png) -->
 
 \clearpage
 
@@ -158,17 +157,7 @@ grid.raster(img)
 
 \clearpage
 
-```{r toeFigureS5, eval = T,  echo = F, fig.width=4, fig.height=4, fig.cap =  "Changes in Stock Share Ratio by 2050 (2041-2060) relative to 1951-2005. Lines represent the average gain of transboundary stock share ratio with arrows going from the losing EEZ (point) to the winner (arrowhead). Polygons represent the percentage of initial stocks that will see a shift. Panel B zooms into specific areas shown in grey boxes of A."}
-
-img <- readPNG("../Figures/FigS5.png")
-grid.raster(img)
-
-```
-
-\clearpage
-
-
-```{r toeFigureS6, eval = T,  echo = F, fig.width=14 fig.height=10, fig.cap =  "Schematic diagram of the transboundary index (TI) to determine the time of emergence of transboundary stocks. The index is based on the distance between the distributional centroid of the transboundary stock and the geographic centroid of the neighboring Exclusive Economic Zones sharing the stock (Top panel). Time of emergence is defined as the first year when the TI overshoots historical values (Bottom panel)."}
+```{r toeFigureS6, eval = T,  echo = F, fig.width=14, fig.height=10, fig.cap =  "Schematic diagram of the transboundary index (TI) to determine the time of emergence of transboundary stocks. The index is based on the distance between the distributional centroid of the transboundary stock and the geographic centroid of the neighboring Exclusive Economic Zones sharing the stock (Top panel). Time of emergence is defined as the first year when the TI overshoots historical values (Bottom panel)."}
 
 img <- readPNG("../Figures/FigS6.png")
 grid.raster(img)
@@ -178,7 +167,7 @@ grid.raster(img)
 \clearpage
 
 
-```{r toeFigureS7, eval = T,  echo = F, fig.width=14 fig.height=10, fig.cap =  "Average year of range shift by Exclusive Economic Zone (EEZ) and transboundary stock using different levels of abundance percentile to determine the stock’s centroid. Top Row: results in absolute numbers. Bottom row: results expressed as a percentage of the total emerging stocks and EEZs with emerging stock."}
+```{r toeFigureS7, eval = T,  echo = F, fig.width=14, fig.height=10, fig.cap =  "Average year of range shift by Exclusive Economic Zone (EEZ) and transboundary stock using different levels of abundance percentile to determine the stock’s centroid. Top Row: results in absolute numbers. Bottom row: results expressed as a percentage of the total emerging stocks and EEZs with emerging stock."}
 
 img <- readPNG("../Figures/FigS7.png")
 grid.raster(img)
@@ -188,7 +177,7 @@ grid.raster(img)
 \clearpage
 
 
-```{r toeFigureS7, eval = T,  echo = F, fig.width=6 fig.height=6, fig.cap =  "Average distribution of transboundary stock’s year of change in their shared distribution. Left panel is the average year across stocks and right panel the standard deviation. Yellow represents a one standard deviation distance from the historical average and purple represents a two standard deviation distance from the historical average."}
+```{r toeFigureS8, eval = T,  echo = F, fig.width=6, fig.height=6, fig.cap ="Average distribution of transboundary stock’s year of change in their shared distribution. Left panel is the average year across stocks and right panel the standard deviation. Yellow represents a one standard deviation distance from the historical average and purple represents a two standard deviation distance from the historical average."}
 
 img <- readPNG("../Figures/FigS8.png")
 grid.raster(img)
