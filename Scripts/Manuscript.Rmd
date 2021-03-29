@@ -93,7 +93,7 @@ grid.raster(img)
 We estimated the current (2005 - 2010) contribution of shifting stocks to yearly fishing revenue generated from fisheries targeting transboundary stocks within global EEZs. Within five years of the UN 2030 Agenda, 979 transboundary stocks responsible for 5.3 billion USD in fishing revenue are projected to shift in the EEZs of 76 countries (Fig. \@ref(fig:toeFigure3)); with 4.2 billion USD accounted by 321 stocks shifting in just eleven countries (Fig. \@ref(fig:toeFigure3)).  In terms of the number of transboundary stocks shifting from historical variability, Spain (n = 122), France (n = 85), China and Portugal (both n = 73), and Senegal (n = 66), emerge as the top five countries (Fig. \@ref(fig:toeFigure3)).
 
 
-```{r toeFigure3, eval = T,  echo = F, fig.width=10, fig.height=8,fig.pos= "H", fig.cap =  "Average range shift of transboundary stocks and corresponding fishing revenue per country. Countries are coded according to different colored symbols representative of 5 distinct regions. Horizontal line separates countries above and below the 75th percentile of annual fishing revenue. Showing country names for those within the top 75th percentile projected to have an average shift within 5 years after the 2030 deadline of the Sustainable Development Agenda.}
+```{r toeFigure3, eval = T,  echo = F, fig.width=10, fig.height=8,fig.pos= "H", fig.cap =  "Average range shift of transboundary stocks and corresponding fishing revenue per country. Countries are coded according to different colored symbols representative of 5 distinct regions. Horizontal line separates countries above and below the 75th percentile of annual fishing revenue. Showing country names for those within the top 75th percentile projected to have an average shift within 5 years after the 2030 deadline of the Sustainable Development Agenda."}
 
 img <- readPNG("../Figures/Fig3.png")
 grid.raster(img)
@@ -109,7 +109,7 @@ We estimated the intensity of the distributional shift of transboundary stocks i
 
 ```{r toeFigure4, eval = T,  echo = F, fig.width=12, fig.height=10,fig.pos= "H", fig.cap =  "Changes in stock proportion of neighboring Exclusive Economic Zones by 2030 (2021-2040) relative to 1951-2005. Lines represent the average change in transboundary stock share ratio with arrows going from EEZ with decreasing stock share (point) to those gaining shares (arrowhead). Land polygons represent the percentage of stocks that are projected to change their stock share ratio beyond the identified threat point with higher gains identified in warmer colors. Panel B highlights changes for the Caribbean and Northwestern Europe."}
 
-img <- readPNG("../Figures/Fig5.png")
+img <- readPNG("../Figures/Fig4.png")
 grid.raster(img)
 
 ```
@@ -151,7 +151,7 @@ The global community has set the ambitious goal of managing all fisheries sustai
 \setcounter{table}{0}
 
 
-```{r supplements, child = '../Scripts/Supplements.Rmd', eval = T}
+```{r supplements, child = '../Scripts/Supplements.Rmd', eval = F}
 
 ```
 
