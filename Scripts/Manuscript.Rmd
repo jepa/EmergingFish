@@ -151,7 +151,7 @@ The global community has set the ambitious goal of managing all fisheries sustai
 \setcounter{table}{0}
 
 
-```{r supplements, child = '../Scripts/Supplements.Rmd', eval = F}
+```{r supplements, child = '../Scripts/Supplements.Rmd', eval = T}
 
 ```
 
