@@ -3116,12 +3116,12 @@ grey_land <- World_map %>%
 
 # Rectangles dataset
 # coord_sf(xlim = c(-3, 35),ylim = c(30, 45)) +
-Rectangles <- tibble(
-    x1=c(-100,-14), #LatAm, Med, NE
-    x2=c(-55,23),
-    y1=c(9,50), 
-    y2=c(30,67)
-  )
+# Rectangles <- tibble(
+#     x1=c(-100,-14), #LatAm, Med, NE
+#     x2=c(-55,23),
+#     y1=c(9,50), 
+#     y2=c(30,67)
+#   )
 
 
 time_sets <- c("per_early","per_mid")
@@ -3164,15 +3164,15 @@ for(i in 1:2){
                             ends = "first"),
               show.legend = NA) +
     # Closeup Rectangles 
-    geom_rect(data=Rectangles,
-              aes(xmin=x1, 
-                  xmax=x2,
-                  ymin=y1,
-                  ymax=y2),
-              color="grey50", 
-              fill = NA,
-              linetype = "dashed"
-    ) +
+    # geom_rect(data=Rectangles,
+    #           aes(xmin=x1, 
+    #               xmax=x2,
+    #               ymin=y1,
+    #               ymax=y2),
+    #           color="grey50", 
+    #           fill = NA,
+    #           linetype = "dashed"
+    # ) +
     my_ggtheme_m() +
     scale_colour_viridis(
       name="Stock share ratio gain \nand changing stocks (%)",
