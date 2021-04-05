@@ -1036,7 +1036,7 @@ Transboundary_spp <- my_path("D", extra_path = "Species/", name="Transboundary_s
 ### Estimate number of transboundary stocks ###
 # ------------------------------------------- #
 
-Transboundary_spp %>% 
+n_stocks <- Transboundary_spp %>% 
   left_join(Neighbours,
             by = c("eez_name", "eez_neighbour")) %>% 
   # filter(neighbour_id %in% c(1,105)) %>%
@@ -1045,7 +1045,8 @@ Transboundary_spp %>%
   summarise(n_stock = length(unique(taxon_key))) %>% 
   # View()
   group_by() %>% 
-  summarise(t_trans_stocks = sum(n_stock)) # 9132
+  summarise(t_trans_stocks = sum(n_stock)) %>% 
+  pull(t_trans_stocks) # 9132
 
 
 ## ----------------- ##
@@ -1625,7 +1626,7 @@ PropChange <- function(taxon_list,links="NA"){
 # General Data needed
 # --------------- #
 
-# Read transboundary species database from Palacios-Abrantes et al 2020 (FishForVisa)
+  # Read transboundary species database from Palacios-Abrantes et al 2020 (FishForVisa)
 Transboundary_spp <- my_path("D", extra_path = "Species/", name="Transboundary_spp.csv", read = TRUE)
 
 
@@ -1903,27 +1904,11 @@ Eez_centroid_sf <-st_as_sf(Eez_centroid,
 #   bind_cols(Eez_centroid) %>% 
   # select(eez_name,longitude = lon,latitude = lat)
 
+#
 
-# Join all data for analysis
-
-Main_data <- Eme_Res %>% # 19728
-  filter(tresh == "Tresh_one") %>% # 11490
-  left_join(Spp_depth) %>% 
-  select(taxon_key,tresh,sf_eez_name,sau_fishing_entity,fishing_entity_id,emerging_yr,eezid,dem_pel,un_region= un_geo_region) %>% 
-  left_join(Toe_temp,
-            by = c("eezid","tresh")
-            ) %>% 
-  left_join(Catch_trend,
-            by = c("taxon_key","sau_fishing_entity","fishing_entity_id")
-            ) %>% # 11492
-  left_join(Eez_biogeo,
-            by = "eezid") %>% 
-  left_join(Spp_env_pref,
-            by = "taxon_key") %>% 
-  left_join(Eez_centroids,
-            by = "eezid") %>% 
-  mutate(latitude = abs(latitude))
-
+# See chunk Emerging_control_panel
+n_stock <- 9132
+n_eez <- length(unique(Eez_centroid_sf$eez_name))
 
 ```
 
@@ -1948,7 +1933,7 @@ Eme_Res %>%
   group_by(tresh) %>% 
   summarise(
     emerging_stocks = sum(emerging_stocks),
-    prop_total = (emerging_stocks/9132)*100,
+    prop_total = (emerging_stocks/n_stock)*100,
     )
 
 # Global average ToE
@@ -1962,6 +1947,19 @@ Eme_Res %>%
     min = min(emerging_yr),
     max = max(emerging_yr)
            )
+
+# By 2030
+Eme_Res %>% 
+filter(emerging_yr >= 2030) %>% 
+  group_by(tresh,neighbour_id) %>% 
+  summarise(
+    emerging_stocks = length(unique(taxon_key))
+    ) %>% 
+  group_by(tresh) %>% 
+  summarise(
+    emerging_stocks = sum(emerging_stocks),
+    prop_total = (emerging_stocks/n_stock)*100
+    )
 
 
 
@@ -1990,7 +1988,7 @@ stock_d <-
     level = "stock"
   )
 
-max(stock_d$com_sum)
+# max(stock_d$com_sum)
 
 #  EEZ data
 eez_d <-  Eme_Res %>% 
@@ -2011,7 +2009,7 @@ eez_d <-  Eme_Res %>%
     level = "eez"
   )
 
-max(eez_d$com_sum)
+# max(eez_d$com_sum)
 
 # Plot Data
 plot_data <- stock_d %>% 
@@ -2019,14 +2017,14 @@ plot_data <- stock_d %>%
   filter(tresh != "NA") %>% 
   mutate(
     # total = ifelse(level == "stock",length(unique(Eme_Res$taxon_key)),length(unique(Eme_Res$sf_eez_name))),
-    total = ifelse(level == "stock",max(stock_d$com_sum),max(eez_d$com_sum)),
+    total = ifelse(level == "stock",n_stock,n_eez),
     per = com_sum/total*100
   ) %>% 
   gather("metric","value",com_sum,per) %>% 
   filter(tresh == selected_tresh)
 
 
-# Manually include rest of data untill 2100
+# Manually include rest of data until 2100
 cont_eez <- plot_data %>% 
   filter(level == "eez") %>% 
   arrange(taxon_emer) %>% 
@@ -2034,9 +2032,12 @@ cont_eez <- plot_data %>%
   select(-1) %>% 
   arrange(metric) %>% 
   mutate(
-    value = ifelse(metric == "per",100,228),
+    value = ifelse(metric == "per",81,228),
     taxon_emer = c(seq(2088,2099,1),seq(2088,2099,1))
   )
+
+
+
 
 plot_data <- plot_data %>% 
   bind_rows(cont_eez) %>% 
@@ -2108,9 +2109,7 @@ count_eez_plot <- ggplot() +
                      limits = c(2005,2100),
                      label = c(seq(2000,2075,25),">2100")
   ) +
-  my_ggtheme_p() +
-  theme(legend.position = "") +
-  guides(fill=guide_legend(title= "Level", reverse=FALSE)) +
+  my_ggtheme_p(leg_pos = "", hjust = 0.5) +
   scale_fill_viridis(discrete = T,
                      begin = 0.1, 
                      end = 0.1
@@ -2156,8 +2155,7 @@ count_stock_plot <- ggplot() +
                      limits = c(2005,2100),
                      label = c(seq(2000,2075,25),">2100")
   ) +
-  my_ggtheme_p(leg_pos = "") +
-  guides(fill=guide_legend(title= "Level", reverse=FALSE)) +
+  my_ggtheme_p(leg_pos = "", hjust = 0.5) +
   scale_fill_viridis(discrete = T,
                      begin = 0.7, 
                      end = 0.7
@@ -2196,7 +2194,7 @@ percentage_plot <- ggplot() +
   geom_text(data = dashed_lines,
             aes(
               x = x-4,
-              y = 18,
+              y = 14,
               label = label
             ),
             size = 4,
@@ -2211,8 +2209,7 @@ percentage_plot <- ggplot() +
                      limits = c(2005,2100),
                      label = c(seq(2000,2075,25),">2100")
   ) +
-  my_ggtheme_p(leg_pos = "right") +
-  guides(fill=guide_legend(title= "", reverse=FALSE)) +
+  my_ggtheme_p(leg_pos = "right", hjust = 0.5) +
   scale_fill_viridis(discrete = T,
                      begin = 0.1,
                      end = 0.7,
@@ -2229,9 +2226,9 @@ percentage_plot <- ggplot() +
 
 # Draw figure
   plot_all <- ggdraw() +
-    # Latin America and the Car.
+    # Count stock plot
     draw_plot(count_stock_plot, x = 0.01, y = 0, width = 0.29, height = 0.90) +
-    # Europe
+    # Count EEZ plot
     draw_plot(count_eez_plot, x = 0.31, y = 0, width = 0.29, height = 0.90) +
     # Percentage plot
     draw_plot(percentage_plot, x = 0.61, y = 0 , width = 0.29, height = 0.90) +
@@ -2240,7 +2237,7 @@ percentage_plot <- ggplot() +
     # Labels
     draw_plot_label(label = c("A", "B","C"), 
                     size = 20,
-                    x = c(0.01, 0.285,0.56), 
+                    x = c(0.01, 0.285,0.59), 
                     y = c(1,1,1)
     )
   
