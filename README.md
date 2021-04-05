@@ -1,13 +1,20 @@
-# Matching the Time of Emergence of Transboundary Fish Stocks to Lead Time for Policy Response Under Climate Change
+# Imminent range shifts in transboundary fish stocks challenge their management under climate change
+
 
 This repository is intended to support the project *Matching the Time of Emergence of Transboundary Fish Stocks to Lead Time for Policy Response Under Climate Change* 
 
-**Authors**: Juliano Palacios-Abrantes<sup>1</sup>, Thomas Frölicher<sup>2</sup>, U. Rashid Sumaila<sup>3</sup>, Vicky Lam<sup>1</sup>, David VanderZwaag<sup>3</sup> and William W.L. Cheung<sup>1</sup>.
+**Authors**: Juliano Palacios-Abrantes<sup>1</sup>, Thomas L. Frölicher<sup>1,3</sup>, Gabriel Reygondeau<sup>1</sup>, U. Rashid
+Sumaila<sup>1</sup>, Alessandro Tagliabue<sup>4</sup>, Colette C.C. Wabnitz<sup>1,5</sup>, and William W.L. Cheung<sup>1</sup>
 
+
+
+Juliano Palacios-Abrantes<sup>1</sup>, Thomas Frölicher<sup>2</sup>, U. Rashid Sumaila<sup>3</sup>, Vicky Lam<sup>1</sup>, David VanderZwaag<sup>3</sup> and William W.L. Cheung<sup>1</sup>.
 
 1. Institute for the Oceans and Fisheries, University of British Columbia, Vancouver, Canada.  
-2. Climate and Environmental Physics, Physics Institute, University of Bern
-3. Schulich School of Law, Dalhousie University
+2. Climate and Environmental Physics, Physics Institute, University of Bern, Switzerland.
+3. Oeschger Centre for Climate Change Research, University of Bern, Switzerland.
+4. School of Environmental Sciences, University of Liverpool, U.K.
+5. Stanford Center for Ocean Solutions, Stanford University, Stanford, United States
 
 \*Corresponding author: Juliano Palacios-Abrantes, j.palacios@oceans.ubc.ca
 
