@@ -3172,7 +3172,7 @@ for(i in 1:2){
     # ) +
     my_ggtheme_m() +
     scale_colour_viridis(
-      name="Stock share ratio gain \nand changing stocks (%)",
+      name= "Changes in catch proportion \nand changing stocks (%)",
       limits = c(0,max(Map_data$per_plot)),
       breaks = seq(0,max(Map_data$per_plot),10),
       labels = c(seq(0,max(Map_data$per_plot-10),10),">50")
@@ -3180,7 +3180,7 @@ for(i in 1:2){
       # direction = -1
     ) +
     scale_fill_viridis(
-      name="Stock share ratio gain \nand changing stocks (%)",
+      name= "Changes in catch proportion \nand changing stocks (%)",
       limits = c(0,max(Map_data$per_plot)),
       breaks = seq(0,max(Map_data$per_plot),10),
       labels = c(seq(0,max(Map_data$per_plot-10),10),">50")
@@ -3423,7 +3423,7 @@ for(i in 1:2){
     )#;Eu_map
   
   # Legend
-  map_plot <- get_legend(Prop_map)
+  map_legend <- get_legend(Prop_map)
   
   Prop_map <- Prop_map + 
     theme(legend.position = "")
@@ -3443,9 +3443,9 @@ for(i in 1:2){
     # Latin America and the Car.
     draw_plot(Lat_am_map, x = 0.05, y = 0.00, width = 0.5, height = 0.50) +
     # Europe
-    draw_plot(Eu_map, x = 0.52, y = 0.05, width = 0.35, height = 0.35) +
+    draw_plot(Eu_map, x = 0.53, y = 0.05, width = 0.35, height = 0.35) +
     # Legend
-    draw_plot(legend, x = 0.25, y = 0, width = 0.59, height = 0.09) +
+    draw_plot(map_legend, x = 0.25, y = 0, width = 0.59, height = 0.08) +
     # Labels
     draw_plot_label(label = c("A", "B", "The Caribbean","Northwestern Europe"),
                     size = c(20,20,15,15),
