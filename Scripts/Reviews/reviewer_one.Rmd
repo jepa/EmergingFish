@@ -5,7 +5,7 @@ output: pdf_document
 
 - Response: [Not responded] 
 - *Response*: [Draft response here] 
-- **Response**: [Response compleded her and in manuscript] 
+- **Response**: [Response completed her and in manuscript] 
 
 
 # Main comment 
@@ -47,23 +47,23 @@ P5L8 – “as early as 2006” is there a way to validate the historical period
 
 P8L6 – can you include information on direction here as well? Are these top five countries gaining stocks, losing stocks or just shifting stocks? It would be good to know which countries are predicted to be winners vs. losers.
 
-- Response:
+- **Response:** Thank you for your comment. We provide direction of change in the next figure (Figure 5 of the revised manuscript) showing winners and losers according to neighboring EEZs. Here we show how each neighboring EEZ will stand to win or lose against its neighbors. **NOTE FOR CO-AUTHORS:** *I am hesitant of actually pointing out winners and losers (e.g., stating that Spain will loos most of its catch to France). Hence, I rather leave the results and discussion more general. THoughts?*
 
 P9L7-8 – “catch proportion are expected to become more common and intense” – this sentence is a bit too jargon-y for the non-fisheries reader. Please specify whether you’re referring to increased specialization? Or?
 
-- Response:
+- **Response:** We have modified this sentence in the revised manuscript with the hopes to make it less jargon-y. It now reeds on line *7* of *P9* the revised manuscript: "*There will be an increase in the number of stocks changing their catch proportion and the number of EEZs with changing stocks towards the mid-21st century. Such increase will be followed by an also increase in the intensity of the proportion change (Figs. S3 and S4).*" 
 
 P10L6-7 – “with higher gains identified in warmer colors” Please be specific here on the scale as well. Which colors represent which # of stocks transitioning? This could be absolute number (stocks gained – stocks leaving) or relative (stocks gained – stocks leaving) / historical EEZ stocks. Both of these metrics could be quite useful for future planning.
 
-- Response:
+- **Response:** We realize the figure was missing the legend and color bar making it confusing for the reader. We have now included the legend explaining the legend and color bar.
 
 P12L2-3 – “As transboundary stocks continue to shift, such international disputes are likely to increase in frequency and requiring a revision of management plans (9, 28).” I do not disagree with this statement but it rings a bit hollow without knowing which country management plans need revision. I am not asking the authors to fully assess this literature but instead provide examples of successful management plans in response to transboundary shifts and examples those that are existing that would need to be revised.
 
-- Response:
+- *Response:* Thank you for this comment. We have included a couple of examples of management plans that are somehow prepared or have respond to the issues we highlight.
 
 Pgs 12-13 deal with this a bit but this could use more context.
 
-- Response:
+- **Response:** Please see previous comment.
 
 P13L10-12 – “Results from multiple marine ecosystem models show that SST and primary production (NPP) are the main drivers of changes in species distributions across oceanic basins (37, 38).” This statement is misleading in my opinion. They are often important drivers in our models but this may be in part because we don’t measure other metrics at the appropriate scale for global or basin-scale modeling. I would revise to say “are the main indicators of species distributional changes across ocean basins.”
 
@@ -71,8 +71,8 @@ P13L10-12 – “Results from multiple marine ecosystem models show that SST and
 
 P14L14-16 - “Overall, changes in fish biomass with multiple upper trophic level models show overall agreement across models in terms of direction of change, but vary in the magnitude of that change (38).” I really appreciate the discussion of uncertainty but it seems important to present uncertainty for the models you have presented as well. Is there an upper and lower bounds (based on RCP8.5) due to model uncertainty from the predictions you have included? This could be incorporated in a number of the presented data points, e.g. 4,119 stocks by 2100, 239 of the world EEZs, etc.
 
-- Response:
+- **Response:** Thank you for your comment. For this paper we used one climate model (the GFDL) forced following one climate change scenario (RCP 8.5) to couple with one species distribution model. For this reason, providing quantitative upper and lower bounds of our results is not possible and would require substantial extra computation. However, because we have 10 different runs of the GFDL we are capable of providing a a less conservative estimate of the numbers you mention (i.e., the number of shifting stocks and EEZs). This was originally presented in the methods section as a sensitivity analyses and has now been moved to the Methods section of the main paper. It reads on line *XXX* of page *XX*: *We also computed a less conservative estimation of shifting transboundary stocks by including a threshold of one standard deviation (i.e., representing a probability of 68% that the stock had shifted from natural variation; see methods). In this case, the global average shift in the shared distribution of transboundary stocks is 2029 $\pm$ 27 years, a difference of about 7 years (Fig. S8). In total, 5,745 transboundary stocks would shift their shared distributions between 2006 and 2100 considering a less conservative metric, that is, 33% (n = 1626) more shifting stocks (Figs. S2 and S8).*
 
 P14L20-23 – “While this method might define some stocks that do not necessarily align with biologically-defined sub-populations within an EEZ, in many EEZs, fisheries are often managed at the species level (43) and sub-populations are potentially interconnected (44), thus, providing additional ecological ground for our analysis (45).” A counterpoint would argue that subpopulations may have different ecological responses to climate variability and change thus species-specific models may miss this nuance. You get to this topic a bit on the next page though.
 
-- Response:
+- **Response:** We agree with this comment. However, based on the data available we are unable to increase the detail of our study.
