@@ -1486,11 +1486,12 @@ SummaryProp <- function(taxon_key,links="NA"){
     left_join(proportion_data) %>% 
     # Only keeps change if surpasses treshold
     mutate(
-      over_tresh = ifelse(ensemble_mean > top_tresh | ensemble_mean < low_tresh,"keep",
+      over_tresh = ifelse(time_step != "historical" & ensemble_mean > top_tresh | ensemble_mean < low_tresh,"keep",
                           ifelse(time_step == "historical","keep","drop")
       )
     ) %>% 
-    filter(over_tresh == "keep") %>% 
+    # filter(time_step !="historical" | over_tresh == "keep") %>%
+    filter(over_tresh == "keep") %>%
     select(-top_tresh,-low_tresh)
   
   if(links == "y"){
@@ -1517,6 +1518,38 @@ SummaryProp <- function(taxon_key,links="NA"){
 
 ```
 
+
+#### Fun `EEZarrive_exit`
+
+```{r fun_EEZexit, eval = F, echo = F}
+
+# taxon_list <- c(600004,600006)
+
+# EEZProp <- function(taxon_list,links="NA"){
+  
+  spp <- bind_rows(
+    lapply(Taxon_list,SummaryProp,links)
+  ) %>% 
+    spread(time_step,mean_spp) %>% 
+    # mutate_if(is.numeric,replace_na,0) %>% # If NA 0 meaning wins and looses
+    mutate_at(vars(
+      "per_early" = early,
+      "per_mid" = mid
+    ),
+    funs(round(((.-historical)/(abs(historical)))*100,2))) %>%  # original
+         # funs(round(((historical-.)/(abs((historical+.)/2)))*100,2)
+    # funs((historical-.)*100)) %>%  
+    # funs(ifelse(variable == "n_per",.,round(((.-historical)/(abs(historical)))*100,2)
+                # )
+         # )
+    # ) %>%
+  gather("time_step","percentage_change",per_early:per_mid)
+  
+
+
+
+
+```
 
 #### Fun `EEZProp`
 
@@ -1604,7 +1637,9 @@ PropChange <- function(taxon_list,links="NA"){
       "per_mid" = mid
     ),
     # funs(round(((.-historical)/(abs(historical)))*100,2)
-    funs(ifelse(variable == "n_per",.,round(((.-historical)/(abs(historical)))*100,2)
+    funs(ifelse(variable == "n_per",.,round(((.-historical)/(abs(historical)))*100,2) # original
+    #             )
+    # funs(ifelse(variable == "n_per",.,(historical-.)*100)
                 )
          )
     )
@@ -2996,8 +3031,8 @@ Prop_results %>%
     sd(.,na.rm=T),
     length(unique(eez_name)),
     length(unique(eez_name))/280*100
-    )
-    )
+  )
+  )
 
 # Prepare data from results
 Data <- Prop_results %>% 
@@ -3141,7 +3176,7 @@ for(i in 1:2){
             col = "white") +
     geom_sf(data = World_eez_sf, size = 0.1, fill = "white", col = "gray30") +
     geom_sf(data = grey_land, size = 0.1, fill = "grey50", col = "gray30") + # created for figure 2
-    geom_point(data = subset(Map_data, time_step == time & per_plot < 0),
+    geom_point(data = subset(Map_data, variable =="mean_eez" & time_step == time & per_plot < 0), 
                aes(start_lon,
                    start_lat
                ),
@@ -3149,7 +3184,7 @@ for(i in 1:2){
                col = "gray80",
                shape = 20,
                stroke = 1.5) +
-    geom_path(data = subset(paths, time_step == time & per_plot > 0),
+    geom_path(data = subset(paths, variable =="mean_eez" & time_step == time & per_plot > 0), # filter data 
               aes(X,
                   Y,
                   group = interaction(line_id,subline_id),
