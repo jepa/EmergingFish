@@ -50,8 +50,7 @@ P5L7 – “Our results suggest that 4,119 transboundary stocks will experience 
 
 P5L8 – “as early as 2006” is there a way to validate the historical period of these predictions (e.g. 2006-2020) to see if the model is actually predicting observed changes in transboundary stocks? This would greatly improve the validity of the manuscript.
 
-- *Response:* In the section "High present-day climate risk of on transboundary fisheries management" we describe early shifts in the shared distribution of transboundary stocks including the cases of Humboldt squid (*Dosidicus gigas*) and Atlantic mackerel (*Scomber scombrus*) both in the early 2000s. We have included some more punctual examples of documented shifts between 2006 and 2021. It reads on line **xx** of page **XX**: "Similar shifts have been documented for multiple European stocks [@Baudron:2020dj] like European hake (*Merluccius merluccius*) [@Baudron:2015il] as well as...
-
+- **Response:** In the section "High present-day climate risk of on transboundary fisheries management" we describe early shifts in the shared distribution of transboundary stocks including the cases of Humboldt squid (*Dosidicus gigas*) and Atlantic mackerel (*Scomber scombrus*) both in the early 2000s and have included a couple more punctual examples of documented shifts between 2006 and 2021. However, there is not a vast documentation on shifts in the distribution of transboundary species (i.e., specifically from one EEZ to another). Mapping these shifts is out of the scope of the current project as there is an ongoing effort to document the global hifts of transboundary species. 
 
 P8L6 – can you include information on direction here as well? Are these top five countries gaining stocks, losing stocks or just shifting stocks? It would be good to know which countries are predicted to be winners vs. losers.
 
