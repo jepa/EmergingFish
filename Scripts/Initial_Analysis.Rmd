@@ -1536,13 +1536,8 @@ SummaryProp <- function(taxon_key,links="NA"){
       "per_early" = early,
       "per_mid" = mid
     ),
-    funs(round(((.-historical)/(abs(historical)))*100,2))) %>%  # original
-         # funs(round(((historical-.)/(abs((historical+.)/2)))*100,2)
-    # funs((historical-.)*100)) %>%  
-    # funs(ifelse(variable == "n_per",.,round(((.-historical)/(abs(historical)))*100,2)
-                # )
-         # )
-    # ) %>%
+    funs(round(((.-historical)/(abs(historical)))*100,2))
+    ) %>%  # original
   gather("time_step","percentage_change",per_early:per_mid)
   
 
@@ -1636,10 +1631,7 @@ PropChange <- function(taxon_list,links="NA"){
       "per_early" = early,
       "per_mid" = mid
     ),
-    # funs(round(((.-historical)/(abs(historical)))*100,2)
     funs(ifelse(variable == "n_per",.,round(((.-historical)/(abs(historical)))*100,2) # original
-    #             )
-    # funs(ifelse(variable == "n_per",.,(historical-.)*100)
                 )
          )
     )
