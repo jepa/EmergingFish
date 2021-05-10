@@ -1,12 +1,8 @@
 ---
 title: "Response to Reviewer One"
-output: pdf_document
+# output: pdf_document
+output: word_document
 ---
-
-- Response: [Not responded] 
-- *Response*: [Draft response here] 
-- **Response**: [Response completed her and in manuscript] 
-
 
 # Main comment 
 
