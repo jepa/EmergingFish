@@ -42,6 +42,7 @@ _**Projecting species distributions under climate change**_
 
 We projected the future distribution of transboundary stocks using a dynamic bioclimatic envelope model (hereafter called DBEM). The DBEM determines the environmental space a species will occupy based on physiology, habitat suitability, depth and latitudinal ranges, and spatial population dynamics as well as preferences for sea temperature, salinity, oxygen content, sea ice extent (for polar species) and bathymetry. The DBEM then estimates species’ abundance and maximum catch potential (a proxy for maximum sustainable yield) over a regular spatial grid of 0.5 of latitude per 0.5 of longitude. Below we provide an overall description of the model. Please see @Cheung:2010dt; @Cheung:2009ud; @Cheung:2016jd for a more detailed version. Importantly, the DBEM is able to project catches by Exclusive Economic Zones that are consistent with observational-based estimates of catch from 1950 to 2016 [@Cheung:2016jd, Cheung et al. *in revision*].
 
+<!-- Included more details of the DBEM in response to reviewer 3 -->
 For each species, the DBEM uses the Sea Around Us (www.searaundus.org) distributional data and environmental variables from 1970 to 2000 to estimate the current distribution and environmental profile of each species. Moreover, it projects the future habitat suitability in each grid-cell (*i*) based on the following components;
 
 \begin{equation}
@@ -69,14 +70,13 @@ Finally, the DBEM projects maximum catch potential by setting fishing mortality 
 
 The DBEM was driven by simulated ocean conditions from a ten-ensemble member simulation of the Geophysical Fluid Dynamics Laboratory Earth system model (GFDL-ESM2M) to project the distributions of the 633 species from 1951 to 2100 [@Dunne:2012bo; @Dunne:2013db; @Rodgers:2015jq]. The GFDL-ESM2M was run under historical forcing until 2005 and follows a high greenhouse gas emissions scenario, Representative Concentration Pathway 8.5 (RCP 8.5), over the 2006-2100 period [@Riahi:2011dk]. We chose this time period to match the historical period in the GFDL ESM2M simulations over which the model was forced with observation-based greenhouse gas, aerosol and natural external forcing [@Rodgers:2015jq]. Because the main approach of this paper relies on understanding the spatial and temporal variation of a stock’s distribution, we have to understand distribution variability during both historical and future periods, to infer differences between time frames. To this end, each of the ten GFDL-ESM2M ensembles were started from infinitesimally small differences in Earth system initial conditions in 1950, resulting in a unique atmosphere and ocean state at each point in time after about three years for surface and eight years for subsurface waters [@Frolicher:2020cc]. By design, variations among ensemble members are then solely due to natural internal variability (e.g., different phases of the El Niño Southern Oscillation-ENSO). Thus, for our experiment, each of the ten GFDL-ESM2M ensembles were started from infinitesimally small differences in Earth system initial conditions in the year 1950, resulting in a unique atmosphere and ocean state at each point in time after about three years for surface waters and eight years for subsurface waters [@Frolicher:2020cc].
 
-
 _**Calculating an index of transboundary range shift**_
 
 We developed a Transboundary Index (TI) to evaluate range shifts in the shared distribution of transboundary stocks under climate change. This index represents the shift in the distribution centroid of a transboundary stock relative to the centroid of neighboring EEZs that share this stock (Fig. \@ref(fig:toeFigureS6)). The centroid of a transboundary stock was determined by the average ($\mu$) latitude ($lat_{ts}$) and longitude ($lon_{ts}$) across grid cells within the neighboring EEZs sharing the stock. Therefore,
 
 \begin{equation}
 \begin{split}
-\label{eq:one}
+\label{eq:four}
 lat_{ts} = \mu (lat_{per}) \\
 lon_{ts} = \mu (lon_{per})
 \end{split}
@@ -86,18 +86,23 @@ lon_{ts} = \mu (lon_{per})
 where $lat_{per}$ and $lon_{per}$ are the latitudes and longitudes of the grid cells holding the specified percentile ($per^{th}$) of the projected transboundary stock abundance. To focus on areas where transboundary stocks are more abundant and fishing activities are more likely to take place, we included grid cells where the projected stock abundance within the neighboring EEZs sharing the stock was above the $95^{th}$ percentile. A sensitivity analysis using a subset of species (n = 34) for all EEZs  to examine the effects of different thresholds (per = $20^{th}$, $50^{th}$ and $90^{th}$ percentile) on the calculated index value showed no apparent difference between percentiles (Fig. \@ref(fig:toeFigureS7)). The centroid of each EEZ was estimated using the st package in R (Fig. \@ref(fig:toeFigureS5)). For each ensemble member, neighboring EEZs and transboundary stock, we computed the distance between centroids (i.e., EEZ and stock) using the geosphere package in R assuming the Earth is a perfect sphere and ignoring geographic barriers;
 
 \begin{equation}
-\label{eq:two}
+\label{eq:five}
 D_{ens} = acos(sin(lat_{eez})*sin(lat_{ts}) + cos(lat_{eez})*cos(lat_{ts})*cos(lon_{eez}-lon_{ts}))
 \end{equation}
 
 where $lat_{eez}$ and $lat_{ts}$ are the latitudes of the EEZ and transboundary stock centroids, respectively, and $lon_{eez}$ and $lon_{ts}$ are associated longitudes. Then, for each year and for each ensemble member between 1951 and 2100 we calculated the transboundary index (TI) as follows:
 
 \begin{equation}
-\label{eq:three}
+\label{eq:six}
 TI =(\frac{D_{A,t}}{sd(D_{A,th})} - \frac{D_{B,t}}{sd(D_{B,th)}})^2
 \end{equation}
 
-where $D_A$ and $D_B$ represent the distance between the distribution centroids of a stock and the centroid of the neighboring EEZs (A and B) sharing the stock for each time step from 2006 to 2100 (*t*); and *sd* is the standard deviation of the historical (th, 1951 - 2005) centroid distribution for $D_A$ and $D_B$. Thus, a higher TI means that the abundance of a transboundary stock within neighboring EEZs changes beyond historical levels. From the perspective of a state’s fisheries, increasing TI indicates an increase in the challenges to effective management and sustainability of the transboundary stock’s fisheries. In contrast, a decreasing TI suggests that the sharing of the stocks between neighboring EEZs is becoming relatively more stable; a condition that favors effective management and sustainability of the related fisheries. The index was smoothed to a 10-year average to reduce interannual variability [@Frolicher:2016dg].
+where $D_A$ and $D_B$ represent the distance between the distribution centroids of a stock and the centroid of the neighboring EEZs (A and B) sharing the stock for each time step from 2006 to 2100 (*t*); and *sd* is the standard deviation of the historical (th, 1951 - 2005) centroid distribution for $D_A$ and $D_B$. 
+
+<!-- Removed in response to reviewer 3 -->
+<!-- Thus, a higher TI means that the abundance of a transboundary stock within neighboring EEZs changes beyond historical levels. From the perspective of a state’s fisheries, increasing TI indicates an increase in the challenges to effective management and sustainability of the transboundary stock’s fisheries. In contrast, a decreasing TI suggests that the sharing of the stocks between neighboring EEZs is becoming relatively more stable; a condition that favors effective management and sustainability of the related fisheries. -->
+
+The index was smoothed to a 10-year average to reduce interannual variability [@Frolicher:2016dg].
 
 _**Calculating shifts in the shared distribution of transboundary stocks**_
 
@@ -108,7 +113,7 @@ Knowing the point in time at which the distribution of a shared stock will diver
 <!-- $ToE = t when Emergence index[t] > 1$ -->
 
 \begin{equation}
-\label{eq:four}
+\label{eq:seven}
 ToE = TI_\mu[t']>2* TI_\sigma 
 \end{equation}
 
@@ -122,7 +127,7 @@ Here, we adopt the concept of threat point to quantify the intensity of changes 
 <!-- $$ \Delta{SSR_{e,m}} = \frac{(SSR_{f}-SSR_{th})}{SSR_{th}}* 100 $$ -->
 
 \begin{equation}
-\label{eq:five}
+\label{eq:eight}
 \Delta{SSR_{e,s}} = \frac{(SSR_{f}-SSR_{th})}{SSR_{th}}* 100
 \end{equation}
 
@@ -180,16 +185,6 @@ grid.raster(img)
 ```
 
 \clearpage
-
-```{r toeFigureS6, eval = T,  echo = F, fig.width=14, fig.height=10, fig.cap =  "Schematic diagram of the transboundary index (TI) to determine the time of emergence of transboundary stocks. The index is based on the distance between the distributional centroid of the transboundary stock and the geographic centroid of the neighboring Exclusive Economic Zones sharing the stock (Top panel). Time of emergence is defined as the first year when the TI overshoots historical values (Bottom panel)."}
-
-img <- readPNG("../Figures/FigS6.png")
-grid.raster(img)
-
-```
-
-\clearpage
-
 
 ```{r toeFigureS7, eval = T,  echo = F, fig.width=14, fig.height=10, fig.cap =  "Average year of range shift by Exclusive Economic Zone (EEZ) and transboundary stock using different levels of abundance percentile to determine the stock’s centroid. Top Row: results in absolute numbers. Bottom row: results expressed as a percentage of the total emerging stocks and EEZs with emerging stock."}
 
