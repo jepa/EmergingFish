@@ -598,7 +598,7 @@ GetCentroids <- function(taxon_key,
          ) %>% 
          select(taxon_key,eez_name,neighbour_id,ensemble,year,distance)
        
-       ### Code to produce graphs for Brazil and ruguay
+       ### Code to produce graphs for Brazil and Uruguay
        
        # name <- paste(taxon_key, "distrbution p = 90%") 
        # Centroids %>% 
@@ -870,9 +870,9 @@ TransIndex <- function(Centroids, # Expecting the results from the GetCentroids 
        path = my_path("R")
        )
   
-  }
+  } #End test plot
   
-  # If no historic data then emergin year is the first year of data
+  # If no historic data then emerging year is the first year of data
   if(nrow(historic_sd) == 0){
     
     Final_Result <- mean_sd_index %>%
