@@ -796,7 +796,9 @@ TransIndex <- function(Centroids, # Expecting the results from the GetCentroids 
   # Estimate noice from ensemble members
   historic_sd <- Trans_index %>% 
     filter(year <= Hist_y) %>% 
+    # Alternative method sensitivity analysis
     group_by(taxon_key,neighbour_id,ensemble) %>% #Average historic data per year first
+    # group_by(taxon_key,neighbour_id,ensemble) %>% #Average historic data per year first
     summarise_at(vars("trans_index"),
                  c(trend= mean),
                  na.rm=T
@@ -1945,7 +1947,7 @@ n_eez <- length(unique(Eez_centroid_sf$eez_name))
 ```{r ToE_generals,  eval = F, echo = T}
 
 ### ------------ ##
-# Select a trshold
+# Select a treshold
 selected_tresh <- "tresh_two"
 ### ------------ ##
 
@@ -2500,7 +2502,7 @@ for(i in 1:2){
     left_join(Eme_Res) %>%
     filter(tresh == tresh_list[i],
            !is.na(un_sub_region)) %>%
-    mutate(weight = )
+    # mutate(weight = )
     mutate(un_sub_region = ifelse(str_detect(un_sub_region,"Latin"),"Ltn. Ame. and\nthe Car.",
                                   ifelse(str_detect(un_sub_region,"Australia"),"Aus. and New Z.",
                                          ifelse(str_detect(un_sub_region,"Sub-Saharan"),"Sub-Saharan\nAfrica",
@@ -3543,7 +3545,7 @@ ggplot() +
 
 ## Sensitivity analysis
 
-Testing different Per values for the centroids 
+### Testing different Per values for the centroids 
 
 ```{r data_loading, eval = F, echo = F}
 
@@ -3738,6 +3740,41 @@ ggplot() +
 
 ```
 
+### Noise for all ensemble members
+
+
+```{r read_raw_data}
+
+# --------------- #
+# Load year of emergence results
+# --------------- #
+
+# Taxon_list_emer <- list.files(my_path("R",extra_path = "Emergence_2005"))
+Taxon_list_emer <- list.files("~/Desktop/Emergence_p95_alt")
+
+# clean names for function
+Taxon_list_emer <- gsub("_.*","",Taxon_list_emer) 
+
+
+# Paths <- paste(my_path("R",extra_path = "Emergence_raw_p95"),Taxon_list_emer,"_emergence_raw.csv",sep="")[1:10]
+
+Paths <- list.files("~/Desktop/Emergence_p95_alt",full.names = T)
+
+# Load all sp in one table
+Eme_Alt_Res <- bind_rows(lapply(Paths, fread)) %>% 
+  left_join(Neighbours,
+            # by = c("eez_name","eez_neighbour")
+  ) %>%
+  rename(sf_eez_name=eez_name) %>%
+  left_join(Matching_names,
+            by=  "sf_eez_name") %>%
+  clean_names() %>%
+  mutate(tresh = str_to_lower(tresh)) %>% 
+  rename(emerging_yr = mean_emer)
+
+
+
+```
 
 
 
