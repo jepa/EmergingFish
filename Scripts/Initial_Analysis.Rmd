@@ -657,12 +657,13 @@ GetCentroids <- function(taxon_key,
 
 # Test function
 
-# GetCentroids(taxon_key = 600076,
+# GetCentroids(taxon_key = 600004,
 #              year = year_df$year[1:5],
 #              data_type = "Catch",
 #              ensemble = 102,
 #              Neighbours = Neighbours,
-#              eez_centroid = eez_centroid
+#              eez_centroid = eez_centroid,
+#              p = 0.95
 #              )
 
 # head(Test_centroids)
@@ -851,15 +852,24 @@ TransIndex <- function(Centroids, # Expecting the results from the GetCentroids 
     {if(Plot_Test)geom_point(data = subset(mean_sd_index, trend > (historic_sd$hist_mean+historic_sd$noise) | trend < (historic_sd$hist_mean-historic_sd$noise)),
                aes(
                  x = year,
-                 y = trend,
-                 colour = "red",
+                 y = trend
                ),
+               colour = "red",
                shape = 1,
                size = 3
     )
       } +
+        geom_line(data = Trans_index,
+              aes(
+                x = year,
+                y = RMean,
+                color = as.factor(ensemble)
+              ),
+              alpha = 0.3
+    ) +
     geom_vline(xintercept = Hist_y,colour="blue",alpha = 0.5) +
-    scale_x_continuous(breaks = seq(1950,2100,5)) +
+    scale_x_continuous(breaks = seq(1960,2100,5),limits = c(1960,2100)) +
+    scale_color_brewer("Ensembles", palette = "Greens") +
     theme_classic()
   
     tk <- unique(mean_sd_index$taxon_key)
@@ -1059,7 +1069,7 @@ n_stocks <- Transboundary_spp %>%
 year_df <- tibble(year =  seq(1951,2099,1))
 
 # Last year of "historic" data
-Historic_year = 2005
+Historic_year <- 2005
 
 # Data path
 # path = DBEM_path
