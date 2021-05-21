@@ -894,7 +894,7 @@ TransIndex <- function(Centroids, # Expecting the results from the GetCentroids 
                 by = "neighbour_id") %>%
       ungroup() %>%
       select(taxon_key,eez_name,eez_neighbour,n_ens,emerging_yr) %>% 
-      mutate(tresh= NA)
+      mutate(tresh= "NA")
   
   return(Final_Result)
     
@@ -974,6 +974,14 @@ GetTransIndex <- function(taxon_key,
     print("Starting Step Two")
     
     # Second Step
+    
+    ### TEST it 
+    # for (i in 1:length(Ids)){
+    #   print(Ids[i])
+    #   print(TransIndex(Step_one,Ids[i]))
+    # }
+    
+    
     # Get the transboudary index based on all centroids
     Step_two <- bind_rows(
       lapply(Ids,
@@ -1109,8 +1117,7 @@ t_start <- Sys.time()
 
 gc()
 
-    Emerging_result <- bind_rows(
-      mclapply(alt_sens,
+      mclapply(spp_reman,
                GetTransIndex,
                year = year_df$year,
                Hist_y = Historic_year,
@@ -1121,7 +1128,7 @@ gc()
                p = 0.95, # main is 95
                Plot = F
       )
-    )
+    
 
 ``` 
 
