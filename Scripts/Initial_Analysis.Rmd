@@ -1957,7 +1957,6 @@ n_eez <- length(unique(Eez_centroid_sf$eez_name))
 
 ###  Year of Eergence Analysis
 
-
 ```{r ToE_generals,  eval = F, echo = T}
 
 ### ------------ ##
@@ -2079,9 +2078,6 @@ cont_eez <- plot_data %>%
     taxon_emer = c(seq(2088,2099,1),seq(2088,2099,1))
   )
 
-
-
-
 plot_data <- plot_data %>% 
   bind_rows(cont_eez) %>% 
   mutate(
@@ -2153,6 +2149,9 @@ count_eez_plot <- ggplot() +
                      label = c(seq(2000,2075,25),">2100")
   ) +
   my_ggtheme_p(leg_pos = "", hjust = 0.5) +
+  theme(
+    axis.ticks.x = element_line()
+  ) +
   scale_fill_viridis(discrete = T,
                      begin = 0.1, 
                      end = 0.1
@@ -2202,7 +2201,9 @@ count_stock_plot <- ggplot() +
   scale_fill_viridis(discrete = T,
                      begin = 0.7, 
                      end = 0.7
-  )
+  ) + theme(
+    axis.ticks.x = element_line()
+  ) 
 
 
 # Percentage plot
@@ -2257,7 +2258,9 @@ percentage_plot <- ggplot() +
                      begin = 0.1,
                      end = 0.7,
                      labels = c("EEZs","Stocks")
-  )
+  )+theme(
+    axis.ticks.x = element_line()
+  ) 
 
 
 # Legend
@@ -2593,8 +2596,8 @@ for(i in 1:2){
     geom_point(
       aes(
         x = reorder(un_sub_region,order),
-        y = med,
-        colour = med
+        y = mean,
+        colour = mean
       ),
       size = 5
     ) + 
@@ -3757,40 +3760,297 @@ ggplot() +
 ### Noise for all ensemble members
 
 
-```{r read_raw_data}
+```{r read_raw_data, eval = T, echo = F}
 
 # --------------- #
 # Load year of emergence results
 # --------------- #
 
-# Taxon_list_emer <- list.files(my_path("R",extra_path = "Emergence_2005"))
-Taxon_list_emer <- list.files("~/Desktop/Emergence_p95_alt")
-
-# clean names for function
-Taxon_list_emer <- gsub("_.*","",Taxon_list_emer) 
-
-
-# Paths <- paste(my_path("R",extra_path = "Emergence_raw_p95"),Taxon_list_emer,"_emergence_raw.csv",sep="")[1:10]
-
-Paths <- list.files("~/Desktop/Emergence_p95_alt",full.names = T)
+sens_paths <- list.files("~/Desktop/Sens_analysis/Emergence_alt_sens",full.names = T)
 
 # Load all sp in one table
-Eme_Alt_Res <- bind_rows(lapply(Paths, fread)) %>% 
+Eme_Alt_Res <- bind_rows(lapply(sens_paths, fread)) %>% 
+  mutate(method= "alt") %>% 
   left_join(Neighbours,
-            # by = c("eez_name","eez_neighbour")
-  ) %>%
-  rename(sf_eez_name=eez_name) %>%
+            by = c("eez_name","eez_neighbour")
+  ) %>% 
+  rename(sf_eez_name=eez_name) %>% 
   left_join(Matching_names,
-            by=  "sf_eez_name") %>%
-  clean_names() %>%
+            by=  "sf_eez_name") %>% 
+  clean_names() %>% 
   mutate(tresh = str_to_lower(tresh)) %>% 
-  rename(emerging_yr = mean_emer)
+  filter(emerging_yr != 2100)
 
 
+# Combine both datas
+sens_data <- Eme_Res %>% 
+  filter(taxon_key %in% Eme_Alt_Res$taxon_key) %>% 
+  mutate(method = "org") %>% 
+  bind_rows(Eme_Alt_Res)
+
+
+n_stock <- sens_data %>% 
+  filter(method == "org") %>% 
+  group_by(neighbour_id) %>% 
+  summarise(n_stock = length(unique(taxon_key))) %>% 
+  # View()
+  group_by() %>% 
+  summarise(t_trans_stocks = sum(n_stock)) %>% 
+  pull(t_trans_stocks)
+
+n_eez <- length(unique(sens_data$sf_eez_name))
+
+```
+
+## General numbers
+
+```{r sens_numbers, eval = T, echo = F}
+
+# Total number of emerging stocks
+
+# Global estimates
+sens_data %>% 
+  group_by(tresh,neighbour_id,method) %>% 
+  summarise(
+    emerging_stocks = length(unique(taxon_key))
+    ) %>% 
+  group_by(tresh,method) %>% 
+  summarise(
+    emerging_stocks = sum(emerging_stocks),
+    prop_total = (emerging_stocks/n_stock)*100,
+    )
+
+# Looks like there is no difference in the total number of emerging stocks
+# method emerging_stocks prop_total
+# alt                158       85.9
+# org                147       79.9
+
+# Global average ToE
+sens_data %>% 
+  group_by(tresh,method) %>% 
+  summarise(
+    # emerging_stocks = length(unique(taxon_key)),
+    # prop_total = (emerging_stocks/9132)*100,
+    mean= mean(emerging_yr),
+    sd = sd(emerging_yr),
+    min = min(emerging_yr),
+    max = max(emerging_yr)
+           )
+
+# Looks like the alternative method sets a later mean ToE but no real difference in s.d. min nor max
+# method  mean    sd   min   max
+# alt    2054.  29.2  2007  2099
+# org    2029.  25.4  2006  2098
+
+```
+
+```{r read_raw_data, eval = T, echo = F}
+
+  # Per Stock
+stock_d <-  
+  sens_data %>% 
+  # left_join(Neighbours) %>% 
+  # distinct(taxon_key,neighbour_id, .keep_all = TRUE) %>% 
+  group_by(taxon_key,neighbour_id,tresh,method) %>% 
+  summarise(
+    taxon_emer = min(emerging_yr)
+  ) %>% 
+  group_by(taxon_emer,tresh,method) %>% 
+  summarise(
+    n_tax = n()
+  ) %>% 
+  group_by(tresh,method) %>% 
+  mutate(
+    com_sum = cumsum(n_tax),
+    level = "stock"
+  )
+
+# max(stock_d$com_sum)
+
+#  EEZ data
+eez_d <-  sens_data %>% 
+  # left_join(Neighbours) %>% 
+  filter(n_ens == 10) %>% 
+  # distinct(eez_name,neighbour_id, .keep_all = TRUE) %>% 
+  group_by(sf_eez_name,tresh,method) %>% 
+  summarise(
+    taxon_emer = min(emerging_yr)
+  ) %>% 
+  group_by(taxon_emer,tresh,method) %>% 
+  summarise(
+    n_tax = n()
+  ) %>% 
+  group_by(tresh,method) %>% 
+  mutate(
+    com_sum = cumsum(n_tax),
+    level = "eez"
+  )
+
+# max(eez_d$com_sum)
+
+# Plot Data
+plot_data <- stock_d %>% 
+  bind_rows(eez_d) %>% 
+  filter(tresh != "NA") %>% 
+  mutate(
+    total = ifelse(level == "stock",n_stock,n_eez),
+    per = com_sum/total*100
+  ) %>% 
+  gather("metric","value",com_sum,per) %>% 
+  filter(tresh == "tresh_two")
+
+# 
+# # Manually include rest of data until 2100
+# cont_eez <- plot_data %>% 
+#   filter(level == "eez") %>% 
+#   arrange(taxon_emer) %>% 
+#   slice(1:24) %>%
+#   select(-1) %>% 
+#   arrange(metric) %>% 
+#   mutate(
+#     value = ifelse(metric == "per",81,228),
+#     taxon_emer = c(seq(2088,2099,1),seq(2088,2099,1))
+#   )
+
+
+plot_data <- plot_data %>% 
+  # bind_rows(cont_eez) %>% 
+  mutate(
+    my_facet = ifelse(metric == "per","Percentage (%)","Cumulative sum (n stocks)"),
+    label = ifelse(total == max(stock_d$com_sum),"Total number of emerging stocks","Total number of EEZs")
+  )
 
 ```
 
 
+```{r Time_lapse_plot, eval = F, echo = F}
+
+### Three plots
+
+count_eez_plot <- ggplot() +
+  geom_area(data = subset(plot_data, metric == "com_sum" & level == "eez"),
+            aes(
+              x = as.numeric(taxon_emer),
+              y = value,
+              fill = level
+            ),
+            size=0.5,
+            colour="black"
+  )  +
+  scale_y_continuous("Cumulative number of EEZs",
+                     expand = c(0,0)
+                     ) +
+  scale_x_continuous("Year of range shift",
+                     breaks = seq(2000,2100,25),
+                     limits = c(2005,2100),
+                     label = c(seq(2000,2075,25),">2100")
+  ) +
+  my_ggtheme_p(leg_pos = "", hjust = 0.5) +
+  scale_fill_viridis(discrete = T,
+                     begin = 0.1, 
+                     end = 0.1
+  ) +
+  facet_wrap(~ method);count_eez_plot
+
+#### Count stock plot 
+count_stock_plot <- ggplot() +
+  geom_area(data = subset(plot_data, metric == "com_sum" & level == "stock"),
+            aes(
+              x = as.numeric(taxon_emer),
+              y = value,
+              fill = level
+            ),
+            size=0.5,
+            colour="black"
+  )  +
+  scale_y_continuous("Cumulative number of stocks",
+                     expand = c(0,0)
+                     ) +
+  scale_x_continuous("",
+                     breaks = seq(2000,2100,25),
+                     limits = c(2005,2100),
+                     label = c(seq(2000,2075,25),">2100")
+  ) +
+  my_ggtheme_p(leg_pos = "", hjust = 0.5) +
+  scale_fill_viridis(discrete = T,
+                     begin = 0.7, 
+                     end = 0.7
+  ) +
+  facet_wrap(~ method);count_stock_plot
+
+
+# Percentage plot
+percentage_plot <- ggplot() +
+  geom_area(data = subset(plot_data, level == "eez" & my_facet == "Percentage (%)"),
+            aes(
+              x = as.numeric(taxon_emer),
+              y = value,
+              fill = level
+            ),
+            size=0.5,
+            colour="black"
+  ) + 
+  geom_area(data = subset(plot_data, level == "stock" & my_facet == "Percentage (%)"),
+            aes(
+              x = as.numeric(taxon_emer),
+              y = value,
+              fill = level
+            ),
+            size=0.5,
+            colour="black"
+  ) + 
+  scale_y_continuous("Cumulative proportion of the total (%)",
+                     expand = c(0,0)
+  ) +
+  scale_x_continuous("",
+                     breaks = seq(2000,2100,25),
+                     limits = c(2005,2100),
+                     label = c(seq(2000,2075,25),">2100")
+  ) +
+  my_ggtheme_p(leg_pos = "right", hjust = 0.5) +
+  scale_fill_viridis(discrete = T,
+                     begin = 0.1,
+                     end = 0.7,
+                     labels = c("EEZs","Stocks")
+  )+
+  facet_wrap(~ method);percentage_plot
+
+
+# Legend
+  legend <- get_legend(percentage_plot)
+  
+  percentage_plot <- percentage_plot + 
+    theme(legend.position = "")
+  
+
+# Draw figure
+  plot_all <- ggdraw() +
+    # Count stock plot
+    draw_plot(count_stock_plot, x = 0.01, y = 0, width = 0.29, height = 0.90) +
+    # Count EEZ plot
+    draw_plot(count_eez_plot, x = 0.31, y = 0, width = 0.29, height = 0.90) +
+    # Percentage plot
+    draw_plot(percentage_plot, x = 0.61, y = 0 , width = 0.29, height = 0.90) +
+    # legend
+    draw_plot(legend, x = 0.84, y = 0 , width = 0.20, height = 1) +
+    # Labels
+    draw_plot_label(label = c("A", "B","C"), 
+                    size = 20,
+                    x = c(0.01, 0.285,0.59), 
+                    y = c(1,1,1)
+    )
+  
+  
+  # Save plot
+  save_plot(
+    "./Figures/cumu_per_freq.png",
+    plot_all,
+    base_height = 5,
+    base_width = 12
+  )
+
+
+```
 
 # END PAPER
 
