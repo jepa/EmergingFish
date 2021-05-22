@@ -3773,10 +3773,21 @@ ggplot() +
 # Load year of emergence results
 # --------------- #
 
-sens_paths <- list.files("~/Desktop/Sens_analysis/Emergence_alt_sens",full.names = T)
+fread2 <- function(x){
+  
+  tb <- fread(x)
+  
+  if(nrow(tb) >0){
+    return(tb)
+  }
+  
+}
+
+
+sens_paths <- list.files(my_path("R","Emergence_alt_sens"),full.names = T)
 
 # Load all sp in one table
-Eme_Alt_Res <- bind_rows(lapply(sens_paths, fread)) %>% 
+Eme_Alt_Res <- bind_rows(lapply(sens_paths, fread2)) %>% 
   mutate(method= "alt") %>% 
   left_join(Neighbours,
             by = c("eez_name","eez_neighbour")
@@ -3809,7 +3820,7 @@ n_eez <- length(unique(sens_data$sf_eez_name))
 
 ```
 
-## General numbers
+#### General numbers
 
 ```{r sens_numbers, eval = T, echo = F}
 
@@ -3828,9 +3839,11 @@ sens_data %>%
     )
 
 # Looks like there is no difference in the total number of emerging stocks
-# method emerging_stocks prop_total
-# alt                158       85.9
-# org                147       79.9
+ # tresh     method emerging_stocks prop_total
+# 1 tresh_one alt               6665      116. 
+# 2 tresh_one org               5729      100  
+# 3 tresh_two alt               5258       91.8
+# 4 tresh_two org               4108       71.7
 
 # Global average ToE
 sens_data %>% 
@@ -3845,12 +3858,15 @@ sens_data %>%
            )
 
 # Looks like the alternative method sets a later mean ToE but no real difference in s.d. min nor max
-# method  mean    sd   min   max
-# alt    2054.  29.2  2007  2099
-# org    2029.  25.4  2006  2098
+#  tresh     method  mean    sd   min   max
+# 1 tresh_one alt    2055.  28.7  2007  2099
+# 2 tresh_one org    2029.  26.7  2006  2099
+# 3 tresh_two alt    2057.  28.6  2007  2099
+# 4 tresh_two org    2036.  28.1  2006  2099
 
 ```
 
+#### Area plots 
 ```{r read_raw_data, eval = T, echo = F}
 
   # Per Stock
@@ -4050,7 +4066,7 @@ percentage_plot <- ggplot() +
   
   # Save plot
   save_plot(
-    "./Figures/cumu_per_freq.png",
+    "./Figures/cumu_per_freq_sens.png",
     plot_all,
     base_height = 5,
     base_width = 12
@@ -4058,6 +4074,144 @@ percentage_plot <- ggplot() +
 
 
 ```
+
+
+#### Comparative map
+
+```{r}
+
+# Per EEZs
+Eez_d_hist <- sens_data %>% 
+  group_by(eezid,sau_fishing_entity,tresh,method) %>% 
+  summarise(
+    mean_yr = mean(emerging_yr,na.rm=T),
+    sd_yr = sd(emerging_yr,na.rm=T),
+    n_taxa = length(unique(taxon_key))
+    ) %>% 
+  gather("metric","value",mean_yr:n_taxa) %>% 
+  mutate(
+    reverse = abs(value-2100)  + 2000
+  )
+
+# Estimate the value (catch and USD) of emerging species
+Eme_value_data <- sens_data %>% 
+  group_by(sau_fishing_entity,fishing_entity_id,tresh,taxon_key,method) %>% 
+  summarise(n()) %>% 
+  left_join(Sau_data,
+            by = c("fishing_entity_id","taxon_key")) %>% 
+  filter(!is.na(variable)) %>% 
+  group_by(sau_fishing_entity,fishing_entity_id,tresh,variable,method) %>% 
+  summarise(
+   sum_value = sum(value,na.rm=T),
+    n_taxa = length(unique(taxon_key)) 
+  )
+  
+# Total value of each fishing nation
+
+Total_value <- Sau_data %>% 
+  group_by(fishing_entity_id,variable) %>% 
+  summarise(tot_value= sum(value,na.rm=T))
+
+
+Value_map_data <- Eme_value_data %>% 
+  left_join(Total_value,
+            by = c("fishing_entity_id","variable")) %>% 
+  mutate(participation = (sum_value/tot_value)*100+2000)
+
+
+# Per fishing entity
+
+fish_d_hist <- sens_data %>% 
+  group_by(sau_fishing_entity,tresh,method) %>% 
+  summarise(
+    value = length(unique(taxon_key))
+    ) %>% 
+  filter(!is.na(sau_fishing_entity))
+
+World_map_nemer <- World_map %>%
+  full_join(Value_map_data,
+            by = c("sau_fishing_entity","fishing_entity_id")
+  ) %>% 
+  filter(!is.na(participation))
+
+# These are regions without transboundary species
+grey_land <- World_map %>% 
+  filter(!fishing_entity_id %in% Value_map_data$fishing_entity_id) %>% 
+  filter(!sovereignt %in% c("Antarctica"))
+
+# -------------------------- #
+# Call plot
+# -------------------------- #
+tresh_list <- "tresh_two"
+
+  name_save <- paste("./Figures/emer_map_sens_",tresh_list,".png",sep = "")
+  
+  # Value Map
+  World_map_part <- World_map_nemer %>% 
+  filter(
+    tresh ==  tresh_list,
+    variable == "value"
+  )
+  
+  # ToE Map 
+  toe_map_data <- World_eez_sf %>% 
+    left_join(Eez_d_hist,
+              by = "eezid") %>% 
+    filter(tresh == tresh_list,
+           metric == "mean_yr")
+  
+  # Map with countries without ToE
+  
+  russia_churchil <- World_eez_sf %>% 
+    filter(eez_name %in% c("Russia (Kara Sea)","Russia (Laptev to Chukchi Sea)"))
+  
+  no_toe_eez <- World_eez_sf %>% 
+    filter(eez_name %in% Neighbours$eez_name, # Filter EEZs without Transboundary spp
+           !eez_name %in% toe_map_data$eez_name) %>%  # Filter EEZs with ToE stocks
+    rbind(russia_churchil)
+  
+  no_toe_land <- World_map %>% 
+    filter(name %in% Neighbours$eez_name, # Filter EEZs without Transboundary spp
+           !name %in% World_map_part$name) # Filter EEZs with ToE stocks
+    
+    
+  map <- ggplot(toe_map_data) +
+    geom_sf(
+      aes(
+        fill = reverse
+      ),
+      color =  "white",
+      size = 0.1
+    ) +
+    geom_sf(data = World_map_part,
+            aes(fill = participation),
+            color =  "white",
+            size = 0.1
+    ) +
+    geom_sf(data = grey_land, aes(), fill = "grey50", color =  "white",size = 0.1) +
+    geom_sf(data = no_toe_eez, aes(), fill = "lightblue", color =  "white",size = 0.1) +
+    geom_sf(data = no_toe_land, aes(), fill = "lightblue", color =  "white",size = 0.1) +
+    scale_fill_viridis("",
+                       limits = c(2000,2100),
+                       breaks = seq(2000,2100,25),
+                       labels = c(">2100",seq(2075,2000,-25)) # not inluding the > because we
+    ) +
+    my_ggtheme_m() +
+    facet_wrap(~method,
+               nrow = 2)
+  
+  
+  
+  ggsave(name_save,
+         width = 10,
+         height = 6,
+         units = "in"
+  )
+
+
+```
+
+
 
 # END PAPER
 
