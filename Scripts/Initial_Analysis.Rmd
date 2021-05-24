@@ -798,10 +798,10 @@ TransIndex <- function(Centroids, # Expecting the results from the GetCentroids 
   historic_sd <- Trans_index %>% 
     filter(year <= Hist_y) %>% 
     # Alternative method sensitivity analysis
-    group_by(taxon_key,neighbour_id,year) %>% #Average historic data per year first
+    group_by(taxon_key,neighbour_id,year) %>% #s.d. historic data per year first
     # group_by(taxon_key,neighbour_id,ensemble) %>% #Average historic data per year first
     summarise_at(vars("trans_index"),
-                 c(trend= mean),
+                 c(trend = sd),
                  na.rm=T
                  ) %>% 
     group_by(taxon_key,neighbour_id) %>% #Capture ensemble variation
@@ -909,11 +909,11 @@ TransIndex <- function(Centroids, # Expecting the results from the GetCentroids 
       gather("tresh","emerged",tresh_one,tresh_two) 
     
     
-    taxon <- unique(Raw_Result$taxon_key)
-    name_raw <- paste(my_path("R",extra_path = "/Emergence_alt_sens_raw/"),taxon,"_emergence_raw.csv",sep="")
-    
-    write_csv(Raw_Result,
-              name_raw)
+    # taxon <- unique(Raw_Result$taxon_key)
+    # name_raw <- paste(my_path("R",extra_path = "/Emergence_alt_sens_raw/"),taxon,"_emergence_raw.csv",sep="")
+    # 
+    # write_csv(Raw_Result,
+    #           name_raw)
     
     ToE_Result <- Raw_Result %>% 
     # Method the last year when the index overshoots and never goes back
@@ -990,7 +990,7 @@ GetTransIndex <- function(taxon_key,
              Centroid = Step_one)
     )
     
-    name <- paste(my_path("R",extra_path = "/Emergence_alt_sens/"),taxon_key,"_emergence.txt",sep="")
+    name <- paste(my_path("R",extra_path = "/Emergence_alt_sens_sd/"),taxon_key,"_emergence.txt",sep="")
     
     write_csv(Step_two,
               name)
