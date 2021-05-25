@@ -1478,13 +1478,13 @@ ggsave(map,filename="/Users/william/Google Drive/Projects/MHWs Global/MHW_SST_pl
 
 ## Percentage Change
 
-This results only shows the average percentage change in proportion of all speecies within an EEZ without relationship with neighbours
+This results only shows the average percentage change in proportion of all speecies within an EEZ without relationship with neighbors
 
 ### Functions and Data needed
 
 #### Fun `SummaryProp`
 
-This function estimates the total change in MCP proportion of each species for each EEZ. It looses the connection with neighbours as you only know for x species houw much is the proportion changing.
+This function estimates the total change in MCP proportion of each species for each EEZ. It looses the connection with neighbors as you only know for x species how much is the proportion changing.
 
 ```{r fun_SummaryProp, eval = F, echo =F}
 
@@ -1827,6 +1827,7 @@ Taxon_list <- gsub(".csv","",Taxon_list)
 
 
 # Read proportion results
+suppressMessages(
 Prop_results <- PropChange(Taxon_list, links="y") %>%
   filter(!is.na(eez_neighbour)) %>%
   mutate(per_mid_plot =ifelse(per_mid >= 100, 100,
@@ -1836,7 +1837,7 @@ Prop_results <- PropChange(Taxon_list, links="y") %>%
                          ifelse(per_early <= -100,-100,per_early)
   )
   )
-
+)
 # For dat availability
  # write_csv(prop_results,
           # "proportion_change_2005.csv")
@@ -2094,8 +2095,12 @@ plot_data <- plot_data %>%
 
 
 dashed_lines <- tibble(
-  x = c(2030,2050,2070),
-  label = c("UN 2030 Agenda","Mid range shift   ","Late range shift   ")
+  x = c(2030
+        # ,2050,2070),
+  ),
+  label = c("UN 2030 Agenda"
+            # ,"Mid range shift   ","Late range shift   "
+            )
 )
 
 
@@ -2666,10 +2671,6 @@ for(i in 1:2){
 
 ```{r, buble_plot, eval = F, echo = F}
 
-dashed_lines <- tibble(
-  x = c(2030,2050,2070),
-  label = c("UN 2030 Agenda","Mid range shift  ","Late range shift   ")
-)
 # Needs previous chunk
 
 Buble_data <- Eez_d_hist %>% 
@@ -2726,9 +2727,15 @@ Buble_data %>%
 # Labels Data
 
 Labels_data <- tibble(
-  x = c(2030,2050,2070,2007),
-  y = c(-5.8,-5.8,-5.8,Percentile_value$x+.1),
-  label = c("UN 2030 Agenda", "Mid shift","Late shift","Fisheries > 75th percentile")
+  x = c(2029,
+        # 2050,2070,
+        2007),
+  y = c(-5.2,
+        # -5.8,-5.8,
+        Percentile_value$x+.1),
+  label = c("UN 2030 Agenda", 
+            # "Mid shift","Late shift",
+            "Fisheries > 75th percentile")
 )
 
 
@@ -2785,18 +2792,28 @@ ggplot(Buble_data) +
                   hjust         = 1
   ) +
   # Divisory lines and labels
-  geom_vline(xintercept = c(2030,2050,2070), color = "grey50", size = 0.5, linetype = "dashed") +
-  geom_hline(data = Percentile_value,
-             aes(yintercept = x),
-             color = "grey50"
-  )  +
-  geom_text(data = Labels_data,
+  geom_vline(xintercept = 2030, color = "grey50", size = 0.5, linetype = "dashed") +
+  geom_text(data = subset(Labels_data, x == 2029),
             aes(
               x = x,
               y = y,
               label = label
             ),
-            size = 5,
+            size = 4,
+            color = "grey30",
+            angle = 90
+  ) +
+  geom_hline(data = Percentile_value,
+             aes(yintercept = x),
+             color = "grey50"
+  )  +
+  geom_text(data = subset(Labels_data, x == 2007),
+            aes(
+              x = x,
+              y = y,
+              label = label
+            ),
+            size = 4,
             color = "grey30"
   ) + 
   scale_shape("Region") +
