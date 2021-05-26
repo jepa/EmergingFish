@@ -1,5 +1,5 @@
 ---
-title: "Supplementary Materials for Imminent range shifts in transboundary fish stocks challenge their management under climate change"
+title: "Timing and magnitude of climate driven range shifts in transboundary fish stocks challenge their management"
 author: 'Juliano Palacios-Abrantes, Thomas L. Frölicher, Gabriel Reygondeau, U. Rashid Sumaila, Alessandro Tagliabue, Colette C.C. Wabnitz, and William W.L. Cheung'
 output:
   bookdown::word_document2:

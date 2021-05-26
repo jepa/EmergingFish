@@ -1,6 +1,6 @@
 ---
-title: "Imminent range shifts in transboundary fish stocks challenge their management under climate change"
-author: "SUBMITTED MANUSCRIPT. DO NOT SHARE."
+title: "Timing and magnitude of climate driven range shifts in transboundary fish stocks challenge their management"
+author: "REVISED MANUSCRIPT. DO NOT SHARE."
 date: "Affiliations: ^1^Institute for the Oceans and Fisheries, University of British Columbia, Vancouver, Canada. ^2^Climate and Environmental Physics, Physics Institute, University of Bern. ^3^Oeschger Centre for Climate Change Research, University of Bern, Switzerland. ^4^School of Environmental Sciences, University of Liverpool. ^5^Stanford Center for Ocean Solutions, Stanford University, Stanford, United States"
 subtitle: "Juliano Palacios-Abrantes*^1^, Thomas L. Frölicher^2,3^, Gabriel Reygondeau^1^, U. Rashid Sumaila^1^, Alessandro Tagliabue^4^, Colette C.C. Wabnitz^1,5^, and William W.L. Cheung^1^"
 # output: bookdown::pdf_document2
