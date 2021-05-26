@@ -762,10 +762,10 @@ TransIndex <- function(Centroids, # Expecting the results from the GetCentroids 
     mutate(RMean = rollmean(x = trans_index, 
                             10, 
                             align = "right", 
-                            fill = trans_index,
+                            fill = NA,
                             na.rm=T)
     ) %>% 
-    # filter(year > 1960) %>%
+    # filter(year > 1960) %>% # drop first 10 years of running mean
     select(taxon_key,neighbour_id,year,ensemble,trans_index,RMean)
   
   # Average of 10 years mean of ensemble members results
@@ -781,7 +781,7 @@ TransIndex <- function(Centroids, # Expecting the results from the GetCentroids 
     )
     
     # Valid ensembles
-  # Only perform analysis on ensembles containing all years between 1951 and 2040
+  # Only perform analysis on ensembles containing all years between 1961 and 2040
     n_years <- mean_sd_index %>% 
       group_by(n_ens) %>% 
       summarise(
@@ -798,10 +798,10 @@ TransIndex <- function(Centroids, # Expecting the results from the GetCentroids 
   historic_sd <- Trans_index %>% 
     filter(year <= Hist_y) %>% 
     # Alternative method sensitivity analysis
-    group_by(taxon_key,neighbour_id,year) %>% #s.d. historic data per year first
-    # group_by(taxon_key,neighbour_id,ensemble) %>% #Average historic data per year first
-    summarise_at(vars("trans_index"),
-                 c(trend = sd),
+    # group_by(taxon_key,neighbour_id,year) %>% #s.d. historic data per year first
+    group_by(taxon_key,neighbour_id,ensemble) %>% #Average historic data per year first
+    summarise_at(vars("RMean"),
+                 c(trend = mean),
                  na.rm=T
                  ) %>% 
     group_by(taxon_key,neighbour_id) %>% #Capture ensemble variation
@@ -899,33 +899,24 @@ TransIndex <- function(Centroids, # Expecting the results from the GetCentroids 
   return(Final_Result)
     
   }else{
+    
+Final_Result <- mean_sd_index %>%
+  filter(year > Hist_y) %>%
+  mutate(
+    tresh_one = ifelse(trend > (historic_sd$hist_mean+historic_sd$noise) | trend < (historic_sd$hist_mean-historic_sd$noise),"One",NA),
+    tresh_two = ifelse(trend > (historic_sd$hist_mean+(2*historic_sd$noise)) | trend < (historic_sd$hist_mean-(2*historic_sd$noise)),"Two",NA)
+  ) %>%
+  gather("tresh","YesNo",tresh_one,tresh_two) %>% 
+  filter(!is.na(YesNo)) %>% 
+  group_by(taxon_key,neighbour_id,n_ens,tresh) %>%
+  summarise(emerging_yr= min(year)) %>%
+  # summarise(emerging_yr= max(year)) %>% # Last year that treshold is crossed
+  left_join(EEZ_ids,
+            by = "neighbour_id") %>%
+  ungroup() %>%
+  select(taxon_key,eez_name,eez_neighbour,n_ens,emerging_yr,tresh)
   
-    Raw_Result <- mean_sd_index %>%
-      filter(year > Hist_y) %>%
-      mutate(
-        tresh_one = ifelse(trend > (historic_sd$hist_mean+historic_sd$noise) | trend < (historic_sd$hist_mean-historic_sd$noise),"One",NA),
-        tresh_two = ifelse(trend > (historic_sd$hist_mean+(2*historic_sd$noise)) | trend < (historic_sd$hist_mean-(2*historic_sd$noise)),"Two",NA)
-      ) %>%
-      gather("tresh","emerged",tresh_one,tresh_two) 
-    
-    
-    # taxon <- unique(Raw_Result$taxon_key)
-    # name_raw <- paste(my_path("R",extra_path = "/Emergence_alt_sens_raw/"),taxon,"_emergence_raw.csv",sep="")
-    # 
-    # write_csv(Raw_Result,
-    #           name_raw)
-    
-    ToE_Result <- Raw_Result %>% 
-    # Method the last year when the index overshoots and never goes back
-      filter(is.na(emerged)) %>% 
-      group_by(taxon_key, neighbour_id,n_ens,tresh) %>% 
-      summarize(emerging_yr = max(year)+1) %>% # last year of NA + 1 makes it the first year of overshooting
-      left_join(EEZ_ids,
-                by = "neighbour_id") %>%
-      ungroup() %>%
-      select(taxon_key,eez_name,eez_neighbour,n_ens,emerging_yr,tresh)
-  
-  return(ToE_Result)
+  return(Final_Result)
   }
 }
   
@@ -990,7 +981,7 @@ GetTransIndex <- function(taxon_key,
              Centroid = Step_one)
     )
     
-    name <- paste(my_path("R",extra_path = "/Emergence_alt_sens_sd/"),taxon_key,"_emergence.txt",sep="")
+    name <- paste(my_path("R",extra_path = "/Emergence_95/"),taxon_key,"_emergence.txt",sep="")
     
     write_csv(Step_two,
               name)
