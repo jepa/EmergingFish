@@ -2095,9 +2095,9 @@ dashed_lines <- tibble(
 )
 
 
-# How many between 2006 and 2020?
+# How many between 2006 and 2030?
 plot_data %>% 
-  filter(taxon_emer <= 2020,
+  filter(taxon_emer <= 2030,
          tresh == selected_tresh) %>%  # Presenting results for the second treshold
   group_by(level,metric) %>% 
   summarise(
@@ -2438,7 +2438,7 @@ for(i in 1:2){
     annotate("text",
              x =-150,
              y = -69,
-             label = "% Of fishing revenue",
+             label = "Transboundary fishing revenue (%)",
              color="black",
              size=5,
              angle=0,
@@ -2459,7 +2459,7 @@ for(i in 1:2){
     annotate("text", 
              x =-150,
              y = -85,
-             label = "Year of range shift",
+             label = "Average year of range shift",
              color="black", 
              size=5, 
              angle=0, 
