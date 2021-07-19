@@ -189,7 +189,7 @@ grid.raster(img)
 
 ```{r toeFigureS7, eval = T,  echo = F, fig.width=14, fig.height=10, fig.cap =  "Average year of range shift by Exclusive Economic Zone (EEZ) and transboundary stock using different levels of abundance percentile to determine the stock’s centroid. Top Row: results in absolute numbers. Bottom row: results expressed as a percentage of the total emerging stocks and EEZs with emerging stock."}
 
-img <- readPNG("../Figures/FigS7.png")
+img <- readPNG("../Figures/FigS6.png")
 grid.raster(img)
 
 ```
@@ -199,7 +199,7 @@ grid.raster(img)
 
 ```{r toeFigureS8, eval = T,  echo = F, fig.width=6, fig.height=6, fig.cap ="Average distribution of transboundary stock’s year of change in their shared distribution. Left panel is the average year across stocks and right panel the standard deviation. Yellow represents a one standard deviation distance from the historical average and purple represents a two standard deviation distance from the historical average."}
 
-img <- readPNG("../Figures/FigS8.png")
+img <- readPNG("../Figures/FigS7.png")
 grid.raster(img)
 
 ```
@@ -235,7 +235,7 @@ tibble(
 
 \clearpage
 
-```{r toeTableS3, eval = T, echo = F}
+```{r toeTableS3, eval = F, echo = F}
 
 read.csv("~/GitHub/TransEmergence/Tables/kw_habitat.csv") %>% 
   select(-statistic,
@@ -255,7 +255,7 @@ read.csv("~/GitHub/TransEmergence/Tables/kw_habitat.csv") %>%
 
 \clearpage
 
-```{r toeTableS2, eval = T, echo = F}
+```{r toeTableS2, eval = F, echo = F}
 
 read.csv("~/GitHub/TransEmergence/Tables/kw_regional.csv") %>% 
   select(-statistic,
