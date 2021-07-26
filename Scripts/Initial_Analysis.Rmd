@@ -1533,33 +1533,6 @@ SummaryProp <- function(taxon_key,links="NA"){
 ```
 
 
-#### Fun `EEZarrive_exit`
-
-```{r fun_EEZexit, eval = F, echo = F}
-
-# taxon_list <- c(600004,600006)
-
-# EEZProp <- function(taxon_list,links="NA"){
-  
-  spp <- bind_rows(
-    lapply(Taxon_list,SummaryProp,links)
-  ) %>% 
-    spread(time_step,mean_spp) %>% 
-    # mutate_if(is.numeric,replace_na,0) %>% # If NA 0 meaning wins and looses
-    mutate_at(vars(
-      "per_early" = early,
-      "per_mid" = mid
-    ),
-    funs(round(((.-historical)/(abs(historical)))*100,2))
-    ) %>%  # original
-  gather("time_step","percentage_change",per_early:per_mid)
-  
-
-
-
-
-```
-
 #### Fun `EEZProp`
 
 The next step is to summarize all species per eez so our results shows average change of all species within an EEZ towards a neighbour. 
