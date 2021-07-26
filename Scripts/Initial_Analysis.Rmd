@@ -1664,7 +1664,7 @@ Spp_env_pref <- rbind(species(Exploited_spp_list, #species from rfishbase packag
               clean_names(),
             by = "taxon_name")
 
-# Neighbour list and their respective id (see chunk 3)
+# Neighbor list and their respective id (see chunk 3)
 Neighbours <- my_path("D", extra_path = "Spatial/", name="Neighbours_eez_id.csv", read = TRUE)
 
 Neighbours_n <- Neighbours %>% 
@@ -1688,8 +1688,8 @@ Eez_centroids <- my_path("D", extra_path = "Spatial/", name="eez_centroids.csv",
   left_join(Matching_names) %>% 
   select(eezid,latitude,longitude)
 
-# Species depth clasification (SAU-fishbase)
-Spp_depth <-fread(paste(my_path("D"),"SAU/SppTaxonName.csv", sep ="")) %>% 
+# Species depth classification (SAU-fishbase)
+Spp_depth <- fread(paste(my_path("D"),"SAU/SppTaxonName.csv", sep ="")) %>% 
   clean_names()
 
 # Temperature Time of Emergence
@@ -1855,16 +1855,7 @@ Sau_data <-fread(paste(my_path("D"),"SAU/sau_catch_value_country_taxon_JEPA.csv"
 
 # Load SAU shapefile name and paths
 
-# The path
-path_world <- my_path("G", extra_path = "Spatial/SAU/SAU_Shapefile")
-path_world <- "~/Downloads/SAU_Shapefile"
-
-# The File
-fnam_world <- "SAUEEZ_July2015.shp"
-
-# Load it!
-World_eez_sf <- st_read(dsn = path_world,
-                        layer =file_path_sans_ext(fnam_world)) %>% 
+World_eez_sf <- st_read(my_path("G", extra_path = "Spatial/SAU/SAU_Shapefile", "SAUEEZ_July2015.shp")) %>% 
   rename(eez_name = Name) %>% 
   st_transform(crs = 4326) %>% # 4326
   # st_transform(crs = "+proj=eck4") %>% # for tbular plot
@@ -2034,8 +2025,8 @@ plot_data <- stock_d %>%
     total = ifelse(level == "stock",n_stock,n_eez),
     per = com_sum/total*100
   ) %>% 
-  gather("metric","value",com_sum,per) %>% 
-  filter(tresh == selected_tresh)
+  gather("metric","value",com_sum,per) #%>% 
+  # filter(tresh == selected_tresh)
 
 
 # Manually include rest of data until 2100
@@ -2643,7 +2634,7 @@ Buble_data <- Eez_d_hist %>%
   summarise(mean_yr = mean(value)) %>% 
   left_join(Eme_value_data,
             by = c("sau_fishing_entity","tresh")) %>% 
-  filter(tresh == selected_tresh, # tresh hold selection
+  filter(#tresh == selected_tresh, # tresh hold selection
          variable == "value") %>% 
   mutate(
     weight_toe = sum_value/mean_yr,
@@ -2652,41 +2643,42 @@ Buble_data <- Eez_d_hist %>%
     ) %>%   # Billion usd
   left_join(Matching_names,
             by = c("sau_fishing_entity","fishing_entity_id")) %>% 
-  distinct(sau_fishing_entity,.keep_all = TRUE) %>% 
+  distinct(sau_fishing_entity,tresh,.keep_all = TRUE) %>%
   filter(!is.na(un_geo_region)) %>% 
   ungroup()# %>%  # no more asterisk
   # mutate(
   #   sau_fishing_entity = ifelse(sum_value_bi >= 1 & !sau_fishing_entity %in% c("Spain"), paste(sau_fishing_entity,"*",sep = ""),sau_fishing_entity))
 
-### Fucntion for estimating percentile
+### Function for estimating percentile
 
 quibble <- function(x, q = p) {
         tibble(x = quantile(x, q), q = q)
 }
 
 Percentile_value <- Buble_data %>% 
-  group_by() %>%  # for whole distribution
+  group_by(tresh) %>%  # for whole distribution
         do(quibble(.$log_value, 0.75))
 
 
 ## Top fishing nations close to SDGs
 Buble_data %>% 
   filter(log_value > Percentile_value$x & mean_yr < 2036) %>% 
-  # View()
-  group_by() %>% 
+  View()
+  group_by(tresh) %>% 
   summarise(sum(sum_value_bi),
             sum(n_taxa))
 
 ## All fishing nations close to SDGs
 Buble_data %>% 
   filter(mean_yr < 2036) %>% 
-  # nrow() # 76  coutries
-  # View()
-  group_by() %>% 
+  # nrow() # 76  countries
+  View()
+  group_by(tresh) %>% 
   summarise(sum(sum_value_bi),
             sum(n_taxa))
 
 76/length(unique(Buble_data$sau_fishing_entity))
+134/length(unique(Buble_data$sau_fishing_entity))
 
 # Labels Data
 
