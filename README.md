@@ -1,20 +1,24 @@
-# Imminent range shifts in transboundary fish stocks challenge their management under climate change
+# Timing and magnitude of climate driven range shifts in transboundary fish stocks challenge their management
 
 
-This repository is intended to support the project *Matching the Time of Emergence of Transboundary Fish Stocks to Lead Time for Policy Response Under Climate Change* 
+This repository is intended to support the project *Timing and magnitude of climate driven range shifts in transboundary fish stocks challenge their management* 
 
-**Authors**: Juliano Palacios-Abrantes<sup>1</sup>, Thomas L. Frölicher<sup>1,3</sup>, Gabriel Reygondeau<sup>1</sup>, U. Rashid
+**Authors**: Juliano Palacios-Abrantes<sup>1,6</sup>, Thomas L. Frölicher<sup>2,3</sup>, Gabriel Reygondeau<sup>1</sup>, U. Rashid
 Sumaila<sup>1</sup>, Alessandro Tagliabue<sup>4</sup>, Colette C.C. Wabnitz<sup>1,5</sup>, and William W.L. Cheung<sup>1</sup>
 
+1- Institute for the Oceans and Fisheries, University of British Columbia, Vancouver, Canada. 
+
+2- Climate and Environmental Physics, Physics Institute, University of Bern.
+
+3- Oeschger Centre for Climate Change Research, University of Bern, Switzerland.
+
+4- School of Environmental Sciences, University of Liverpool.
+
+5- Stanford Center for Ocean Solutions, Stanford University, Stanford, United States"
+
+6- Center for Limnology, University of Wisconsin-Madison, United States
 
 
-Juliano Palacios-Abrantes<sup>1</sup>, Thomas Frölicher<sup>2</sup>, U. Rashid Sumaila<sup>3</sup>, Vicky Lam<sup>1</sup>, David VanderZwaag<sup>3</sup> and William W.L. Cheung<sup>1</sup>.
-
-1. Institute for the Oceans and Fisheries, University of British Columbia, Vancouver, Canada.  
-2. Climate and Environmental Physics, Physics Institute, University of Bern, Switzerland.
-3. Oeschger Centre for Climate Change Research, University of Bern, Switzerland.
-4. School of Environmental Sciences, University of Liverpool, U.K.
-5. Stanford Center for Ocean Solutions, Stanford University, Stanford, United States
 
 \*Corresponding author: Juliano Palacios-Abrantes, j.palacios@oceans.ubc.ca
 

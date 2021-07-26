@@ -68,8 +68,6 @@ Climate change is shifting the distribution of shared fish stocks between neighb
 \clearpage
 
 
-# Introduction
-
 Over the past century, human activities have dramatically altered the physical and biogeochemical conditions of the ocean, resulting in warmer, more acidic and less oxygenated waters [@IPCC:2019tn]. Marine species’ distributions reflect species’ preferences for discrete environmental conditions [@Hutchinson:1957nt]. As a result of changing ocean conditions, many marine species are shifting their distributions towards higher latitudes, deeper water or following local temperature gradients to remain within their optimal environmental “niche” [@Poloczanska:2016kk]. The biogeography of marine species is projected to continue to shift as ocean conditions change through the 21st century [@Cheung:2010dt], impacting fish stocks, fisheries production and economies [@Sumaila:2019ew]. These impacts are compromising our capacity to reach international sustainability goals under the United Nations (UN)  2030 Agenda for Sustainable Development such as Goal 14 - life below water [@UnitedNations2018; @Singh:2017ds; @Pecl:2017hu]. The projected risks and impacts can be reduced by improving the effectiveness of current governance and fisheries management, including for species that cross international borders, also known as ‘shared stocks’ [@Pinsky:2018cb].
 
 The concept of shared stocks was developed following the ratification of the UN on the Law of the Sea (UNCLOS) and the claiming of Exclusive Economic Zones (EEZs) by Coastal States [@UnitedNations:1986tl]. As defined by the UN's Food and Agriculture Organization, shared stocks can be classified into four non-exclusive categories: (*i*) transboundary stocks, which cross neighboring EEZs; (*ii*) straddling stocks that, in addition to neighboring EEZs, also visit the adjacent high seas; (*iii*) highly migratory stocks, mainly tunas and bill-fishes, that migrate across vast oceanic regions including both the high seas and EEZs; and (*iv*) discrete stocks that are only present on the high seas [@Munro:2004th]. This study focuses on transboundary stocks exploited by fisheries operating within EEZs. Under UNCLOS, countries are responsible for the management of stocks within their EEZs and encouraged to cooperate when stocks are shared  [@UnitedNations:1986tl]. A recent study estimates that there are 633 transboundary fish species globally, representing 67% of identified exploited taxa. Between 2005 and 2010, these species yielded an annual average of 48 million tonnes of catch and USD 78 billion in fishing revenue [@PalaciosAbrantes:2020tv].
@@ -93,13 +91,14 @@ We coupled a mechanistic population dynamic model (i.e., the DBEM) with an Earth
 
 We then developed a Transboundary Index to evaluate range shifts in the shared distribution of transboundary stocks. The index is based on changes in the distance of the stock’s abundance centroid and that of the EEZs that share a given stock (Fig. \@ref(fig:toeFigure1)A). We used the ten-ensemble-member approach to determine the historical internal variability of the stock (i.e., 1951 to 2005) and apply the concept of *time of emergence*  to determine a shift in a stock’s shared distribution. The time of emergence (i.e., the year a transboundary stocks shifted from its historical distribution) was defined as the first year the index was beyond two standard deviations from the historical internal variability for a 95% probability of "emergence". We also relaxed the results by including a threshold of one standard deviation (i.e., representing a probability of 68% that the index has emerged).
 
-Finally, we apply the Game Theory concept of *threat point* [See @Sumaila:2020tp; @Munro:1979dg for its application to fisheries] to quantify the intensity of changes in the shared distribution of transboundary stocks between neighboring EEZs (Methods). A threat point is defined as the minimum payoff a player would be willing to receive to cooperate in a game-theoretic model. Here, we define the minimum payoff as two standard deviations from the historical catch proportion (average of 1951 to 2005) that each EEZ had for each stock. This assumes that countries are adapted to the historical sharing, but no country would be willing to collaborate if the future catch proportion of the transboundary stock is lower than it has ever been [@PalaciosAbrantes:2020vt; @Sumaila:2020tp]. Finally, we computed changes in catch proportion that were below the threat point of neighboring EEZs sharing a stock for two time periods relative to the historical proportion: 2030 (2021 and 2040) matching the UN 2030 Agenda and a mid-century timeline (2040 to 2050).
+Finally, we apply the Game Theory concept of *threat point* [See @Sumaila:2020tp; @Munro:1979dg for its application to fisheries] to quantify the intensity of changes in the shared distribution of transboundary stocks between neighboring EEZs (Methods). A threat point is defined as the minimum payoff a player would be willing to receive to cooperate in a game-theoretic model. Here, we define the minimum payoff as two standard deviations from the historical catch proportion (average of 1951 to 2005) that each EEZ had for each stock. This assumes that countries are adapted to the historical sharing, but no country would be willing to collaborate if the future catch proportion of the transboundary stock is lower than it has ever been [@PalaciosAbrantes:2020vt; @Sumaila:2020tp]. 
+<!-- Finally, we computed changes in catch proportion that were below the threat point of neighboring EEZs sharing a stock for two time periods relative to the historical proportion: 2030 (2021 and 2040) matching the UN 2030 Agenda and a mid-century timeline (2040 to 2050). -->
 
 # Results
 
 ### Identifying range shifts in the shared distribution of transboundary stocks
 
-**Our results suggest that 4,119 transboundary stocks will experience a range shift beyond historical variability by 2100 (hereafter referred to as ‘shifts’; Fig. \@ref(fig:toeFigure1)A), using a two s.d. threshold (i.e., representing a probability of 95% that the stock has shifted). This corresponds to 45% of the studied stocks (Fig. \@ref(fig:toeFigure1)C). Using a less conservative threshold (i.e., one s.d. representing a probability of 68% that the stock has shifted) results in 33% (n = 5,745) more shifting stocks, that is, 63% of all studied stocks (Figs. \@ref(fig:toeFigureS2) and \@ref(fig:toeFigureS8)). For both cases, the first shift is modelled to have occurred back in 2006. The average year of shift in the shared distribution of these stocks in all EEZs analyzed is projected to be between 2029 $\pm$ 27 years (one s.d. threshold) and 2036 $\pm$ 28 years (two s.d. threshold). Furthermore, between 81% and 83% of the world’s EEZs will experience at least one transboundary stock shift by 2100 with 77% to 80% of EEZs recording a distributional stocks shift by the UN 2030 Agenda’s deadline (Fig. \@ref(fig:toeFigure1)C).**
+**Our results suggest that 4,119 transboundary stocks will experience a range shift beyond historical variability by 2100 (hereafter referred to as ‘shifts’; Fig. \@ref(fig:toeFigure1)A), using a two s.d. threshold (i.e., representing a probability of 95% that the stock has shifted). This corresponds to 45% of the studied stocks (Fig. \@ref(fig:toeFigure1)C). Using a less conservative threshold (i.e., one s.d. representing a probability of 68% that the stock has shifted) results in 33% (n = 5,745) more shifting stocks, that is, 63% of all studied stocks (Figs. \@ref(fig:toeFigureS2) and \@ref(fig:toeFigureS8)). For both cases, the first shift is modelled to have occurred back in 2006. The average year of shift in the shared distribution of these stocks in all EEZs analyzed is projected to be between 2029 $\pm$ 27 years (one s.d. threshold) and 2036 $\pm$ 28 years (two s.d. threshold). Furthermore, between 81% and 83% of the world’s EEZs will experience at least one transboundary stock shift by 2100 with 77% to 80% of EEZs recording a distributional stock shift by the UN 2030 Agenda’s deadline (Fig. \@ref(fig:toeFigure1)C).**
 
 
 
@@ -176,16 +175,7 @@ Different levels of uncertainty exist in the projected emergence of environmenta
 
 The global community has set the ambitious goal of managing all fisheries sustainably (SDG 14 – Life below water) by 2030; achieving this goal would have clear benefits for several other societal goals [@UnitedNations2018; @Singh:2017ds]. Developing anticipatory policies to deal with shifting transboundary stocks is key to achieving the SDGs and ensuring effective governance of the world’s fisheries [@Pinsky:2018cb; @Oremus:2020id; @Pecl:2017hu]. Here, we developed an approach to inform the sustainable management and governance of transboundary fisheries in a changing world [@Link:2010ei]. First, we identified the transboundary stocks that would likely see shifts in their shared distribution compared to their historical average and the year in which such shifts would occur. Second, we estimated the intensity of such change. While future studies, specifically at more localized scale, will provide valuable nuance in designing effective policies, our results provide an important baseline on which to build when preparing ocean governance for shifting transboundary stocks [@Pinsky:2018cb; @PalaciosAbrantes:2020tv]. Our findings emphasize recent calls for the urgent adoption of measures in support of more adaptive, flexible fisheries management and governance to support resilient fisheries and durable management systems [@Pinsky:2018cb; @Pinsky:2020jx; @Oremus:2020id].
 
-
-\clearpage
-
-# References
-
-<div id="refs"></div>
-
-\clearpage
-
-# Supplements
+# Methods
 
 <!-- Set Figure, table and equations numbering according to the chapter -->
 \renewcommand{\thefigure}{S\arabic{figure}}
@@ -197,4 +187,11 @@ The global community has set the ambitious goal of managing all fisheries sustai
 ```{r supplements, child = '../Scripts/Supplements.Rmd', eval = T}
 
 ```
+
+# References
+
+<div id="refs"></div>
+
+
+
 
