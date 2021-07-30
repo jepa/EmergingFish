@@ -2,13 +2,11 @@
 title: "Timing and magnitude of climate driven range shifts in transboundary fish stocks challenge their management"
 author: 'Juliano Palacios-Abrantes, Thomas L. Frölicher, Gabriel Reygondeau, U. Rashid Sumaila, Alessandro Tagliabue, Colette C.C. Wabnitz, and William W.L. Cheung'
 output:
-  bookdown::word_document2:
+  # bookdown::word_document2
+    bookdown::pdf_document2:
     toc : no
     keep_tex: no
     number_sections: yes
-reference_docx: ../References/supplementary_template.docx
-bibliography: ../References/ToE_Ref.bib
-csl: ../References/science.csl
 header-includes:
 - \usepackage{float} #use the 'float' package
 - \floatplacement{figure}{H} #make every figure with caption = h
@@ -32,118 +30,33 @@ packages <- c(
 my_lib(packages)
 ```
 
-# Materials and methods
-
-### Databases and species selection
-
-The analyses detailed herein are based on 633 exploited marine transboundary species that account for 80% of the catch taken from the world’s EEZs between 2005 and 2014 [@PalaciosAbrantes:2020tv]. When a species was shared by a pair of neighboring EEZs it was considered a transboundary stock [@PalaciosAbrantes:2020tv; @Teh:2015gd], resulting in a total of 9,132 transboundary stocks. Using the transboundary species Atlantic cod (*Gadus morhua*) as an example and this study’s definition of transboundary stock, the United States and Canada share a stock of Atlantic cod, and Canada and Greenland share a separate stock of Atlantic cod, but the United States and Greenland do not as they do not have juxtaposing EEZs. We defined the boundaries of the world’s EEZs using the Sea Around Us spatial division (updated 1 July 2015; http://www.seaaroundus.org), noting that it subdivides the EEZs of 198 coastal states into 280 regions (Fig. \@ref(fig:toeFigureS5)) including island territories. We determined the intersections between polygons using the R package sf [@PackagesfSimpleF:2018vp]. Each EEZ was categorized by geopolitical region according to the United Nations (https://population.un.org/wpp/DefinitionOfRegions/) and biome [@Reygondeau:2019uh]. The habitat preference of each species was determined following FishBase (http://www.fishbase.org) for fish species and SeaLifeBase (http://www.fishbase.org) for invertebrates (Table S\@ref(tab:toeTableS1)). For each stock and EEZ, we used Sea Around Us data to estimate catch and fishing revenue from fishing activities. We report both average catch and revenue for the last available decade (2005-2014) [@Zeller2016; @Tai2017; @Sumaila:2015uc].
-
-### Projecting species distributions under climate change
-
-We projected the future distribution of transboundary stocks using a dynamic bioclimatic envelope model (hereafter called DBEM). The DBEM determines the environmental space a species will occupy based on physiology, habitat suitability, depth and latitudinal ranges, and spatial population dynamics as well as preferences for sea temperature, salinity, oxygen content, sea ice extent (for polar species) and bathymetry. The DBEM then estimates species’ abundance and maximum catch potential (a proxy for maximum sustainable yield) over a regular spatial grid of 0.5 of latitude per 0.5 of longitude. Below we provide an overall description of the model. Please see @Cheung:2010dt; @Cheung:2009ud; @Cheung:2016jd for a more detailed version. Importantly, the DBEM is able to project catches by Exclusive Economic Zones that are consistent with observational-based estimates of catch from 1950 to 2016 [@Cheung:2016jd, Cheung et al. *in revision*].
-
-<!-- Included more details of the DBEM in response to reviewer 3 -->
-For each species, the DBEM uses the Sea Around Us (www.searaundus.org) distributional data and environmental variables from 1970 to 2000 to estimate the current distribution and environmental profile of each species. Moreover, it projects the future habitat suitability in each grid-cell (*i*) based on the following components;
-
-\begin{equation}
-\label{eq:one}
-Hs = P(T_{i},TPP) *  P(Ba_{i}, Min_{D}, Max_{D}) * P(Hab_{i,j}, Hab_{Assoc}) * (Sal_{i}, Sal_{Assoc}) * P(Ice_{i}, Ice_{P})
-\end{equation}
-
-where *T* is seawater temperature, *TPP* is the species temperature profile, *Ba* is bathymetry, $Min_{D}$ and $Max{D}$ are the species minimum and maximum depth limits, *Hab* is the proportion of area of the habitat type *j* relative to the total seawater area of the cell *i*, $Hab_{Assoc}$ is an habitat association index, *Sal* is the salinity class of cell *i* and $Sal_{Assoc}$ is a salinity class association index. Finally, for polar regions and species, *Ice* is sea ice extent, and $Ice_{P}$ is association to sea ice. For pelagic species, the model uses environmental variables at the surface whereas demersal and benthic species’ distributions are driven by ocean bottom variables.
-
-The DBEM also integrates each species preference profile with physiology and population dynamics to project relative biomass assuming that spatio-temporal dynamics are determined by intrinsic growth rate, larval dispersion, and adult migration;
-
-\begin{equation}
-\label{eq:two}
-\frac{dA}{dt} = \sum_{j=1}^{n} (L_{ji} + Ad_{ji} + G_i)
-\end{equation}
-
-where $A_i$ is the relative abundance of the gri-cell *i*, *G* is the intrinsic population growth and $L_{ji}$ and $Ad_{ji}$ are settled larvae and net migrated adults from surrounding cells (*j*), respectively. Larval dispersal is modeled through ocean current with an advection-diffusion-reaction model. Finally, $G_i$ estimates the intrinsic growth following a logistic equation and the intrinsic rate of population increase (*r*):
-
-\begin{equation}
-\label{eq:three}
-G_i = r * A_i * (1-\frac{A_i}{A_{\infty,i}})
-\end{equation}
-
-Finally, the DBEM projects maximum catch potential by setting fishing mortality to half of the intrinsic population growth rate of the species (*f = r/2*).
-
-The DBEM was driven by simulated ocean conditions from a ten ensemble member simulation of the Geophysical Fluid Dynamics Laboratory Earth system model (GFDL-ESM2M) to project the distributions of the 633 species from 1951 to 2100 [@Dunne:2012bo; @Dunne:2013db; @Rodgers:2015jq]. The GFDL-ESM2M was run under historical forcing until 2005 and follows a high greenhouse gas emissions scenario, Representative Concentration Pathway 8.5 (RCP 8.5), over the 2006-2100 period [@Riahi:2011dk]. We chose the 1951-2100 time period to match the historical period in the GFDL ESM2M simulations over which the model was forced with observation-based greenhouse gas, aerosol and natural external forcing [@Rodgers:2015jq]. Because the main approach of this paper relies on understanding the spatial and temporal variation of a stock’s distribution, we have to understand distribution variability during both historical and future periods, to infer differences between time frames. To this end, each of the ten GFDL-ESM2M ensembles were started from infinitesimally small differences in Earth system initial conditions in 1950, resulting in a unique atmosphere and ocean state at each point in time after about three years for surface and eight years for subsurface waters [@Frolicher:2020cc]. By design, variations among ensemble members are then solely due to natural internal variability (e.g., different phases of the El Niño Southern Oscillation-ENSO). Thus, for our experiment, each of the ten GFDL-ESM2M ensemble simulations were started from infinitesimally small differences in Earth system initial conditions in the year 1950, resulting in a unique atmosphere and ocean state at each point in time after about three years for surface waters and eight years for subsurface waters [@Frolicher:2020cc].
-
-### Calculating an index of transboundary range shift
-
-We developed a Transboundary Index (TI) to evaluate range shifts in the shared distribution of transboundary stocks under climate change. This index represents the shift in the distribution centroid of a transboundary stock relative to the centroid of neighboring EEZs that share this stock (Fig. \@ref(fig:toeFigure1)). The centroid of a transboundary stock was determined by the average ($\mu$) latitude ($lat_{ts}$) and longitude ($lon_{ts}$) across grid cells within the neighboring EEZs sharing the stock. Therefore,
-
-\begin{equation}
-\begin{split}
-\label{eq:four}
-lat_{ts} = \mu (lat_{per}) \\
-lon_{ts} = \mu (lon_{per})
-\end{split}
-\end{equation}
 
 
-where $lat_{per}$ and $lon_{per}$ are the latitudes and longitudes of the grid cells holding the specified percentile ($per^{th}$) of the projected transboundary stock abundance. To focus on areas where transboundary stocks are more abundant and fishing activities are more likely to take place, we included grid cells where the projected stock abundance within the neighboring EEZs sharing the stock was above the $95^{th}$ percentile. A sensitivity analysis using a subset of species (n = 34) for all EEZs  to examine the effects of different thresholds (per = $20^{th}$, $50^{th}$ and $90^{th}$ percentile) on the calculated index value showed no apparent difference between percentiles (Fig. \@ref(fig:toeFigureS7)). The centroid of each EEZ was estimated using the st package in R (Fig. \@ref(fig:toeFigureS5)). For each ensemble member, neighboring EEZs and transboundary stock, we computed the distance between centroids (i.e., EEZ and stock) using the geosphere package in R assuming the Earth is a perfect sphere and ignoring geographic barriers;
+# Supplemental Figures
 
-\begin{equation}
-\label{eq:five}
-D_{ens} = acos(sin(lat_{eez})*sin(lat_{ts}) + cos(lat_{eez})*cos(lat_{ts})*cos(lon_{eez}-lon_{ts}))
-\end{equation}
+S1
 
-where $lat_{eez}$ and $lat_{ts}$ are the latitudes of the EEZ and transboundary stock centroids, respectively, and $lon_{eez}$ and $lon_{ts}$ are associated longitudes. Then, for each year and for each ensemble member between 1951 and 2100 we calculated the transboundary index (TI) as follows:
+```{r toeFigureS2, eval = T,  echo = F, fig.width=12, fig.height=7, fig.cap ="Year of change in the shared distribution of 5,745 transboundary stocks using a one standard deviation threshold. A) Land polygons show the contribution of shifting stocks to a country or territory’s total fishing revenue from transboundary stocks. Exclusive Economic Zone polygons display average year of range shifts within them. EEZs with no distributional shift between 2006 and 2100 are represented in aqua color. B) Year of shared distribution shifts by UN sub-regions. Points color coded by the median year of range shift. Horizontal dashed line represents the year 2030 – the Sustainable Development Agenda deadline. N = North, S = South, W = West and E = East. Ltn. Ame. and the Car. = Latin America and the Caribbean. Aus and New Z. = Australia and New Zealand."}
 
-\begin{equation}
-\label{eq:six}
-TI =(\frac{D_{A,t}}{sd(D_{A,th})} - \frac{D_{B,t}}{sd(D_{B,th)}})^2
-\end{equation}
+img <- readPNG("../Figures/FigS2.png")
+grid.raster(img)
 
-where $D_A$ and $D_B$ represent the distance between the distribution centroids of a stock and the centroid of the neighboring EEZs (A and B) sharing the stock for each time step from 2006 to 2100 (*t*); and *sd* is the standard deviation of the historical (th, 1951 - 2005) centroid distribution for $D_A$ and $D_B$. The TI was smoothed to a 10-year average to reduce interannual variability [@Frolicher:2016dg] and to match transboundary fisheries management that often integrates a longer time-frame in their consideration.
-
-<!-- Removed in response to reviewer 3 -->
-<!-- Thus, a higher TI means that the abundance of a transboundary stock within neighboring EEZs changes beyond historical levels. From the perspective of a state’s fisheries, increasing TI indicates an increase in the challenges to effective management and sustainability of the transboundary stock’s fisheries. In contrast, a decreasing TI suggests that the sharing of the stocks between neighboring EEZs is becoming relatively more stable; a condition that favors effective management and sustainability of the related fisheries. -->
-
-### Calculating shifts in the shared distribution of transboundary stocks
-
-Knowing the point in time at which the distribution of a shared stock will diverge from historical variability is important to inform decision makers by when, ideally, climate adaptation plans will need to have been implemented [@Link:2010ei]. To that end, we adopted the concept of time of emergence, commonly applied to multiple oceanic physical and biogeochemical variables [@Rodgers:2015jq; @Keller:2014jv; @Cheung:2020ja; @Schlunegger:2020gz; @Schlunegger:2019el; @Henson:2017ev] and defined as the moment in time when a signal (e.g., future anthropogenic trend) emerges from the background noise of natural variability (i.e., historical natural variation) [@Hawkins:2012hc]. The premise behind time of emergence is that we can only be confident that a significant change has been detected when the signal of anthropogenic climate change is larger than the background noise of natural climate variability [@Hawkins:2012hc]. The TI’s natural internal variability was estimated from the ensemble members by firstly averaging the TI from 1951 to 2005 and then estimating the variation ($TI_\sigma$) across ensemble members. The TI signal represents the average TI across ensemble members from 2006 to 2100 ($TI_\mu$). We then set a threshold (*tresh*) of $TI_\sigma$ to define the time of emergence of transboundary stocks (See Fig. \@ref(fig:toeFigure1) for a graphical description):
-
-<!-- We then set a threshold of two times $TI_\sigma$ representing a probability of 95% that the transboundary index has “emerged” from historical variability (See Fig. \@ref(fig:toeFigure1) for a graphical description): -->
-
-
-<!-- $EmergenceTIndex = \frac{\mu_{TI[t]}}{SD_{TI_{th}}}$ -->
-<!-- $ToE = t when Emergence index[t] > 1$ -->
-
-\begin{equation}
-\label{eq:seven}
-ToE = TI_\mu[t']> tresh
-\end{equation}
-
-**This way we define a shift in a stock’s shared distribution (i.e., time of emergence) as the first year the TI “emerges” from historical internal variability (*tresh*). It assumes that, from a fisheries’ perspective, the first year a stock’s distribution shift from a 10-year average is sufficient to call for caution. Two different arbitrary values of *tresh* were used. A conservative value ($tresh = 2* TI_\sigma$) representing a 95% probability that the index has emerged from historical variability and a more relaxed value ($tresh=TI_\sigma$) for a 68% probability. **
-
-Since the ToE method is sensitive to the noise estimate (i.e., historical natural variability), we conducted sensitivity analysis where we first calculated the average across the 10 ensemble members for each year between 1951 to 2005 and the calculating the standard deviation over 1950-2005. Under this method, the natural variability is slightly larger resulting in a latter overall time of emergence (average ToE = 2057 vs 2036 of the original method). However, this method projects 1,139 more emerging stocks than the original (5,258 stocks vs 4,119 of the original method). The minimum and maximum ToE remains the same, and the number of EEZs with emerging stocks slightly increases with the alternative method. Further research looking at different approaches of estimating the natural variability component could help reduce the uncertainty in the estimation of the time of emergence of transboundary stocks. 
-
-<!-- In this case, the global average shift in the shared distribution of transboundary stocks by 2029 $\pm$ 27 years, a difference of about 7 years (Fig. \@ref(fig:toeFigureS8)). In total, 5,745 transboundary stocks would shift their shared distributions between 2006 and 2100 considering a less conservative metric, that is, 33% (n = 1626) more shifting stocks (Figs. \@ref(fig:toeFigureS2) and \@ref(fig:toeFigureS8)). -->
-
-### Quantifying the intensity of transboundary stocks’ range shift
-
-Here, we adopt the concept of threat point to quantify the intensity of changes in the shared distribution of transboundary stocks between neighboring EEZs. The concept of threat point comes from Game Theory and has been widely used in shared fisheries management [@Bailey:2010ga; @Sumaila:2013hv; @Sumaila:2020tp; @Clark:1975uu; @Munro:1979dg]. In a game theoretic model, a player’s strategy (e.g., to act cooperatively or not) will have direct consequences for other players, which, in turn, will affect the overall outcome of the game [@Bailey:2010ga]. Cooperation will often result in the maximization of benefits for the system rather than for individual players. However, for a cooperative strategy to work, the benefit a player gets must not be less than the benefit under a non-cooperative strategy. Thus, the “threat point” is defined as the minimum payoff a player is willing to receive to cooperate in a game-theoretic model [@Nash:1953vr]. We define the threat point as the minimum required catch proportion of a transboundary stock within an EEZ for a country to engage in cooperative management with their sharing neighbor [@PalaciosAbrantes:2020vt; @Sumaila:2020tp]. Any proportion below the defined threat point would result in the unilateral management of the stock assuming that no country will be willing to engage in cooperative management if the future catch proportion of the transboundary stock is lower than it has ever been.
-
-First, we estimated the catch proportion as the stock share ratio (SSR) catch of each transboundary stock shared by neighboring nations between 1951 and 2100. We did this by aggregating the projected catch within the $0.5^{\circ}$ x $0.5^{\circ}$ grid cells in which the stock is present across neighboring EEZs, and then calculated the proportion of the stock's catch held within each EEZ [@PalaciosAbrantes:2020tv]. Second, to reduce the effects of variability, we averaged the calculated proportion of stock occupying a given EEZ into three time periods: the historical time period ($SSR_{th}$) from 1951 to 2005, and two future periods, the early $21^{st}$ century, between 2021 and 2040 ($SSR_{te}$), and the mid $21^{st}$ century, defined as the average of 2041 to 2060 ($SSR_{tm}$). These future time periods were chosen to correspond to the challenges of achieving fisheries-relevant UN-SDGs by 2030 (i.e., the 2030 Agenda), such as SDG 14.4 (end overfishing), SDG 2.4 (ensure sustainable food production systems) and SDG 1.2 (poverty reduction) [@Singh:2017ds; @UnitedNations:1Qe8KIcN]. The analysis was replicated for projected stock distributions from each of the ten ensemble members and results were averaged across ensemble members. Third, we defined a threat point for each EEZ’s stock as $SSR_{th} \pm 2 \sigma$, where  is the standard deviation of $SSR_{th}$. Thus, a change of SSR catch beyond an EEZ’s threat point happens when the future SSR catch exceeds two standard deviations of the historical variations in SSR (i.e., when $SSR_{et} \geqq (SSR_{th} + 2 \sigma$) or $SSR_{e,m} \leqq (SSR_{th} - \sigma)$. Finally, we estimated the percentage change in SSR ($\Delta SSR$) of each future time period ($SSR_{tf}$) relative to the historic time period $SSR_{th}$ for each stock whose share ratio exceeded the threat point following [@PalaciosAbrantes:2020tv];
-
-<!-- $$ \Delta{SSR_{e,m}} = \frac{(SSR_{f}-SSR_{th})}{SSR_{th}}* 100 $$ -->
-
-\begin{equation}
-\label{eq:eight}
-\Delta{SSR_{e,s}} = \frac{(SSR_{f}-SSR_{th})}{SSR_{th}}* 100
-\end{equation}
-
-### Statistical analysis
-
-We tested the results for normality (e.g., skewness, kurtosis) and performed two non-parametric Kruskal–Wallis tests by ranks [@Hollander:2013wz]  to investigate geopolitical and ecological differences in the range shift of transboundary species. Specifically, we tested if the habitat preference of transboundary species and the geographic location of EEZs would have any effect on the transboundary stocks distributional range shift. In both cases, our null hypothesis was that there were no significant differences in the year of shift across habitat association or EEZs. All analyses were run using the statistical software R version 3.5.2 (2018-12-20; Eggshell Igloo) with the packages cowplot [@CowplotStreamlined:2019wt], data.table [@Packagedatatable:2019uh], geosphere [@], ggrepel [@PackageggrepelAut:2020to], gmt [@PackagegmtInterfa:2017vh], janitor [@PackagejanitorSim:2018ur], moments [@PackagemomensMome:2015uh], pgirmess [@PackagepgirmessSp:2018um], rfishbase [@PackagerfishbaseR:2019th], sf [@PackagesfSimpleF:2018vp], sp [@PackagespClasses:2019tn], tidiverse [@PackagetidyverseE:2017vq], tidytext [@PackagetidytextTe:2019vk], viridis [@PackageviridisDef:2018us], zeallot [@PackagezeallotMul:2018wy], and zoo [@PackagezooSInfr:2019tm]. Code for all analyses is available at https://github.com/jepa/EmergingFish
-
+```
 
 \clearpage
 
-# Supplemental Figures
+S2
+
+```{r toeFigureS8, eval = T,  echo = F, fig.width=6, fig.height=6, fig.cap ="Average distribution of transboundary stock’s year of change in their shared distribution. Left panel is the average year across stocks and right panel the standard deviation. Yellow represents a one standard deviation distance from the historical average and purple represents a two standard deviation distance from the historical average."}
+
+img <- readPNG("../Figures/FigS7.png")
+grid.raster(img)
+
+```
+
+\clearpage
+
+S3
 
 ```{r toeFigureS1, eval = T,  echo = F, fig.width=9, fig.height=7,fig.pos= "H", fig.cap =  "Comparison of shifts in the shared distribution of transboundary stocks by species’ habitat association. Classification is based on the habitat preference information obtained from FishBase and SeaLifeBase (see Table S1). The category “Other” consists of species that have no “habitat preference” classification. The number of stocks included in this analysis for each habitat type is noted in parentheses. Dashed whiskers represent the 1.5* interquartile range. Box represents interquartile range as distance between first and third quartiles. Solid line represents the median time of emergence per habitat preference."}
 
@@ -155,14 +68,7 @@ grid.raster(img)
 
 \clearpage
 
-```{r toeFigureS2, eval = T,  echo = F, fig.width=12, fig.height=7, fig.cap =". Year of change in the shared distribution of 5,745 transboundary stocks using a one standard deviation threshold. A) Land polygons show the contribution of shifting stocks to a country or territory’s total fishing revenue from transboundary stocks. Exclusive Economic Zone polygons display average year of range shifts within them. EEZs with no distributional shift between 2006 and 2100 are represented in aqua color. B) Year of shared distribution shifts by UN sub-regions. Points color coded by the median year of range shift. Horizontal dashed line represents the year 2030 – the Sustainable Development Agenda deadline. N = North, S = South, W = West and E = East. Ltn. Ame. and the Car. = Latin America and the Caribbean. Aus and New Z. = Australia and New Zealand."}
-
-img <- readPNG("../Figures/FigS2.png")
-grid.raster(img)
-
-```
-
-\clearpage
+S4
 
 ```{r toeFigureS3, eval = T,  echo = F, fig.width=7, fig.height=5, fig.cap = "Distribution of changes in transboundary stock proportion per stock and neighboring Exclusive Economic Zones. Yellow color represents changes by early, 2030 (2021-2040) and purple by mid 2050 (2041-60) 21st century relative to 1951-2005."}
 
@@ -173,6 +79,8 @@ grid.raster(img)
 
 \clearpage
 
+S5
+
 ```{r toeFigureS4, eval = T,  echo = F, fig.width=14, fig.height=7, fig.cap ="Changes in stock proportion of neighboring Exclusive Economic Zones by 2050 (2041-2060) relative to 1951-2005. Lines represent the average change in transboundary stock share ratio with arrows going from EEZ with decreasing stock share (point) to those gaining shares (arrowhead). Land polygons represent the percentage of stocks that are projected to change their stock share ratio beyond the identified threat point with higher gains identified in warmer colors. Panel B highlights changes for the Caribbean and Northwestern Europe."}
 
 img <- readPNG("../Figures/FigS4.png")
@@ -182,14 +90,8 @@ grid.raster(img)
 
 \clearpage
 
-```{r toeFigureS5, eval = T,  echo = F, fig.width=4, fig.height=4, fig.cap =  "World Exclusive Economic Zones used in this study as divided by the Sea Around Us and their estimated centroids (black points)."}
+S6
 
-img <- readPNG("../Figures/FigS5.png")
-grid.raster(img)
-
-```
-
-\clearpage
 
 ```{r toeFigureS7, eval = T,  echo = F, fig.width=14, fig.height=10, fig.cap =  "Average year of range shift by Exclusive Economic Zone (EEZ) and transboundary stock using different levels of abundance percentile to determine the stock’s centroid. Top Row: results in absolute numbers. Bottom row: results expressed as a percentage of the total emerging stocks and EEZs with emerging stock."}
 
@@ -200,13 +102,16 @@ grid.raster(img)
 
 \clearpage
 
+S7
 
-```{r toeFigureS8, eval = T,  echo = F, fig.width=6, fig.height=6, fig.cap ="Average distribution of transboundary stock’s year of change in their shared distribution. Left panel is the average year across stocks and right panel the standard deviation. Yellow represents a one standard deviation distance from the historical average and purple represents a two standard deviation distance from the historical average."}
+```{r toeFigureS5, eval = T,  echo = F, fig.width=4, fig.height=4, fig.cap =  "World Exclusive Economic Zones used in this study as divided by the Sea Around Us and their estimated centroids (black points)."}
 
-img <- readPNG("../Figures/FigS7.png")
+img <- readPNG("../Figures/FigS5.png")
 grid.raster(img)
 
 ```
+
+\clearpage
 
 
 _**Tables**_
@@ -227,6 +132,7 @@ tibble(
     "Living and feeding in the open sea; associated with the surface or middle depths of a body of water; free swimming in the seas, oceans or open waters; not in association with the bottom. Many pelagic fish feed on plankton. In FishBase, referring to surface or mid water from 0 to 200 m depth."
   )
 ) %>% 
+  write.csv(.,"habitat_preference.csv")
  kable(
         booktabs = T,
         caption = "Definition of each habitat preference according to FishBase"
