@@ -1,30 +1,31 @@
 ---
 title: "Timing and magnitude of climate driven range shifts in transboundary fish stocks challenge their management"
-author: "REVISED MANUSCRIPT. DO NOT SHARE."
-date: "Affiliations: ^1^Institute for the Oceans and Fisheries, University of British Columbia, Vancouver, Canada. ^2^Climate and Environmental Physics, Physics Institute, University of Bern. ^3^Oeschger Centre for Climate Change Research, University of Bern, Switzerland. ^4^School of Environmental Sciences, University of Liverpool. ^5^Stanford Center for Ocean Solutions, Stanford University, Stanford, United States"
+date: "Affiliations: ^1^Institute for the Oceans and Fisheries, University of British Columbia, Vancouver, Canada.^2^Center for Limnology, University of Wisconsin, Madison. ^3^Climate and Environmental Physics, Physics Institute, University of Bern. ^4^Oeschger Centre for Climate Change Research, University of Bern, Switzerland. ^5^School of Environmental Sciences, University of Liverpool. ^6^Stanford Center for Ocean Solutions, Stanford University, Stanford, United States"
 subtitle: "Juliano Palacios-Abrantes*^1,2^, Thomas L. Frölicher^3,4^, Gabriel Reygondeau^1^, U. Rashid Sumaila^1^, Alessandro Tagliabue^5^, Colette C.C. Wabnitz^1,6^, and William W.L. Cheung^1^"
-# output: bookdown::pdf_document2
 output: 
-  bookdown::word_document2:
+  bookdown::pdf_document2:
     number_section: no
+    toc: no
+    latex_engine: xelatex
 reference_docx:  ../References/sci_template.docx
 bibliography: ../References/ToE_Ref.bib
-csl: ../References/pnas.csl
+csl: ../References/gcb.csl
 header-includes:
   - \usepackage{setspace}
   - \usepackage{caption}
+  - \usepackage[left]{lineno} # for numbers in lines
   - \usepackage{float} # Use the 'float' package
   - \captionsetup[figure]{name = Fig}
+  - \floatplacement{figure}{H}
 ---
+
+<!-- Running title: Imminent shifts of transboundary fish stocks -->
 
 
 \setlength{\parindent}{4em} 
 \linespread{1}
 \doublespacing
 
-<!-- # Instructions  -->
-
-<!-- Research articles should present a major advance and can be short or long (maximum 15,000 words) format. Submissions must include an abstract (up to 150 words), an introduction, and sections with brief informative subheadings. You may include up to ten figures and/or tables and about 60 references. Supplementary materials should be limited to information that is not essential for the general understanding of the research presented in the main text and can include data sets, figures, tables, videos, or audio files.  You may include up to a total of ten figures and/or tables (combined) throughout the supplemental text.  -->
 
 ```{r setup, eval = T, echo = F, warning = F, message = F, results = 'hide'}
 
@@ -58,43 +59,64 @@ my_lib(packages)
 
 ```
 
-**Email**: [j.palacio\@oceans.ubc.ca](mailto:j.palacios@oceans.ubc.ca){.email}
+<!-- **Email**: [j.palacio\@oceans.ubc.ca](mailto:j.palacios@oceans.ubc.ca){.email} -->
 
-**Author Contributions:**  
-Conceptualization: JPA, WWLC, TF, AT
-Data curation; TF; WWLC; GR
-Formal Analysis: JPA
-Methodology: JPA, WWLC, TF, AT, GR, CCCW
-Visualization: JPA
-Writing – original draft: JPA; WWLC; CCCW; TF
-Writing – review & editing: JPA; WWLC; CCCW; TF; AT: URS; GR
+<!-- **Author Contributions:**   -->
+<!-- Conceptualization: JPA, WWLC, TF, AT -->
+<!-- Data curation; TF; WWLC; GR -->
+<!-- Formal Analysis: JPA -->
+<!-- Methodology: JPA, WWLC, TF, AT, GR, CCCW -->
+<!-- Visualization: JPA -->
+<!-- Writing – original draft: JPA; WWLC; CCCW; TF -->
+<!-- Writing – review & editing: JPA; WWLC; CCCW; TF; AT: URS; GR -->
 
-**Competing Interest Statement:** Authors declare that they have no competing interests.
+<!-- **Competing Interest Statement:** Authors declare that they have no competing interests. -->
 
-Classification: Biological Science, Environmental Sciences
 
-This PDF file includes:
-Main Text
-Figures 1 to 5
+<!-- Thomas Frölicher -->
+<!-- Horizon 2020 Framework Programme 820989 -->
+<!-- Swiss National Science Foundation PP00P2_170687 -->
+<!-- Swiss National Supercomputing Centre -->
+
+<!-- Alessandro Tagliabue -->
+<!-- Horizon 2020 Framework Programme  724289 -->
+
+<!-- Juliano Palacios-Abrantes -->
+<!-- Natural Sciences and Engineering Research Council of Canada  Discovery Grant -->
+<!-- Social Sciences and Humanities Research Council of Canada Partnership Grant -->
+
+<!-- William Cheung -->
+<!-- Natural Sciences and Engineering Research Council of Canada - Discovery Grant -->
+<!-- Social Sciences and Humanities Research Council of Canada - Partnership Grant -->
+
+<!-- U. Rashid Sumaila -->
+<!-- Social Sciences and Humanities Research Council of Canada --> <!-- Partnership Grant -->
+
+<!-- Colette C.C. Wabnitz -->
+<!-- David and Lucile Packard Foundation 2019-68336 -->
+<!-- Gordon and Betty Moore Foundation GBMF5668.02 -->
+<!-- Walton Family Foundation 2018-1371 -->
+
+
+
+
+\linenumbers
+
+# Abstract
+
+
+Climate change is shifting the distribution of shared fish stocks between neighboring countries’ Exclusive Economic Zones (EEZ) and the high seas. The timescale of these transboundary shifts determines how climate change will affect international fisheries governance. Coupling a large ensemble simulation of an Earth system model to a species distribution model, we show that by 2030, 23% of transboundary stocks would have shifted and 78% of the world EEZs will experience at least one shifting stock under a high emission climate change scenario. By the end of this century, 81% of EEZ waters will see at least one shifting stock with a total of 45% of stocks shifting globally, under a high emissions scenario. Importantly, many countries that are highly dependent on fisheries for income, food and nutrition security, as well as livelihoods emerge as hotspots for transboundary shifts showing early, and sometimes past shifts. Existing fisheries agreements need to be assessed for their capacity in addressing transboundary shifts, and strengthened where necessary to limit conflict over these fish stocks while new agreements are urged to considere this problematic in order to be resilient to global change.
+
+
+<!-- # Significant statement {-} -->
+
+<!-- Marine fish stocks are shifting their distribution in response to climate change. This is of particular importance for the management of stocks shared between neighboring Exclusive Economic Zones, also known as transboundary stocks. Here, we find that imminent climate change-induced shifts in transboundary fish stocks are challenging international management and that urging fisheries agreements to be assessed for their capacity in addressing transboundary shifts, and strengthened where necessary to limit conflict over these fish stocks. -->
+
+
 
 \clearpage
 
-# Abstract {-}
-
-<!-- An opening sentence that states the question/problem addressed by the research AND Enough background content to give context to the study AND A brief statement of primary results AND A short concluding sentence. -->
-
-Climate change is shifting the distribution of shared fish stocks between neighboring countries’ Exclusive Economic Zones (EEZ) and the high seas. The timescale of these transboundary shifts determines how climate change will affect international fisheries governance. Coupling a large ensemble simulation of an Earth system model to a species distribution model, we show that by 2030 23% of transboundary stocks would have shifted and 78% of the world will experience at least one shifting stock. By 2100, 81% of EEZ waters will see at least one shifting stock with a total of 45% of stocks shifting globally, under a high emissions scenario. Importantly, many countries that are highly dependent on fisheries for income, food and nutrition security, as well as livelihoods emerge as hotspots for transboundary shifts. Existing fisheries agreements need to be assessed for their capacity in addressing transboundary shifts, and strengthened where necessary to limit conflict over these fish stocks.
-
-
-# Significant statement {-}
-
-Marine fish stocks are shifting their distribution in response to climate change. This is of particular importance for the management of stocks shared between neighboring Exclusive Economic Zones, also known as transboundary stocks. Here, we find that imminent climate change-induced shifts in transboundary fish stocks are challenging international management and that urging fisheries agreements to be assessed for their capacity in addressing transboundary shifts, and strengthened where necessary to limit conflict over these fish stocks.
-
-
-
-\clearpage
-
-# Main text {-}
+# Introduction
 
 Over the past century, human activities have dramatically altered the physical and biogeochemical conditions of the ocean, resulting in warmer, more acidic and less oxygenated waters [@IPCC:2019tn]. Marine species’ distributions reflect species’ preferences for discrete environmental conditions [@Hutchinson:1957nt]. As a result of changing ocean conditions, many marine species are shifting their distributions towards higher latitudes, deeper water or following local temperature gradients to remain within their optimal environmental “niche” [@Poloczanska:2016kk]. The biogeography of marine species is projected to continue to shift as ocean conditions change through the 21st century [@Cheung:2010dt], impacting fish stocks, fisheries production and economies [@Sumaila:2019ew]. These impacts are compromising our capacity to reach international sustainability goals under the United Nations (UN)  2030 Agenda for Sustainable Development such as Goal 14 - life below water [@UnitedNations2018; @Singh:2017ds; @Pecl:2017hu]. The projected risks and impacts can be reduced by improving the effectiveness of current governance and fisheries management, including for species that cross international borders, also known as ‘shared stocks’ [@Pinsky:2018cb].
 
@@ -104,18 +126,17 @@ Most fisheries management is poorly adapted to address species’ shifting distr
 
 Here, we employ a mechanistic population dynamic model driven by output from a comprehensive Earth system model with ten ensemble members to project transboundary stocks’ distribution across the 280 EEZs of 198 coastal countries/political entities under a high greenhouse gas emissions scenario (Methods). We then developed a Transboundary Index to evaluate range shifts in the shared distribution of transboundary stocks. The index is based on changes in the distance of the stock’s abundance centroid and that of the EEZs that share a given stock (Fig. \@ref(fig:toeFigure1N)). By employing the concept of *time of emergence*, we estimate the year in which the 633 transboundary species (9,132 stocks) are projected to shift their shared distribution beyond historical variations (Fig. 1). Such estimation is based on two thresholds representing a 67 and a 95% probability of shift. Finally, we apply the Game Theory concept of *threat point* [See @Sumaila:2020tp; @Munro:1979dg for its application to fisheries] to quantify the intensity of changes in the shared distribution of transboundary stocks between neighboring EEZs (Methods). This assumes that countries are adapted to the historical sharing, but no country would be willing to collaborate if the future catch proportion of the transboundary stock is lower than it has ever been [@PalaciosAbrantes:2020vt; @Sumaila:2020tp]. We treat each species in an EEZ as a single stock due to the lack of more spatially resolved data to delineate the boundary of a managed population [@PalaciosAbrantes:2020tv] and only consider shared stocks between neighboring EEZs (i.e., excluding the high seas).
 
-```{r toeFigure1N, eval = T,  echo = F, fig.width=14, fig.height=10, fig.cap =  "Schematic diagram of the transboundary index (TI) to determine the time of emergence of transboundary stocks from one Exclusive Economic Zone (EEZ) to another. The index is based on the distance between the distributional centroid of the transboundary stock and the geographic centroid of the neighboring EEZ sharing the stock (Top panel). Time of emergence is defined as the first year when the TI overshoots historical values (Bottom panel). Only showing a subset of ensemble members for clarity."}
+```{r toeFigure1N, eval = T,  echo = F, fig.width=14, fig.height=10, fig.pos="H", fig.cap =  "Schematic diagram of the transboundary index (TI) to determine the time of emergence of transboundary stocks from one Exclusive Economic Zone (EEZ) to another. The index is based on the distance between the distributional centroid of the transboundary stock and the geographic centroid of the neighboring EEZ sharing the stock (Top panel). Time of emergence is defined as the first year when the TI overshoots historical values (Bottom panel). Only showing a subset of ensemble members for clarity."}
 
 img <- readPNG("../Figures/Fig1.png")
 grid.raster(img)
 
 ```
 
-\clearpage
 
 <!-- # Methods -->
 
-We coupled a mechanistic population dynamic model with a ten-ensemble member simulation of an Earth System Model to project the future global distribution of transboundary stocks under climate change (Methods). 
+<!-- We coupled a mechanistic population dynamic model with a ten-ensemble member simulation of an Earth System Model to project the future global distribution of transboundary stocks under climate change (Methods).  -->
 
 
 <!-- In brief, the DBEM algorithm uses historical species distribution and catch, eco-physiology, habitat suitability and spatial population dynamics to project abundance and potential fisheries catches in a $0.5^o$ x $0.5^o$ grid-cell of the world [@Cheung:2010dt; @Cheung:2009ud; @Cheung:2016jd].  -->
@@ -126,92 +147,11 @@ We coupled a mechanistic population dynamic model with a ten-ensemble member sim
 <!-- Finally, we apply the Game Theory concept of *threat point* [See @Sumaila:2020tp; @Munro:1979dg for its application to fisheries] to quantify the intensity of changes in the shared distribution of transboundary stocks between neighboring EEZs (Methods). A threat point is defined as the minimum payoff a player would be willing to receive to cooperate in a game-theoretic model. Here, we define the minimum payoff as two standard deviations from the historical catch proportion (average of 1951 to 2005) that each EEZ had for each stock. This assumes that countries are adapted to the historical sharing, but no country would be willing to collaborate if the future catch proportion of the transboundary stock is lower than it has ever been [@PalaciosAbrantes:2020vt; @Sumaila:2020tp].  -->
 <!-- Finally, we computed changes in catch proportion that were below the threat point of neighboring EEZs sharing a stock for two time periods relative to the historical proportion: 2030 (2021 and 2040) matching the UN 2030 Agenda and a mid-century timeline (2040 to 2050). -->
 
-# Results {-}
-
-### Identifying range shifts in the shared distribution of transboundary stocks {-}
-
-Our results suggest that 4,119 transboundary stocks will experience a range shift beyond historical variability by 2100 (hereafter referred to as ‘shifts’; Fig. \@ref(fig:toeFigure1)A), using a two s.d. threshold (i.e., representing a probability of 95% that the stock has shifted). This corresponds to 45% of the studied stocks (Fig. \@ref(fig:toeFigure1)C). Using a less conservative threshold (i.e., one s.d. representing a probability of 67% that the stock has shifted) results in 33% (n = 5,745) more shifting stocks, that is, 67% of all studied stocks (Figs. \@ref(fig:toeFigureS2) and \@ref(fig:toeFigureS8)). For both cases, the first shift is modelled to have occurred back in 2006. The average year of shift in the shared distribution of these stocks in all EEZs analyzed is projected to be between 2029 $\pm$ 27 years (one s.d. threshold) and 2036 $\pm$ 28 years (two s.d. threshold). Furthermore, between 81% and 83% of the world’s EEZs will experience at least one transboundary stock shift by 2100 with 77% to 80% of EEZs recording a distributional stock shift by the UN 2030 Agenda’s deadline (Fig. \@ref(fig:toeFigure1)C).
-
-
-
-```{r toeFigure1, eval = T,  echo = F, fig.width = 9, fig.height=4, fig.pos= "H", fig.cap =  "Timeline of shifts in transboundary shared stock distribution. (A) Number of stocks (cumulative) whose distribution centroids that have shifted beyond natural variations over time (from 2006 to >2100), (B) Number of EEZs (cumulative) with the distribution centroid of at least one stock that have shifted beyond natural variations and (C) proportion of total shifting stocks and EEZs with at least one stock shifting beyond natural variability. Dashed lines represent the year by which countries have committed to reach full implementation of the 2030 Agenda, as well as mid and late change in range shift (Methods), respectively."}
-
-img <- readPNG("../Figures/Fig2.png")
-grid.raster(img)
-
-```
-
-The median year in which transboundary stocks experience a range shift varied significantly according to the species’ habitat association (Methods; Kruskal-Wallis, $X^2$ = 203.85, DF = 93, *p* < 0.001; using the 2 s.d.  threshold; Tables \@ref(tab:toeTableS1), \@ref(tab:toeTableS2) and Fig. \@ref(fig:toeFigureS1)) and EEZs' geographic regions (Methods; Kruskal-Wallis, $X^2$ = 242.11, DF = 93, *p* < 0.001; using the 2 s.d.  threshold; Table S3 and Fig. 2A). Overall, most tropical EEZs and stocks will see earlier shifts, with the EEZs of Latin America, the Caribbean and Polynesia experiencing shifts significantly earlier (*p* < 0.05; Tables \@ref(tab:toeTableS2) and \@ref(tab:toeTableS3) than almost any other region (Figs. \@ref(fig:toeFigure2)B, \@ref(fig:toeFigureS1) and \@ref(fig:toeFigureS2)). In contrast, EEZs and stocks located in temperate regions, like northern Europe and eastern Asia, are projected to experience much later range shifts. Stocks in a number of EEZs including Brazil and New Zealand’s EEZs are projected to experience no range shifts beyond natural variability by the end of this century (Fig. \@ref(fig:toeFigure2)A).
-
-On average, shifting transboundary stocks represented 27% to 23% (1 and 2 s.d. thresholds) of annual revenue from fisheries targeting transboundary stocks across the world's EEZs between 2004 and 2010 (Fig. \@ref(fig:toeFigure2)A). However, large variation exists, with shifting stocks representing less than 1% of fishing revenue in some countries (e.g., Ireland) and over 90% in others (e.g., Marshall Islands). Moreover, in some EEZs, while few transboundary stocks are projected to shift beyond historical variability, they still represent a large proportion of revenue derived from fisheries within that EEZ (e.g., Peru).
-
-
-```{r toeFigure2, eval = T,  echo = F, fig.width  = 13,fig.pos= "H", fig.height =11, fig.cap =  "Year of change in the shared distribution of 4,119 transboundary stocks. A) Land polygons show the contribution of shifting stocks to a country or territory’s total fishing revenue from transboundary stocks. Exclusive Economic Zone polygons display average year of range shifts within them. Warm colors are indicative of an early shift/high fishing revenue contribution from transboundary stocks while cool colors represent a late shift/low fishing revenue. EEZs with no distributional shift between 2006 and 2100 are represented in pale blue. B) Year of shared distribution shifts by UN sub-regions. Points color coded by the median year of range shift. Horizontal dashed line represents the year by which countries have committed to reach full implementation of the 2030 Agenda. N = North, S = South, W = West and E = East. Ltn. Ame. and the Car. = Latin America and the Caribbean. Aus and New Z. = Australia and New Zealand."}
-
-img <- readPNG("../Figures/Fig3.png")
-grid.raster(img)
-
-```
-
-<!-- ![toeFigure 2. Year of change in the shared distribution of 4,119 transboundary stocks. A) Land polygon shows the contribution of shifting stocks to the country’s total fishing revenue from transboundary stocks. Exclusive Economic Zone polygons represent average range shifts per EEZ. EEZs with no time of emergence between 2006 and 2100 are represented in aqua color. B) Year of shared distribution shifts by region according to United Nations sub-regions. Points represent the median year of range shift. Horizontal dashed line represents the 2030 Agenda. N = North, S = South, W = West and E = East. Ltn. Ame. and the Car. = Latin America and the Caribbean. Aus and New Z. = Australia and New Zealand](../Figures/Fig3.png) -->
-
-We estimated the current (i.e., 2005 - 2010) contribution of shifting stocks to yearly fishing revenue generated from fisheries targeting transboundary stocks within global EEZs for both thresholds (one and two s.d.). Within five years of the UN 2030 Agenda timeline, 979 transboundary stocks accounting for USD 5.3 billion in fishing revenue are projected to shift within 76 EEZs considering a two s.d. threshold (Fig. \@ref(fig:toeFigure3); above Fisheries >75th percentile). In this case, 321 stocks shifting in just eleven countries account for 4.2 billion USD (Fig. \@ref(fig:toeFigure3)). The number of transboundary stocks shifting from historical variability was highest in the EEZs of Spain (n = 122), France (n = 85), China and Portugal (both n = 73), and Senegal (n = 66) (Fig. \@ref(fig:toeFigure3)). The values are substantially higher when considering a more relaxed threshold. In this case, 2,136 stocks accounting for USD 24 billion in fishing revenue are projected to shift within five years of the UN 2030 Agenda timeline in 134 EEZs.
-
-
-```{r toeFigure3, eval = T,  echo = F, fig.width=8, fig.height=6, fig.pos= "H", fig.cap =  "Average range shift of transboundary stocks and corresponding fishing revenue per country. Countries are coded according to different colored symbols representative of 5 distinct regions. The horizontal line separates countries above and below the 75th percentile of annual fishing revenue. Showing country names for the eleven nations above the 75th percentile and projected to have an average shift across transboundary stocks within its EEZ within 5 years of the 2030 Agenda deadline."}
-
-img <- readPNG("../Figures/Fig4.png")
-grid.raster(img)
- 
-```
-
-### Shifting intensity of transboundary stocks {-}
-
-<!-- We based the transboundary index on a stock’s centroid defined as the average grid cells that contain the majority of a stock’s abundance (see Methods - Calculating an index of transboundary range shift). Results from the sensitivity analysis suggest that our method is robust to the abundance level (e.g., the top 95%) of the stock (Fig. \@ref(fig:toeFigureS3)). In addition, we set an arbitrary threshold of 2 s.d. (95% confidence) to determine the time of emergence of the transboundary index. Sensitivity tests to a lower threshold of 1 s.d. (for a 67% confidence) resulted in a global average shift in the shared distribution of transboundary stocks by 2029 $\pm$ 27, a difference of about 7 years (Fig. \@ref(fig:toeFigureS4)). In total, 5,745 transboundary stocks would shift their shared distributions between 2006 and 2100 considering a less conservative metric, that is, 33% (n = 1626) more shifting stocks. SENT TO METHODS!!!! -->
-
-We estimated the intensity of the distributional shift of transboundary stocks in terms of changes in catch proportion by 2030 (2020-2040) and 2050 (2040-2060), relative to the recent past (1951-2005) (see Methods). Projections show that by 2030, 59% $\pm$ 17% of the yearly catch from transboundary stocks will change beyond the historic variability experienced within an EEZ’s (Fig. \@ref(fig:toeFigure4)A). Moreover, 85% (n = 239) of the world’s EEZs will have experienced changes in catch proportion of transboundary stocks by 2030. By mid-21st century, the number of EEZs with changing stocks, as well as the number of stocks experiencing changes in catch proportion and the magnitude of that change will increase (Figs. \@ref(fig:toeFigureS3) and \@ref(fig:toeFigureS4)). The direction and intensity of shifts in transboundary stocks are largely related to regional changes in biogeography and the geometry of EEZs (Fig. \@ref(fig:toeFigure4)A). Along the Atlantic and Pacific coasts of Northern and Southern America and the Atlantic coast of Southern Africa, shifts in stocks are expected to benefit poleward EEZs. However, shifts along the coasts of Pacific Central America and West Africa occur in an equatorial direction.
-
-```{r toeFigure4, eval = T,  echo = F, fig.width=12, fig.height=10,fig.pos= "H", fig.cap =  "Changes in stock proportion of neighboring Exclusive Economic Zones by 2030 (2021-2040) relative to 1951-2005. Lines represent the average change in transboundary stock share ratio (Methods) with arrows going from EEZ with decreasing stock share (point) to those gaining shares (arrowhead). Land polygons represent the percentage of stocks that are projected to change their stock share ratio (i.e., over two standard deviations from the historical catch proportion) beyond the identified threat point with higher gains identified in warmer colors. Panel B highlights changes for the Caribbean and Northwestern Europe."}
-
-img <- readPNG("../Figures/Fig5.png")
-grid.raster(img)
-
-```
-
-<!-- ![Figure 1. Changes in stock share ratio below each country’s threat point by 2030 (2021-2040) relative to 1951-2005. Lines represent the average change in transboundary stock share ratio with arrows going from EEZ with decreasing stock share (point) to those gaining shares (arrowhead). Land polygons represent the percentage of stocks that are projected to change their stock share ratio beyond the identified threat point with higher gains identified in warmer colors (green to yellow). Panel B zooms into specific areas shown within the gray dashed line boundaries in A.](../Figures/Fig1.png) -->
-
-<!-- The direction and intensity of shifts in transboundary stocks are largely related to regional changes in biogeography and the geometry of EEZs (Fig. \@ref(fig:toeFigure4)A). Along the Atlantic and Pacific coasts of Northern and Southern America and the Atlantic coast of Southern Africa, the proportion of the stock is expected to follow a projected poleward shift. However, shifts in the coasts of Pacific Central America and West Africa occur along an equatorial direction. Here, transboundary species follow specific oceanographic regions (*sensu* Longhurst) like upwelling zones (e.g., Humboldt current) and local patterns of oxygen availability, in addition to temperature gradients. Regions where EEZs are relatively small and have multiple borders (e.g., Caribbean or Northwestern Europe) are expected to have a particularly complex exchange of stock share ratio with no clear established pattern (Fig. \@ref(fig:toeFigure4)B). -->
-
-# Discussion {-}
-
-<!-- In this paper, we investigate the timing and intensity associated with changes in the share distribution of transboundary stocks between countries. Our findings highlight an early distributional shift from historical variations for most transboundary stocks in the world. Such early shifts point to the urgency of addressing the challenges that climate change presents for international fisheries management. Moreover, we identify regional patterns of high climate risk to important fish stocks and associated fisheries that would benefit from immediate policy responses to support sustainability into the future. Finally, we show that for many countries changes in the distribution of transboundary stocks are likely to undermine joint resource management between countries [@Bailey:2010ga; @Munro:1979dg; @PalaciosAbrantes:2020vt; @Bailey:2016eh]. Thus, our findings emphasize recent calls for the urgent adoption of adaptation measures in support of more adaptive, flexible fisheries management and governance to support resilient fisheries and durable management systems [@Pinsky:2018cb; @Pinsky:2020jx; @CisnerosMata:2019ks; @Oremus:2020id; @Free:2019jq]. -->
-
-### High present-day climate risk for transboundary fisheries {-}
-
-Our findings highlighting early shifts in the shared distribution of transboundary stocks concur with previous studies that have detected changes in marine catch composition and attributed these to climate change [e.g., @Cheung:2013gk; @Frainer:2017ji; @Last:2011fd]. For example, in the early 2000s, Humboldt squid (*Dosidicus gigas*) substantially expanded its geographic range poleward, reaching the coast of Washington state (US), in response to climatic, and associated oceanographic and ecological changes [@Zeidberg:2007gs]. A new fishery targeting Humboldt squid quickly developed on the heels of the species’ range expansion [@Pinsky:2014by]. In the northeast Atlantic, fisheries on Atlantic mackerel (*Scomber scombrus*) are multi-laterally managed by the EU, Norway, Iceland, Russia, and Denmark (on behalf of the Faroe Islands and Greenland) through the North-East Atlantic Fisheries Commission (NEAFC). However, a range expansion of Atlantic mackerel due to environmental variation into Icelandic waters in 2007 resulted in Iceland capturing 6% of the fishery’s total allowable catch and a further 18% in 2008, without consultation with NEAFC, threatening the sustainability of the stock [@Spijkers:2017ij]. These changes resulted in disputes between Iceland and the Faroe Islands, as well as among NEAFC member states [@Spijkers:2017ij]. Other documented cases of early range expansions across international jurisdictions have also been documented for multiple stocks along the European Union regulatory areas [@Baudron:2020dj], the Benguela Current [@Potts:2014bq; @Yemane:2014jg], and the southwest South Atlantic Ocean [@Franco:2020bk]. Despite these documented cases, broadly speaking, there is a lack of information and data regarding which and how many transboundary stocks are shifting, where they are shifting to and whether they are jointly managed. This is particularly important for international fisheries management as modeling exercises project that climate change will continue to change the distribution of transboundary stocks to the point that some tropical EEZs will lose them completely [@Oremus:2020id] while other EEZs, mainly in higher latitudes, will stand to win new stocks [@Pinsky:2018cb].
-
-### Climate risk hotspots for transboundary fisheries management {-}
-
-Our results identify regional “hotspots” of climate risk for transboundary fisheries management that will require the prompt adaptation of management plans (Figs. \@ref(fig:toeFigure2)A and \@ref(fig:toeFigure4)A). Regions such as the Caribbean are characterized by high levels of warming relative to historical natural variability [@IPCC:2019tn; @Hawkins:2012hc] and species’ high vulnerability to warming waters [@IPCC:2019tn]. Moreover, they represent relatively low area EEZs that border multiple countries. Game theory predicts that the greater the number of negotiating parties, the harder it is for parties to reach an agreement [@Gronbaek:2020ei]. Thus, coordinating the management of shifting transboundary stocks for countries in these regions will be particularly challenging. 
-
-Most management plans that are not designed or prepared to respond to range and abundance shifts will be less resilient to climate change [@Miller:2013iv; @Sumaila:2020tp]. Focusing on identified “hotspots” will help anticipate any potential increases in and averting fisheries conflicts in coming years. Identified strategies to cope with changes in the shared proportion of transboundary stocks include strengthening of current cooperative mechanisms and the consideration of side payments (including non-monetary arrangements) [@Tunca:2019if; @Miller:2013iv], increased international cooperation [@Miller:2013iv] and management rules that capture distributional shifts [@PalaciosAbrantes:2020vt; @Pinsky:2018cb]. Some examples of current treaties that have adapted some of these strategies include: the Pacific Salmon Treaty between Canada and the U.S. to manage Pacific salmon (Oncorhynchus sp.) and which has a conservation fund functioning as a side payment [@Miller:2013iv], the International Pacific Halibut Commission between Canada and the United States, which as the name implies manages Pacific halibut (*Hippoglossus stenolepis*) and allocates quota based on the stock’s yearly distribution [@PalaciosAbrantes:2020vt]; and the Parties to the Nauru Agreement (PNA) an Oceania subregional agreement among 8 Pacific Island countries and Tokelau, which collectively manage the largest tuna fishery in the world, controlling around 50% of the global supply of skipjack tuna (*Katsuwonus pelamis*). The PNA manage fishing effort under a so-called Vessel Day Scheme, an adaptive and equitable system which accounts for shifts in stocks and catches as a result of climate variability [@Bahri:2021wz]. Quota allocation methods based on a stock’s current distribution and/or according to fixed-historical proportions like that of the European Union need to evolve to be more agile [@Baudron:2020dj] and potentially move towards a dynamic method or a combination of both [@PalaciosAbrantes:2020vt; @Sumaila:2020tp].
-
-Even management plans that take into consideration such strategies might not be fully prepared for the consequences of shifting transboundary stocks [@Pinsky:2018cb; @Koubrak:2020hw; @Engler:2020bg]. For example, species’ shifts within the PNA area will likely also have to deal with stocks expanding to new jurisdictions, issue that the NEAFC is currently facing regarding Atlantic mackerel [@Spijkers:2017ij; @Pinsky:2018cb]. Moreover, the transition from historic to dynamic allocations can find strong resistance from stakeholders “losing” benefits from a fishery they have historically been entitled to. Finally, changes in policy can be sluggish (e.g., it took the PST about 10 years to agree on a conservation fund) compared to the timeframe over which species shift [@Pinsky:2012kq]. This is specifically true as in many cases we lack standardized data to track shifts of species across international jurisdictions [@Maureaud:2021gj] as these might already be happening. Addressing shifting transboundary stocks is also challenged by an overall lack of knowledge of how many international agreements exist or what transboundary stocks are jointly managed. Recent efforts looking at 127 international fisheries plans found that they all lacked direct actions to address topics of climate change or species range shifts across jurisdictions [@Oremus:2020id]. Having a better understanding of what stocks are managed as transboundary and under what rules would be an important complement to our study and an important step towards the sustainability of international stocks. [@Oremus:2020id].
-
-### Potential drivers of shift and managing an uncertain future {-}
-
-The early projected range shifts of large number of transboundary stocks can be partially attributed to the parallel global emergence of several ocean variables from historical variability. For example, sea surface temperature (SST) is projected to increase beyond historical variability by 2030 in 50 to 70% of the global ocean [@Rodgers:2015jq; @Frolicher:2016dg; @Mahlstein:2011fy]. Results from multiple marine ecosystem models show that SST and primary production (NPP) are the main indicators of species distributional changes across ocean basins [@BryndumBuchholz:2019kh; @Lotze:2019ce]. Specifically, in the species distribution model used here (see methods), SST is the main environmental driver of biomass changes in polar, tropical and upwelling ecosystems, while NPP drives temperate regions’ results. The combination of the SST emergence pattern and model characteristics could be partially responsible for the early distributional shift of transboundary stocks in the tropics, where marine species live close to their thermal tolerance, making them highly vulnerable to warming waters [@IPCC:2019tn], while also explaining the later, and sometimes non-existent, shifts at higher latitudes (Fig. \@ref(fig:toeFigure2)B).
-Different levels of uncertainty exist in the projected emergence of environmental variables mainly related to *i*) climate change scenarios and *ii*) model structure [@Frolicher:2016dg]. First, our analysis is based on a high emission scenario (RCP 8.5) representing an "extreme" case of shifts in the shared distribution of transboundary species.Thus, any mitigation efforts could result in a substantial delay in distribution shifts as environmental signals are responsive to mitigation, at least after the middle of the $21^{st}$ century [@Frolicher:2016dg]. Second, a substantial source of uncertainty is related to model selection for both climate change and fish distribution. This is specifically important for early time periods (e.g., 2016-2035) where the uncertainty related to model selection, including the parameterization of poorly understood processes that regulate NPP changes, is often larger than the uncertainty stemming from the climate change scenario [@Frolicher:2016dg]. While such uncertainty could potentially be reduced by incorporating ensemble simulations from a range of different ESMs, these are computationally expensive simulations [@Frolicher:2009ge; @Frolicher:2016dg; @Rodgers:2015jq] that are only just becoming available [@Deser:2020bj] and cannot address limitations of process-level understanding. It is unlikely that these complex uncertainties will adequately be addressed in the coming decade. This is critical for the tropics, where the shared distribution of transboundary stocks is expected to shift the earliest, and the response of the base of the food web to climate change is most uncertain [@Tagliabue:2020hd; @Kwiatkowski:2020cf]. These uncertainties also affect the projection of species distributions [@Lotze:2019ce; @BryndumBuchholz:2019kh]. Overall, multiple upper trophic level models present overall agreement in terms of directional change of fish biomass, but variability in the magnitude of that change [@Lotze:2019ce]. Further research that reduces uncertainty in the NPP response at the base of ocean food webs, alongside large ensemble simulations of multiple species distribution models could lead to smaller structural uncertainty of fish and fisheries models [@BryndumBuchholz:2019kh]. Another important source of uncertainty in this study is the utilization of political boundaries (EEZ) to define stocks. While this method might define some stocks that do not necessarily align with biologically-defined sub-populations within an EEZ, in many EEZs, fisheries are often managed at the species level [@MAP:2017uf] and sub-populations are potentially interconnected [@Ramesh:2019va], thus, providing additional ecological ground for our analysis [@Dunn:2019ca]. Reproducing our analysis regionally, where spatially explicit stock data is available would allow to generate better constrained results and potentially identify different types of shared stock shifts at meta-population level [@Link:2010ei; @Archambault:2016ie]. Addressing these uncertainties systematically can serve as a roadmap for future studies to provide additional information to inform policy towards sustainable and equitable international fisheries management under climate change.
-
-<!-- # Conclusion {-} -->
-
-The global community has set the ambitious goal of managing all fisheries sustainably (SDG 14 – Life below water) by 2030; achieving this goal would have clear benefits for several other societal goals [@UnitedNations2018; @Singh:2017ds]. Developing anticipatory policies to deal with shifting transboundary stocks is key to achieving the SDGs and ensuring effective governance of the world’s fisheries [@Pinsky:2018cb; @Oremus:2020id; @Pecl:2017hu]. Here, we developed an approach to inform the sustainable management and governance of transboundary fisheries in a changing world [@Link:2010ei]. First, we identified the transboundary stocks that would likely see shifts in their shared distribution compared to their historical average and the year in which such shifts would occur. Second, we estimated the intensity of such change. While future studies, specifically at more localized scale, will provide valuable nuance in designing effective policies, our results provide an important baseline on which to build when preparing ocean governance for shifting transboundary stocks [@Pinsky:2018cb; @PalaciosAbrantes:2020tv]. Our findings emphasize recent calls for the urgent adoption of measures in support of more adaptive, flexible fisheries management and governance to support resilient fisheries and durable management systems [@Pinsky:2018cb; @Pinsky:2020jx; @Oremus:2020id].
-
-# Materials and Methods {-}
+# Materials and Methods
 
 ## Databases and species selection
 
-The analyses detailed herein are based on 633 exploited marine transboundary species that account for 80% of the catch taken from the world’s EEZs between 2005 and 2014 [@PalaciosAbrantes:2020tv]. When a species was shared by a pair of neighboring EEZs it was considered a transboundary stock [@PalaciosAbrantes:2020tv; @Teh:2015gd], resulting in a total of 9,132 transboundary stocks. Using the transboundary species Atlantic cod (*Gadus morhua*) as an example and this study’s definition of transboundary stock, the United States and Canada share a stock of Atlantic cod, and Canada and Greenland share a separate stock of Atlantic cod, but the United States and Greenland do not as they do not have juxtaposing EEZs. We defined the boundaries of the world’s EEZs using the Sea Around Us spatial division (updated 1 July 2015; http://www.seaaroundus.org), noting that it subdivides the EEZs of 198 coastal states into 280 regions (Fig. \@ref(fig:toeFigureS5)) including island territories. We determined the intersections between polygons using the R package sf [@PackagesfSimpleF:2018vp]. Each EEZ was categorized by geopolitical region according to the United Nations (https://population.un.org/wpp/DefinitionOfRegions/) and biome [@Reygondeau:2019uh]. The habitat preference of each species was determined following FishBase (http://www.fishbase.org) for fish species and SeaLifeBase (http://www.fishbase.org) for invertebrates (Table S\@ref(tab:toeTableS1)). For each stock and EEZ, we used Sea Around Us data to estimate catch and fishing revenue from fishing activities. We report both average catch and revenue for the last available decade (2005-2014) [@Zeller2016; @Tai2017; @Sumaila:2015uc].
+The analyses detailed herein are based on 633 exploited marine transboundary species that account for 80% of the catch taken from the world’s EEZs between 2005 and 2014 [@PalaciosAbrantes:2020tv]. When a species was shared by a pair of neighboring EEZs it was considered a transboundary stock [@PalaciosAbrantes:2020tv; @Teh:2015gd], resulting in a total of 9,132 transboundary stocks. Using the transboundary species Atlantic cod (*Gadus morhua*) as an example and this study’s definition of transboundary stock, the United States and Canada share a stock of Atlantic cod, and Canada and Greenland share a separate stock of Atlantic cod, but the United States and Greenland do not as they do not have juxtaposing EEZs. We defined the boundaries of the world’s EEZs using the Sea Around Us spatial division (updated 1 July 2015; http://www.seaaroundus.org), noting that it subdivides the EEZs of 198 coastal states into 280 regions (Fig. \@ref(fig:toeFigureS5)) including island territories. We determined the intersections between polygons using the R package sf [@PackagesfSimpleF:2018vp]. Each EEZ was categorized by geopolitical region according to the United Nations (https://population.un.org/wpp/DefinitionOfRegions/) and biome [@Reygondeau:2019uh]. The habitat preference of each species was determined following FishBase (http://www.fishbase.org) for fish species and SeaLifeBase (http://www.fishbase.org) for invertebrates (Table \@ref(tab:toeTableS1)). For each stock and EEZ, we used Sea Around Us data to estimate catch and fishing revenue from fishing activities. We report both average catch and revenue for the last available decade (2005-2014) [@Zeller2016; @Tai2017; @Sumaila:2015uc].
 
 ## Projecting species distributions under climate change
 
@@ -315,32 +255,14 @@ First, we estimated the catch proportion as the stock share ratio (SSR) catch of
 
 We tested the results for normality (e.g., skewness, kurtosis) and performed two non-parametric Kruskal–Wallis tests by ranks [@Hollander:2013wz]  to investigate geopolitical and ecological differences in the range shift of transboundary species. Specifically, we tested if the habitat preference of transboundary species and the geographic location of EEZs would have any effect on the transboundary stocks distributional range shift. In both cases, our null hypothesis was that there were no significant differences in the year of shift across habitat association or EEZs. All analyses were run using the statistical software R version 3.5.2 (2018-12-20; Eggshell Igloo) with the packages cowplot [@CowplotStreamlined:2019wt], data.table [@Packagedatatable:2019uh], geosphere [@], ggrepel [@PackageggrepelAut:2020to], gmt [@PackagegmtInterfa:2017vh], janitor [@PackagejanitorSim:2018ur], moments [@PackagemomensMome:2015uh], pgirmess [@PackagepgirmessSp:2018um], rfishbase [@PackagerfishbaseR:2019th], sf [@PackagesfSimpleF:2018vp], sp [@PackagespClasses:2019tn], tidiverse [@PackagetidyverseE:2017vq], tidytext [@PackagetidytextTe:2019vk], viridis [@PackageviridisDef:2018us], zeallot [@PackagezeallotMul:2018wy], and zoo [@PackagezooSInfr:2019tm]. Code for all analyses is available at https://github.com/jepa/EmergingFish
 
-# Acknowledgments {-}
-We would like to acknowledge inputs from T. Clarke and L. Kwong on previous iterations of the manuscript and figures. A.T. acknowledges  funding from the Horizon 2020 Framework Programme (724289). C.C.C.W acknowledges funding from the David and Lucile Packard Foundation (2019-68336), the Gordon and Betty Moore Foundation (GBMF5668.02), and the Walton Family Foundation (2018-1371). J.P.A and W.W.L.C. acknowledge funding from the Social Sciences and Humanities Research Council of Canada, Partnership Grant and the Natural Sciences and Engineering Research Council of Canada, Partnership Grant. T.F. acknowledges funding from the Horizon 2020 Framework Programme (820989), the Swiss National Science Foundation (PP00P2_170687), and the Swiss National Supercomputing Centre. U.R.S. acknowledges funding from the Social Sciences and Humanities Research Council of Canada, Partnership Grant.
+
+# Results
+
+## Identifying range shifts in the shared distribution of transboundary stocks {-}
+
+Our results suggest that 4,119 transboundary stocks will experience a range shift beyond historical variability by 2100 (hereafter referred to as ‘shifts’; Fig. \@ref(fig:toeFigure1)A), using a two s.d. threshold (i.e., representing a probability of 95% that the stock has shifted). This corresponds to 45% of the studied stocks (Fig. \@ref(fig:toeFigure1)C). Using a less conservative threshold (i.e., one s.d. representing a probability of 67% that the stock has shifted) results in 33% (n = 5,745) more shifting stocks, that is, 67% of all studied stocks (Figs. \@ref(fig:toeFigureS2) and \@ref(fig:toeFigureS8)). For both cases, the first shift is modelled to have occurred back in 2006. The average year of shift in the shared distribution of these stocks in all EEZs analyzed is projected to be between 2029 $\pm$ 27 years (one s.d. threshold) and 2036 $\pm$ 28 years (two s.d. threshold). Furthermore, between 81% and 83% of the world’s EEZs will experience at least one transboundary stock shift by 2100 with 77% to 80% of EEZs recording a distributional stock shift by the UN 2030 Agenda’s deadline (Fig. \@ref(fig:toeFigure1)C).
 
 
-
-
-
-
-
-
-
-
-# References {-}
-
-<div id="refs"></div>
-
-# Figures and Tables
-
-```{r toeFigure1N, eval = T,  echo = F, fig.width=14, fig.height=10, fig.cap =  "Schematic diagram of the transboundary index (TI) to determine the time of emergence of transboundary stocks from one Exclusive Economic Zone (EEZ) to another. The index is based on the distance between the distributional centroid of the transboundary stock and the geographic centroid of the neighboring EEZ sharing the stock (Top panel). Time of emergence is defined as the first year when the TI overshoots historical values (Bottom panel). Only showing a subset of ensemble members for clarity."}
-
-img <- readPNG("../Figures/Fig1.png")
-grid.raster(img)
-
-```
-
-\clearpage
 
 ```{r toeFigure1, eval = T,  echo = F, fig.width = 9, fig.height=4, fig.pos= "H", fig.cap =  "Timeline of shifts in transboundary shared stock distribution. (A) Number of stocks (cumulative) whose distribution centroids that have shifted beyond natural variations over time (from 2006 to >2100), (B) Number of EEZs (cumulative) with the distribution centroid of at least one stock that have shifted beyond natural variations and (C) proportion of total shifting stocks and EEZs with at least one stock shifting beyond natural variability. Dashed lines represent the year by which countries have committed to reach full implementation of the 2030 Agenda, as well as mid and late change in range shift (Methods), respectively."}
 
@@ -349,7 +271,11 @@ grid.raster(img)
 
 ```
 
-\clearpage
+The median year in which transboundary stocks experience a range shift varied significantly according to the species’ habitat association (Methods; Kruskal-Wallis, $X^2$ = 203.85, DF = 93, *p* < 0.001; using the 2 s.d.  threshold; Tables \@ref(tab:toeTableS1), \@ref(tab:toeTableS2) and Fig. \@ref(fig:toeFigureS1)) and EEZs' geographic regions (Methods; Kruskal-Wallis, $X^2$ = 242.11, DF = 93, *p* < 0.001; using the 2 s.d.  threshold; Table S3 and Fig. 2A). Overall, most tropical EEZs and stocks will see earlier shifts, with the EEZs of Latin America, the Caribbean and Polynesia experiencing shifts significantly earlier (*p* < 0.05; Tables \@ref(tab:toeTableS2) and \@ref(tab:toeTableS3) than almost any other region (Figs. \@ref(fig:toeFigure2)B, \@ref(fig:toeFigureS1) and \@ref(fig:toeFigureS2)). In contrast, EEZs and stocks located in temperate regions, like northern Europe and eastern Asia, are projected to experience much later range shifts. Stocks in a number of EEZs including Brazil and New Zealand’s EEZs are projected to experience no range shifts beyond natural variability by the end of this century (Fig. \@ref(fig:toeFigure2)A).
+
+
+
+<!-- ![toeFigure 2. Year of change in the shared distribution of 4,119 transboundary stocks. A) Land polygon shows the contribution of shifting stocks to the country’s total fishing revenue from transboundary stocks. Exclusive Economic Zone polygons represent average range shifts per EEZ. EEZs with no time of emergence between 2006 and 2100 are represented in aqua color. B) Year of shared distribution shifts by region according to United Nations sub-regions. Points represent the median year of range shift. Horizontal dashed line represents the 2030 Agenda. N = North, S = South, W = West and E = East. Ltn. Ame. and the Car. = Latin America and the Caribbean. Aus and New Z. = Australia and New Zealand](../Figures/Fig3.png) -->
 
 ```{r toeFigure2, eval = T,  echo = F, fig.width  = 13,fig.pos= "H", fig.height =11, fig.cap =  "Year of change in the shared distribution of 4,119 transboundary stocks. A) Land polygons show the contribution of shifting stocks to a country or territory’s total fishing revenue from transboundary stocks. Exclusive Economic Zone polygons display average year of range shifts within them. Warm colors are indicative of an early shift/high fishing revenue contribution from transboundary stocks while cool colors represent a late shift/low fishing revenue. EEZs with no distributional shift between 2006 and 2100 are represented in pale blue. B) Year of shared distribution shifts by UN sub-regions. Points color coded by the median year of range shift. Horizontal dashed line represents the year by which countries have committed to reach full implementation of the 2030 Agenda. N = North, S = South, W = West and E = East. Ltn. Ame. and the Car. = Latin America and the Caribbean. Aus and New Z. = Australia and New Zealand."}
 
@@ -358,7 +284,10 @@ grid.raster(img)
 
 ```
 
-\clearpage
+On average, shifting transboundary stocks represented 27% to 23% (1 and 2 s.d. thresholds) of annual revenue from fisheries targeting transboundary stocks across the world's EEZs between 2004 and 2010 (Fig. \@ref(fig:toeFigure2)A). However, large variation exists, with shifting stocks representing less than 1% of fishing revenue in some countries (e.g., Ireland) and over 90% in others (e.g., Marshall Islands). Moreover, in some EEZs, while few transboundary stocks are projected to shift beyond historical variability, they still represent a large proportion of revenue derived from fisheries within that EEZ (e.g., Peru).
+
+We estimated the current (i.e., 2005 - 2010) contribution of shifting stocks to yearly fishing revenue generated from fisheries targeting transboundary stocks within global EEZs for both thresholds (one and two s.d.). Within five years of the UN 2030 Agenda timeline, 979 transboundary stocks accounting for USD 5.3 billion in fishing revenue are projected to shift within 76 EEZs considering a two s.d. threshold (Fig. \@ref(fig:toeFigure3); above Fisheries >75th percentile). In this case, 321 stocks shifting in just eleven countries account for 4.2 billion USD (Fig. \@ref(fig:toeFigure3)). The number of transboundary stocks shifting from historical variability was highest in the EEZs of Spain (n = 122), France (n = 85), China and Portugal (both n = 73), and Senegal (n = 66) (Fig. \@ref(fig:toeFigure3)). The values are substantially higher when considering a more relaxed threshold. In this case, 2,136 stocks accounting for USD 24 billion in fishing revenue are projected to shift within five years of the UN 2030 Agenda timeline in 134 EEZs.
+
 
 ```{r toeFigure3, eval = T,  echo = F, fig.width=8, fig.height=6, fig.pos= "H", fig.cap =  "Average range shift of transboundary stocks and corresponding fishing revenue per country. Countries are coded according to different colored symbols representative of 5 distinct regions. The horizontal line separates countries above and below the 75th percentile of annual fishing revenue. Showing country names for the eleven nations above the 75th percentile and projected to have an average shift across transboundary stocks within its EEZ within 5 years of the 2030 Agenda deadline."}
 
@@ -367,11 +296,62 @@ grid.raster(img)
  
 ```
 
-\clearpage
+## Shifting intensity of transboundary stocks
+
+<!-- We based the transboundary index on a stock’s centroid defined as the average grid cells that contain the majority of a stock’s abundance (see Methods - Calculating an index of transboundary range shift). Results from the sensitivity analysis suggest that our method is robust to the abundance level (e.g., the top 95%) of the stock (Fig. \@ref(fig:toeFigureS3)). In addition, we set an arbitrary threshold of 2 s.d. (95% confidence) to determine the time of emergence of the transboundary index. Sensitivity tests to a lower threshold of 1 s.d. (for a 67% confidence) resulted in a global average shift in the shared distribution of transboundary stocks by 2029 $\pm$ 27, a difference of about 7 years (Fig. \@ref(fig:toeFigureS4)). In total, 5,745 transboundary stocks would shift their shared distributions between 2006 and 2100 considering a less conservative metric, that is, 33% (n = 1626) more shifting stocks. SENT TO METHODS!!!! -->
+
+We estimated the intensity of the distributional shift of transboundary stocks in terms of changes in catch proportion by 2030 (2020-2040) and 2050 (2040-2060), relative to the recent past (1951-2005) (see Methods). Projections show that by 2030, 59% $\pm$ 17% of the yearly catch from transboundary stocks will change beyond the historic variability experienced within an EEZ’s (Fig. \@ref(fig:toeFigure4)A). Moreover, 85% (n = 239) of the world’s EEZs will have experienced changes in catch proportion of transboundary stocks by 2030. By mid-21st century, the number of EEZs with changing stocks, as well as the number of stocks experiencing changes in catch proportion and the magnitude of that change will increase (Figs. \@ref(fig:toeFigureS3) and \@ref(fig:toeFigureS4)). The direction and intensity of shifts in transboundary stocks are largely related to regional changes in biogeography and the geometry of EEZs (Fig. \@ref(fig:toeFigure4)A). Along the Atlantic and Pacific coasts of Northern and Southern America and the Atlantic coast of Southern Africa, shifts in stocks are expected to benefit poleward EEZs. However, shifts along the coasts of Pacific Central America and West Africa occur in an equatorial direction.
 
 ```{r toeFigure4, eval = T,  echo = F, fig.width=12, fig.height=10,fig.pos= "H", fig.cap =  "Changes in stock proportion of neighboring Exclusive Economic Zones by 2030 (2021-2040) relative to 1951-2005. Lines represent the average change in transboundary stock share ratio (Methods) with arrows going from EEZ with decreasing stock share (point) to those gaining shares (arrowhead). Land polygons represent the percentage of stocks that are projected to change their stock share ratio (i.e., over two standard deviations from the historical catch proportion) beyond the identified threat point with higher gains identified in warmer colors. Panel B highlights changes for the Caribbean and Northwestern Europe."}
 
 img <- readPNG("../Figures/Fig5.png")
 grid.raster(img)
 
+```
+
+<!-- ![Figure 1. Changes in stock share ratio below each country’s threat point by 2030 (2021-2040) relative to 1951-2005. Lines represent the average change in transboundary stock share ratio with arrows going from EEZ with decreasing stock share (point) to those gaining shares (arrowhead). Land polygons represent the percentage of stocks that are projected to change their stock share ratio beyond the identified threat point with higher gains identified in warmer colors (green to yellow). Panel B zooms into specific areas shown within the gray dashed line boundaries in A.](../Figures/Fig1.png) -->
+
+<!-- The direction and intensity of shifts in transboundary stocks are largely related to regional changes in biogeography and the geometry of EEZs (Fig. \@ref(fig:toeFigure4)A). Along the Atlantic and Pacific coasts of Northern and Southern America and the Atlantic coast of Southern Africa, the proportion of the stock is expected to follow a projected poleward shift. However, shifts in the coasts of Pacific Central America and West Africa occur along an equatorial direction. Here, transboundary species follow specific oceanographic regions (*sensu* Longhurst) like upwelling zones (e.g., Humboldt current) and local patterns of oxygen availability, in addition to temperature gradients. Regions where EEZs are relatively small and have multiple borders (e.g., Caribbean or Northwestern Europe) are expected to have a particularly complex exchange of stock share ratio with no clear established pattern (Fig. \@ref(fig:toeFigure4)B). -->
+
+# Discussion 
+
+<!-- In this paper, we investigate the timing and intensity associated with changes in the share distribution of transboundary stocks between countries. Our findings highlight an early distributional shift from historical variations for most transboundary stocks in the world. Such early shifts point to the urgency of addressing the challenges that climate change presents for international fisheries management. Moreover, we identify regional patterns of high climate risk to important fish stocks and associated fisheries that would benefit from immediate policy responses to support sustainability into the future. Finally, we show that for many countries changes in the distribution of transboundary stocks are likely to undermine joint resource management between countries [@Bailey:2010ga; @Munro:1979dg; @PalaciosAbrantes:2020vt; @Bailey:2016eh]. Thus, our findings emphasize recent calls for the urgent adoption of adaptation measures in support of more adaptive, flexible fisheries management and governance to support resilient fisheries and durable management systems [@Pinsky:2018cb; @Pinsky:2020jx; @CisnerosMata:2019ks; @Oremus:2020id; @Free:2019jq]. -->
+
+## High present-day climate risk for transboundary fisheries
+
+Our findings highlighting early shifts in the shared distribution of transboundary stocks concur with previous studies that have detected changes in marine catch composition and attributed these to climate change [e.g., @Cheung:2013gk; @Frainer:2017ji; @Last:2011fd]. For example, in the early 2000s, Humboldt squid (*Dosidicus gigas*) substantially expanded its geographic range poleward, reaching the coast of Washington state (US), in response to climatic, and associated oceanographic and ecological changes [@Zeidberg:2007gs]. A new fishery targeting Humboldt squid quickly developed on the heels of the species’ range expansion [@Pinsky:2014by]. In the northeast Atlantic, fisheries on Atlantic mackerel (*Scomber scombrus*) are multi-laterally managed by the EU, Norway, Iceland, Russia, and Denmark (on behalf of the Faroe Islands and Greenland) through the North-East Atlantic Fisheries Commission (NEAFC). However, a range expansion of Atlantic mackerel due to environmental variation into Icelandic waters in 2007 resulted in Iceland capturing 6% of the fishery’s total allowable catch and a further 18% in 2008, without consultation with NEAFC, threatening the sustainability of the stock [@Spijkers:2017ij]. These changes resulted in disputes between Iceland and the Faroe Islands, as well as among NEAFC member states [@Spijkers:2017ij]. Other documented cases of early range expansions across international jurisdictions have also been documented for multiple stocks along the European Union regulatory areas [@Baudron:2020dj], the Benguela Current [@Potts:2014bq; @Yemane:2014jg], and the southwest South Atlantic Ocean [@Franco:2020bk]. Despite these documented cases, broadly speaking, there is a lack of information and data regarding which and how many transboundary stocks are shifting, where they are shifting to and whether they are jointly managed. This is particularly important for international fisheries management as modeling exercises project that climate change will continue to change the distribution of transboundary stocks to the point that some tropical EEZs will lose them completely [@Oremus:2020id] while other EEZs, mainly in higher latitudes, will stand to win new stocks [@Pinsky:2018cb].
+
+## Climate risk hotspots for transboundary fisheries management
+
+Our results identify regional “hotspots” of climate risk for transboundary fisheries management that will require the prompt adaptation of management plans (Figs. \@ref(fig:toeFigure2)A and \@ref(fig:toeFigure4)A). Regions such as the Caribbean are characterized by high levels of warming relative to historical natural variability [@IPCC:2019tn; @Hawkins:2012hc] and species’ high vulnerability to warming waters [@IPCC:2019tn]. Moreover, they represent relatively low area EEZs that border multiple countries. Game theory predicts that the greater the number of negotiating parties, the harder it is for parties to reach an agreement [@Gronbaek:2020ei]. Thus, coordinating the management of shifting transboundary stocks for countries in these regions will be particularly challenging. 
+
+Most management plans that are not designed or prepared to respond to range and abundance shifts will be less resilient to climate change [@Miller:2013iv; @Sumaila:2020tp]. Focusing on identified “hotspots” will help anticipate any potential increases in and averting fisheries conflicts in coming years. Identified strategies to cope with changes in the shared proportion of transboundary stocks include strengthening of current cooperative mechanisms and the consideration of side payments (including non-monetary arrangements) [@Tunca:2019if; @Miller:2013iv], increased international cooperation [@Miller:2013iv] and management rules that capture distributional shifts [@PalaciosAbrantes:2020vt; @Pinsky:2018cb]. Some examples of current treaties that have adapted some of these strategies include: the Pacific Salmon Treaty between Canada and the U.S. to manage Pacific salmon (Oncorhynchus sp.) and which has a conservation fund functioning as a side payment [@Miller:2013iv], the International Pacific Halibut Commission between Canada and the United States, which as the name implies manages Pacific halibut (*Hippoglossus stenolepis*) and allocates quota based on the stock’s yearly distribution [@PalaciosAbrantes:2020vt]; and the Parties to the Nauru Agreement (PNA) an Oceania subregional agreement among 8 Pacific Island countries and Tokelau, which collectively manage the largest tuna fishery in the world, controlling around 50% of the global supply of skipjack tuna (*Katsuwonus pelamis*). The PNA manage fishing effort under a so-called Vessel Day Scheme, an adaptive and equitable system which accounts for shifts in stocks and catches as a result of climate variability [@Bahri:2021wz]. Quota allocation methods based on a stock’s current distribution and/or according to fixed-historical proportions like that of the European Union need to evolve to be more agile [@Baudron:2020dj] and potentially move towards a dynamic method or a combination of both [@PalaciosAbrantes:2020vt; @Sumaila:2020tp].
+
+Even management plans that take into consideration such strategies might not be fully prepared for the consequences of shifting transboundary stocks [@Pinsky:2018cb; @Koubrak:2020hw; @Engler:2020bg]. For example, species’ shifts within the PNA area will likely also have to deal with stocks expanding to new jurisdictions, issue that the NEAFC is currently facing regarding Atlantic mackerel [@Spijkers:2017ij; @Pinsky:2018cb]. Moreover, the transition from historic to dynamic allocations can find strong resistance from stakeholders “losing” benefits from a fishery they have historically been entitled to. Finally, changes in policy can be sluggish (e.g., it took the PST about 10 years to agree on a conservation fund) compared to the timeframe over which species shift [@Pinsky:2012kq]. This is specifically true as in many cases we lack standardized data to track shifts of species across international jurisdictions [@Maureaud:2021gj] as these might already be happening. Addressing shifting transboundary stocks is also challenged by an overall lack of knowledge of how many international agreements exist or what transboundary stocks are jointly managed. Recent efforts looking at 127 international fisheries plans found that they all lacked direct actions to address topics of climate change or species range shifts across jurisdictions [@Oremus:2020id]. Having a better understanding of what stocks are managed as transboundary and under what rules would be an important complement to our study and an important step towards the sustainability of international stocks. [@Oremus:2020id].
+
+## Potential drivers of shift and managing an uncertain future
+
+The early projected range shifts of large number of transboundary stocks can be partially attributed to the parallel global emergence of several ocean variables from historical variability. For example, sea surface temperature (SST) is projected to increase beyond historical variability by 2030 in 50 to 70% of the global ocean [@Rodgers:2015jq; @Frolicher:2016dg; @Mahlstein:2011fy]. Results from multiple marine ecosystem models show that SST and primary production (NPP) are the main indicators of species distributional changes across ocean basins [@BryndumBuchholz:2019kh; @Lotze:2019ce]. Specifically, in the species distribution model used here (see methods), SST is the main environmental driver of biomass changes in polar, tropical and upwelling ecosystems, while NPP drives temperate regions’ results. The combination of the SST emergence pattern and model characteristics could be partially responsible for the early distributional shift of transboundary stocks in the tropics, where marine species live close to their thermal tolerance, making them highly vulnerable to warming waters [@IPCC:2019tn], while also explaining the later, and sometimes non-existent, shifts at higher latitudes (Fig. \@ref(fig:toeFigure2)B).
+Different levels of uncertainty exist in the projected emergence of environmental variables mainly related to *i*) climate change scenarios and *ii*) model structure [@Frolicher:2016dg]. First, our analysis is based on a high emission scenario (RCP 8.5) representing an "extreme" case of shifts in the shared distribution of transboundary species.Thus, any mitigation efforts could result in a substantial delay in distribution shifts as environmental signals are responsive to mitigation, at least after the middle of the $21^{st}$ century [@Frolicher:2016dg]. Second, a substantial source of uncertainty is related to model selection for both climate change and fish distribution. This is specifically important for early time periods (e.g., 2016-2035) where the uncertainty related to model selection, including the parameterization of poorly understood processes that regulate NPP changes, is often larger than the uncertainty stemming from the climate change scenario [@Frolicher:2016dg]. While such uncertainty could potentially be reduced by incorporating ensemble simulations from a range of different ESMs, these are computationally expensive simulations [@Frolicher:2009ge; @Frolicher:2016dg; @Rodgers:2015jq] that are only just becoming available [@Deser:2020bj] and cannot address limitations of process-level understanding. It is unlikely that these complex uncertainties will adequately be addressed in the coming decade. This is critical for the tropics, where the shared distribution of transboundary stocks is expected to shift the earliest, and the response of the base of the food web to climate change is most uncertain [@Tagliabue:2020hd; @Kwiatkowski:2020cf]. These uncertainties also affect the projection of species distributions [@Lotze:2019ce; @BryndumBuchholz:2019kh]. Overall, multiple upper trophic level models present overall agreement in terms of directional change of fish biomass, but variability in the magnitude of that change [@Lotze:2019ce]. Further research that reduces uncertainty in the NPP response at the base of ocean food webs, alongside large ensemble simulations of multiple species distribution models could lead to smaller structural uncertainty of fish and fisheries models [@BryndumBuchholz:2019kh]. Another important source of uncertainty in this study is the utilization of political boundaries (EEZ) to define stocks. While this method might define some stocks that do not necessarily align with biologically-defined sub-populations within an EEZ, in many EEZs, fisheries are often managed at the species level [@MAP:2017uf] and sub-populations are potentially interconnected [@Ramesh:2019va], thus, providing additional ecological ground for our analysis [@Dunn:2019ca]. Reproducing our analysis regionally, where spatially explicit stock data is available would allow to generate better constrained results and potentially identify different types of shared stock shifts at meta-population level [@Link:2010ei; @Archambault:2016ie]. Addressing these uncertainties systematically can serve as a roadmap for future studies to provide additional information to inform policy towards sustainable and equitable international fisheries management under climate change.
+
+<!-- # Conclusion {-} -->
+
+The global community has set the ambitious goal of managing all fisheries sustainably (SDG 14 – Life below water) by 2030; achieving this goal would have clear benefits for several other societal goals [@UnitedNations2018; @Singh:2017ds]. Developing anticipatory policies to deal with shifting transboundary stocks is key to achieving the SDGs and ensuring effective governance of the world’s fisheries [@Pinsky:2018cb; @Oremus:2020id; @Pecl:2017hu]. Here, we developed an approach to inform the sustainable management and governance of transboundary fisheries in a changing world [@Link:2010ei]. First, we identified the transboundary stocks that would likely see shifts in their shared distribution compared to their historical average and the year in which such shifts would occur. Second, we estimated the intensity of such change. While future studies, specifically at more localized scale, will provide valuable nuance in designing effective policies, our results provide an important baseline on which to build when preparing ocean governance for shifting transboundary stocks [@Pinsky:2018cb; @PalaciosAbrantes:2020tv]. Our findings emphasize recent calls for the urgent adoption of measures in support of more adaptive, flexible fisheries management and governance to support resilient fisheries and durable management systems [@Pinsky:2018cb; @Pinsky:2020jx; @Oremus:2020id].
+
+
+<!-- # Acknowledgments {-} -->
+<!-- We would like to acknowledge inputs from T. Clarke and L. Kwong on previous iterations of the manuscript and figures. A.T. acknowledges  funding from the Horizon 2020 Framework Programme (724289). C.C.C.W acknowledges funding from the David and Lucile Packard Foundation (2019-68336), the Gordon and Betty Moore Foundation (GBMF5668.02), and the Walton Family Foundation (2018-1371). J.P.A and W.W.L.C. acknowledge funding from the Social Sciences and Humanities Research Council of Canada, Partnership Grant and the Natural Sciences and Engineering Research Council of Canada, Partnership Grant. T.F. acknowledges funding from the Horizon 2020 Framework Programme (820989), the Swiss National Science Foundation (PP00P2_170687), and the Swiss National Supercomputing Centre. U.R.S. acknowledges funding from the Social Sciences and Humanities Research Council of Canada, Partnership Grant. -->
+
+# References
+
+<div id="refs"></div>
+
+<!-- # Supplemental material -->
+
+\renewcommand{\thefigure}{S\arabic{figure}}
+\setcounter{figure}{0}
+\renewcommand{\thetable}{S\arabic{table}}
+\setcounter{table}{0}
+
+```{r supplements, child = 'Supplements.Rmd', eval = T}
 ```
