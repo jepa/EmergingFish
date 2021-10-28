@@ -3,10 +3,11 @@ title: "Timing and magnitude of climate driven range shifts in transboundary fis
 date: "Affiliations: ^1^Institute for the Oceans and Fisheries, University of British Columbia, Vancouver, Canada.^2^Center for Limnology, University of Wisconsin, Madison. ^3^Climate and Environmental Physics, Physics Institute, University of Bern. ^4^Oeschger Centre for Climate Change Research, University of Bern, Switzerland. ^5^School of Environmental Sciences, University of Liverpool. ^6^Stanford Center for Ocean Solutions, Stanford University, Stanford, United States"
 subtitle: "Juliano Palacios-Abrantes*^1,2^, Thomas L. Frölicher^3,4^, Gabriel Reygondeau^1^, U. Rashid Sumaila^1^, Alessandro Tagliabue^5^, Colette C.C. Wabnitz^1,6^, and William W.L. Cheung^1^"
 output: 
-  bookdown::pdf_document2:
+  bookdown::word_document2:
     number_section: no
     toc: no
     latex_engine: xelatex
+always_allow_html: true
 reference_docx:  ../References/sci_template.docx
 bibliography: ../References/ToE_Ref.bib
 csl: ../References/gcb.csl
