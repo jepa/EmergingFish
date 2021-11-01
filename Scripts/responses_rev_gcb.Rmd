@@ -1,0 +1,211 @@
+---
+title: "Response to Reviewers"
+output: pdf_document
+---
+
+# Edditor
+
+Overall, the two reviewers agree that this work tackles an important, but collectively have raised a considerable number of points that will need to be addressed. Of most concern, is that it is not currently clear how this current MS differs from other recent papers that have established methods used on this paper and implications of climate change in the context of transboundary fisheries - including the authors' one works (Sumaila et al. 2020 Ecology and Society, Palacios-Abrantes et al. 2020 Ecology and Society, Pinsky et al. 2018 Science, and Palacios-Abrantes et al. 2020 Scientific Reports). It is important that GCB papers deliver the step change in knowledge that has not been realised elsewhere; therefore' we ask the authors to ensure the paper wholly demonstrates and articulates the transformation achieved in order to progress with the submission.
+
+- **Response:**
+
+# Reviewer 1
+
+Comments to the Author
+In this work, the authors analyze potential shifts in harvested marine species under climate change, in relation to their distribution across neighboring exclusive economic zones. They find that many countries will experience shifting species, and investigate how the number and intensity of transboundary shifts will vary by species type. Overall, I find the authors take an interesting approach to the analysis of transboundary fish populations under climate change, and the Discussion of potential management implications is strong, in my opinion. However, I think the manuscript needs some significant clarifications and edits before it can be published. In the space below, I outline my major comments, followed by more specific and/or minor comments, accompanied by line numbers from the draft pdf.
+
+- **Response:** We are glad that the reviewer found our manuscript to be interesting. We have revised the manuscript paying special attention to clarifying the parts the reviewer flagged. We thank the reviewer for his/her comments as they have strengthen our paper. Please find below direct responses to the reviewer's comments. 
+
+Major comments:
+I am concerned about the lack of a clear definition of “fish stock” in this manuscript, since it is absolutely central to the analysis. I cannot find where in the manuscript the definition of stocks is laid out. In most literature (and especially in fisheries science), stocks have a specific (if flexible) definition as populations of a species with some degree of demographic isolation from other stocks, such that the population dynamics of separate stocks may be considered independent. In this manuscript, it seems that instead, a transboundary stock is simply defined as any pair of EEZs that share a species distribution. I would recommend that the authors define the precise definition of fish stock explicitly within the manuscript, including how their definition is different from the definition in other, related literature.
+
+- **Response:** Thank you for this comment. We acknowledge that we did not defined clearly pur concept of stock in the previous version of the manuscript. The definition of stock has now been included in the revised manuscript in both the introduction and the methods as follows;
+
+  - Introduction Line XX, *We define a ‘stock’ unit as a species shared by neighboring EEZs.*
+
+  - Methods Line XX, *We define a (transboundary) "stock" unit when a species was shared by a pair of neighboring EEZs [@PalaciosAbrantes:2020tv; @Teh:2015gd], resulting in a total of 9,132 transboundary stocks*
+
+
+I have a number of questions and concerns about this approach to stock definition, including: how are neighboring stocks of the same species considered? If, for example, a species’ distribution exists within British Columbia, the United States, and Mexico, is this considered one stock for the purpose of the analyses in the paper (e.g. TI, ToE, SSR), or is this two stocks (one between Canada and the US and one between the US and Mexico)? How does the choice of stock definition influence the calculation of SSR? Given the same sample as above, can the US lose SSR of one stock of a species to Canada, while gaining SSR of the same species from Mexico?
+
+- **Response:** We acknowledged that this was not fully clear in the previous version of the manuscript and have work towards improving clarity in the revise manuscript. For example, pacific sardine is a species present along the coast of Mexico, the United States (US) and, sometimes, British Columbia (BC) [@cisneros-montemayor_ecosystem-based_2020]. For the purpose of our study, we define two stocks: One that is shared by Mexico and the US and one shared by the US and BC. We have made this explicit in the following section of the methods, hopefully clarifying our definition;
+
+    - Methods Line XX, *Let us consider the transboundary species Atlantic cod (*Gadus morhua*) as an example. Atlantic cod's distribution in the Northwest Atlantic ranges from the United States to Greenland. Based on the previous definition of a transboundary stock, the United States and Canada share a stock of Atlantic cod, and Canada and Greenland share a separate stock of Atlantic cod, but the United States and Greenland do not share a stock as they do not have juxtaposing EEZs.* 
+
+    Thus, this definition will influence the calculation of SSR *between* neighboring EEZs (i.e., Mexico and the US SSR for sardine and US and BC SSR for sardine, independently one of another). As the reviewer suggests, in this scenario Mexico could be loosing sardine SSR to the US contiguous states (this can also be seen as the US gaining SSR from Mexico), while the US contiguous states looses sardine SSR to BC (again, this could also be seen as Canada winning SSR from the US contiguous states ). This effect is appreciable in the average SSR gains of Figure 5 where Mexico losses to the US contiguous states, who in turn looses to BC, who actually gains from both US continuous states and Alaska. This is not explain on the methods as follows **NOT SURE WE NEED THIS**;
+
+    - Line XX, *While this means that a shift in the stocks could happened from the US to Canada and from Canada to Greenland, such shift could not (analytically) go directly from the US to Greenland*
+
+    This way, our definition of a shared stock allows for stocks to go to or leave an EEZ from all borders. Continuing using Mexico as an example, Figure 5 shows how in average Mexico will loose SSR of the stocks it shares with the US up north probably do to a poleward shift on the Californian current species [@cisneros-montemayor_ecosystem-based_2020] but also to the south to Guatemala as stocks follow local environmental gradients [@Clarke:2020ep].
+
+The above are just example situations. I do not mean to be nitpicky about definitions, but I am concerned that the definition of stocks used in this manuscript fundamentally determine the top-line results (e.g., number and proportion of shifting stocks, calculation of the transboundary index and time of emergence, loss or gain of SSR, etc. etc.).
+
+  - **Response:** We understand the reviewer's concern and hope that our response have clarified this issue. However, it is almost certain that our definition of stock is influencing the results of our paper, just by tha nature of the analysis. While a more fine scale definition (e.g., biologically-defined populations of stock will probably arose other results, not limiting the species to, at least, an EEZ could result in an overestimation of our results (See Ovando *et al.* https://www.pnas.org/content/118/23/e2025958118).
+
+Further, I am concerned about the averaging and weighting of species that is done across species in this analysis. As one example, why is the geographic centroid (used in the calculation of TI) not weighted by probability of occurrence? Fish stocks are not evenly distributed across their entire range, and unweighted centroids can severely skew the actual distribution of the species. 
+
+- **Response:** We have revised the manuscript to clarify that we did account for the heterogeneous distribution of fish stocks across their entire range. The geographic centroid of each stock is indeed weighted by the abundance of the stock. The DBEM uses the species probability of occurrence to estimate the biomass of the species at each 0.5 x 0.5 gridcell as indicated from lines XX to XX of the methods. The centroid of a transboundary stock was determined by the average latitude and longitude ($lon_{ts}$) of the grid cells holding the specified percentile ($per^{th}$) of the projected transboundary stock abundance. This is, we determined the centroid of the stock using only those regions where abundace is higher (i.e., using the probability of occurrence of the DBEM). It reads as follows:
+
+  - Line, *Fish stocks are not evenly distributed across their entire range, thus we focus on areas where transboundary stocks are more abundant and fishing activities are more likely to take place. Thus, we estimated the centroid of a stock only including grid cells where the projected stock abundance within the neighboring EEZs sharing the stock was above the $95^{th}$ percentile.*
+
+    We agree that and unweighted centroids can severely skew the actual distribution of the species and influence our results. We estimated the sensitivity of our results to the (arbitrarily) $95^{th}$ percentile threshold as described in lines XX and shown in Figure S6 of the supplements. 
+
+Weighting comes up again in the analyses that result in Figures 3, 4, and 5. Having one major, valuable species shift rapidly is a much bigger concern for many countries than having many small or low-value stocks shift slowly. These sorts of dynamics, while interesting, are difficult if not impossible to parse from the current Figures. For example, would the arrows look different in Figure 5 if the averages were weighted by each fish stock’s value?
+
+**NOT SURE I UNDERSTAND THIS COMMENT**
+
+- **Response (INCOMPLETE):** We were not clear in our message and have worked on clarifying all of these results. Specifically, in figure three we are showing the participation of the transboundary stocks that are shifting between neighbouring EEZs relative to the total revenue from all transboundary stocks that each EEZ has. So, for example, the transboundary stocks that are shifting in the Mexican Pacific coast to/from US and Guatemala represent about 15% of Mexico's total revenue from transboundary stocks. They average year of shift is ~2025. Indeed as the reviewer suggests, Figure 4 does not include any weight value, but rather absolute revenue amounts. The figure's objective is not only to inform the reader about the economic importance, in terms of absolute USD, of these shifting transboundary stocks (rather than their weighted value that is presented in Figure 3) but also highlight that these shifts are happening close to the UN 2030 Agenda. Finally, Figure 5 does indeed show weighted values. Here, we are showing the...
+
+We have made the following modifications to the manuscript: 
+
+  - Line XX, *We estimated the participation of the transboundary stocks that are shifting between neighboring EEZs relative to the total revenue from all transboundary stocks that each EEZ has. On average, shifting transboundary stocks represented 27% to 23% (1 and 2 s.d. thresholds) of annual revenue from fisheries targeting transboundary stocks across the world's EEZs between 2004 and 2010 (Fig. \@ref(fig:toeFigure2)A).*
+
+
+
+
+Specific comments:
+
+Abstract:
+Line 10: what does this line mean: “showing early, and sometimes past shifts”?
+
+- **Response:** We have modify this sentence to now read:
+
+  - Abstract Line XX; *Many countries that are highly dependent on fisheries for income, food and nutrition security, as well as livelihoods emerge as hotspots for transboundary shifts. These hotspots are characterized for showing early shifts in the distribution of important transboundary stocks.*
+
+Introduction:
+Be careful of verb tense. The Introduction mixes past with present tense. For example, the first two sentences starting at Line 57.
+
+- **Response: (Incomplete)** Many thanks for this observation. We have revised the whole manuscript to be sure verb tense is maintained through the document. 
+
+Methods:
+
+Line 78-79: Is this the definition of a stock? What if a species spans more than two EEZs? What if it is a straddling stock? Please be more explicit about what kinds of stocks are included (and not) in your analysis.
+
+- **Response:** This is indeed the definition of our stock. Please refer to our responses to the main comment.
+
+Line 79: where is “this study's definition of a transboundary stock?”
+
+- **Response:** Please see reposes to the reviewer's main comments. We have defined a trnaboundary stock as follows;
+
+  - Methods Line XX, *We define a (transboundary) "stock" unit when a species was shared by a pair of neighboring EEZs [@PalaciosAbrantes:2020tv; @Teh:2015gd], resulting in a total of 9,132 transboundary stocks*
+
+Lines 220-226: How does the threat point analysis align with my concerns about the definition of stocks described above? Can an EEZ both lose and gain SSR that exceeds a threshold, but of the same species? If so, this seems misleading.
+
+- **Response:** Thank you for your concern. In short the answer is yes, an EEZ could both lose and gain SSR of the same *species* but not of the same *stock.* This is because, according to our definition of stock, a species who spans multiple EEZs has multiple stocks (see response to the previus question and the main comment). let us use the Peruvian anchoveta (*Engraulis ringens*) as an example.
+
+Peru has identified two main stocks of Peruvian anchoveta. one in the central/norther part of the EEZ and one in the south, shared with Chile. Although the northern stocks is not considered transboundary [@Cashion:2018cg; @PalaciosAbrantes:2020tv] and Equador hardly ever reports anchoveta landings (wwww.searaundus.org), in some few years, environmental variability has pushed the central/north stock towards the EEZ of Ecuador. In those years one could argue that, the Peruvian anchoveta SSR of Peru-Ecuador favors Ecuador.
+
+At the same time, there are regional concerns that the Peruvian southern stock of anchoveta, shared with Chile, has been slowly shifting south into Chilean waters to the point that these two nations are now pushing towards cooperative management of such stock. In this case, the SSR of Peru-Chile, favors Chile. 
+
+This is only and example as our study is not capable of capturing this specific nuisance since we are not able to differentiate stocks within an EEZ nor more detailed, local, environmental factors (in this case, for example, the Humboldt current). However, we believe this 
+
+
+Results:
+
+Lines 244 and 246- check your math here. The percentages seem off. For example, if 4119 stock is 45% of the total, how is 5745 stocks 33% more stocks? If, as stated in the Methods, there are 9132 stocks, then 5745 is ~63% (not 67%) of all stocks, and it is <20% more than 4119 stocks. Please check these numbers and clarify
+
+- **Response:**
+
+Fig. 3 - While I like the idea of Figure 3, I feel that there is too much conveyed in this figure. It is confusing to have two different scales (for land polygons and EEZs, respectively) on the same color ramp, even though they show completely different things. Moreover, see my comments on averaging above. Why is average year used for coloring EEZs, but median year used in Fig 3B?
+
+- **Response:**
+
+Year of range shift- is this the median emergence year for all stocks that experience a shift? A shift beyond the threat point? Does it include stocks that are transboundary but don’t shift? Please clarify how this median is calculated.
+
+- **Response:**
+
+Lines 261-266: I think this is an interesting result, and is lost in the averaging of the range shifts. It would be interesting to see a figure or Table with some of the biggest “winners and losers” in terms of high-value species that are shifting out of or into particular EEZs. Or, could there be a figure displaying the 10-20 biggest/highest-value stocks that are expected to shift? Which countries are expected to lose/gain these species?
+
+- **Response:**
+
+Fig. 4- This figure is a bit messy, and seems to be relating two dubiously-related statistics (that is, the projected average year of range shift with the current value of transboundary fisheries) by world region. I am just not sure what the main message of this figure is. If the point is to show the value of species that may shift over time, I would suggest a time series (by country and/or region), simply showing the total (present) value of transboundary stocks over time.
+
+- **Response:**
+
+Fig. 5- this figure is hard to read, and is another figure that may be misleading if not weighted by abundance or value. It is strange to “average” across a unitless ratio (SSR). For example, a country could “gain” a small share of an extremely high-value species, perhaps enough to offset economically a number of losses of smaller or less valuable stocks. However, in the figure, the “average” SSR for that country would be negative (arrow going out). The authors should distinguish (in the text and in this figure) different possible situations like this.
+
+- **Response:**
+
+Can you determine from your analyses where the biggest positive or negative changes might be in stock distributions, by nation/EEZ? In other words, are there nations with a greater number of stocks entering than exiting, and if so, where are they? This would be an interesting addition to the manuscript
+
+- **Response:**
+
+Discussion 
+
+The Discussion is well-organized and lays out the major implications of the work. I particularly commend the authors on their discussion of specific fisheries and cases where the transboundary issue is already a concern, as well as the description of examples of management approaches to deal with transboundary species. I do not have any major comments.
+
+- **Response:** Many thanks for your kind words. 
+
+# Reviewer 2
+
+This MS estimates both the extent and expected timing of range shifts of transboundary species due to climate change. Overall, the MS is well-written and methods are clearly explained (except Fig. 1 could be slightly modified- see comments below). The authors provided good examples and appropriately place their results into both a global sustainability framework as well as detail the potential application in regional management. From my perspective, this is a great contribution to the field of adaptation planning, and my comments below are to strengthen the connection to adaptation planning.
+
+- **Response:**
+
+Comments:
+
+Line 12. Typo: considere>consider
+
+- **Response:** Changed in the revised manuscript, thank you.
+
+Line 22: After reading the paper—it’s clear that results are also relevant to the SDG 17: https://sdgs.un.org/goals/goal17
+
+- **Response:** We agree with the reviewer and have included the SDG in the paper.
+
+For example: Your results are the type of evidence that would be used by nations to develop adaptation plans, in hotspots, . See 17.16 Enhance the global partnership for sustainable development, complemented by multi-stakeholder partnerships that mobilize and share knowledge, expertise, technology and financial resources, to support the achievement of the sustainable development goals in all countries, in particular developing countries
+
+17.16.1
+Number of countries reporting progress in multi-stakeholder development effectiveness monitoring frameworks that support the achievement of the sustainable development goals
+
+- **Response:**
+
+Line 60: I suggest re-naming this Transboundary Shift and Emergence Index or Transboundary Shift Index. Something a little more descriptive. TI is so vague.
+
+- **Response:**
+Fig. 1: This is a wonderful schematic, my concerns: 1) stocks that do not occur as ovals but occur in patches or blobs instead-- the centroid may be too crude to detect movement of non-centric distributions- I don;t think your approach should change but re-cast as a proof of concept, researchers interested in applying the technique would be able to apply it at a regional level, and perhaps adapt it to patch distributions (separate centroids).
+2) I don;t know what the empty red circle means in bottom panel, I can’t find it. do you mean the white area since the red dot?
+3) what is diff btwn distributional and geographic centroid? (suggest using one term or other).
+4) WHat if EEZ Ca moves at the same rate in the same direction as EEZ Cb. Is the TI only useful if one (more northerly) stock is static? What about adding and index of each Ca and EEZb distance to border? Given how great this MS is, I imagine a lot of thought went through what constitutes a “shift”, so If I have misunderstood index. OH! Now I think I get it, after reading equations 5 and 6, is it possible to include more details in Fig 1?
+
+- **Response:**
+
+Line 109- type- an habitat> a habitat
+
+- **Response:** Changed in the revised manuscript, thank you.
+
+Line 140- Nice real-world application of the DBEM and ensemble ocean models.
+
+- **Response:** Thank you!
+
+Line 180- Time of emergence is excellent -- will allow nations to triage which species have to be jointly managed. Bi-lateral adaptation plans and governance will be a priority for those stocks with earlier times of emergence – really useful information.
+
+- **Response:** Thank you!
+
+Line 185: Re ToE and noise. In my mind, there is no right answer, you may reduce the uncertainty but the natural variability contributing to that uncertainty is inherent in these projections. Instead, the various ToE estimates, produced using different assumptions, can be considered by decision-makers as risk in a risk assessment process. For example, assuming historically high natural variability, the ToE would be n years. Assuming lower natural variability, the ToE would be n years. In other words, having the array of options, some decision-makers may choose to adopt that risk while in other instances, they could choose to be precautionary and act sooner. This information could be used in scenario-management planning. See the following link for ideas.. https://www.fisheries.noaa.gov/resource/document/scenario-planning- introduction-fishery-managers
+
+- **Response:**
+
+Line 249- From an adaptation planning perspective, the sds mean that the average year of shifts are the same regardless of threshold== happening now or soon—again, information that could be used in risk assessment or scenario management planning.
+
+- **Response:**
+
+Line 256: See previous comment on SDG 17
+
+- **Response:**
+
+~Line 274 To re-iterate previous statement, this information can be used in a risk assessment framework/scenario planning to estimate risk/loss of revenue if adaptation is not developed cooperatively.
+
+- **Response:**
+
+Fig.5, can you make the vectors a different color? Currently they seem to be the same color as the low end of the changes in catch proportion scale
+
+- **Response:**
+
+Line 341- This last sentence will be of most interest to decision-makers. As Sumaila is a co-author, add a sentence to expand on the "how-to".
+
+- **Response:**
+
+Line 401-I really like this closing sentence and following paragraphs. Your work provides context and a starting point for regional application. The global scale study provides information to identify global hotspots, and this para discusses how estimates could be "down-scaled", so it is the approach or framework that is a useful starting point.
+
+- **Response:**
+
