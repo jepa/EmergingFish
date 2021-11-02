@@ -46,6 +46,9 @@ packages <- c(
 
 my_lib(packages)
 
+# Fix new updates of sf package
+sf::sf_use_s2(use_s2 = FALSE)
+
 ```
 
 
@@ -1970,7 +1973,7 @@ filter(emerging_yr >= 2030) %>%
 
 ```
 
-##### Fig. 1. Accumulative plots
+##### Fig. 2. Accumulative plots
 
 ```{r Time_lapse_data,  eval = F, echo = T}
 
@@ -2267,7 +2270,7 @@ percentage_plot <- ggplot() +
 ```
 
 
-##### Fig. 2 Mapping the time of emergence
+##### Fig. 3 Mapping the time of emergence
 
 ###### Mean ToE and vulnerabillity Index
 
@@ -2278,7 +2281,7 @@ Eez_d_hist <- Eme_Res %>%
   group_by(eezid,sau_fishing_entity,tresh) %>% 
   # summarise(n_tax = length(unique(taxon_key))) %>% 
   summarise(
-    mean_yr = mean(emerging_yr,na.rm=T),
+    mean_yr = median(emerging_yr,na.rm=T),
     sd_yr = sd(emerging_yr,na.rm=T),
     n_taxa = length(unique(taxon_key))
     ) %>% 
@@ -2462,7 +2465,7 @@ for(i in 1:2){
     #                      colours = pal
     # ) +
     # geom_hline(yintercept = c(-50,0,50,80)) +
-    my_ggtheme_m() +
+    my_ggtheme_m(leg_pos = "bottom") +
     theme(
       legend.box.margin = margin(t = -62, l = 252),
       legend.text = element_blank(),
@@ -2476,49 +2479,49 @@ for(i in 1:2){
   ## --------------- ##
   
   # Weighted verion
-  boxplot_data <- Eme_Res %>% 
-    # Get the order of boxes
-    filter(tresh == tresh_list[i],
-           !is.na(un_sub_region)) %>%
-    group_by(un_sub_region) %>%
-    summarise(n_eezs = length(unique(sf_eez_name))) %>%
-    # Get the rest of the data
-    left_join(Eme_Res) %>%
-    filter(tresh == tresh_list[i],
-           !is.na(un_sub_region)) %>%
-    # mutate(weight = )
-    mutate(un_sub_region = ifelse(str_detect(un_sub_region,"Latin"),"Ltn. Ame. and\nthe Car.",
-                                  ifelse(str_detect(un_sub_region,"Australia"),"Aus. and New Z.",
-                                         ifelse(str_detect(un_sub_region,"Sub-Saharan"),"Sub-Saharan\nAfrica",
-                                                paste(un_sub_region)))
-    )#,
-    # For number labels
-    # un_sub_region = paste(un_sub_region," (n = ",n_eezs,")",sep="")
-    )
+  # boxplot_data <- Eme_Res %>% 
+  #   # Get the order of boxes
+  #   filter(tresh == tresh_list[i],
+  #          !is.na(un_sub_region)) %>%
+  #   group_by(un_sub_region) %>%
+  #   summarise(n_eezs = length(unique(sf_eez_name))) %>%
+  #   # Get the rest of the data
+  #   left_join(Eme_Res) %>%
+  #   filter(tresh == tresh_list[i],
+  #          !is.na(un_sub_region)) %>%
+  #   # mutate(weight = )
+  #   mutate(un_sub_region = ifelse(str_detect(un_sub_region,"Latin"),"Ltn. Ame. and\nthe Car.",
+  #                                 ifelse(str_detect(un_sub_region,"Australia"),"Aus. and New Z.",
+  #                                        ifelse(str_detect(un_sub_region,"Sub-Saharan"),"Sub-Saharan\nAfrica",
+  #                                               paste(un_sub_region)))
+  #   )#,
+  #   # For number labels
+  #   # un_sub_region = paste(un_sub_region," (n = ",n_eezs,")",sep="")
+  #   )
   
   
   
   # Non-weighted verion
 
-  # boxplot_data <- Eme_Res %>% 
-  #   # Get the order of boxes
-  #   filter(tresh == tresh_list[i],
-  #          !is.na(un_sub_region)) %>%
-  #   group_by(un_sub_region) %>% 
-  #   summarise(order = median(emerging_yr),
-  #             n_eezs = length(unique(sf_eez_name))) %>% 
-  #   # Get the rest of the data
-  #   left_join(Eme_Res) %>% 
-  #   filter(tresh == tresh_list[i],
-  #          !is.na(un_sub_region)) %>% 
-  #   mutate(un_sub_region = ifelse(str_detect(un_sub_region,"Latin"),"Ltn. Ame. and\nthe Car.",
-  #                                 ifelse(str_detect(un_sub_region,"Australia"),"Aus. and New Z.",
-  #                                        ifelse(str_detect(un_sub_region,"Sub-Saharan"),"Sub-Saharan\nAfrica",
-  #                                               paste(un_sub_region)))
-  #   ),
-  #   # For number labels
-  #   un_sub_region = paste(un_sub_region," (n = ",n_eezs,")",sep="")
-  #   )
+  boxplot_data <- Eme_Res %>%
+    # Get the order of boxes
+    filter(tresh == tresh_list[i],
+           !is.na(un_sub_region)) %>%
+    group_by(un_sub_region) %>%
+    summarise(order = median(emerging_yr),
+              n_eezs = length(unique(sf_eez_name))) %>%
+    # Get the rest of the data
+    left_join(Eme_Res) %>%
+    filter(tresh == tresh_list[i],
+           !is.na(un_sub_region)) %>%
+    mutate(un_sub_region = ifelse(str_detect(un_sub_region,"Latin"),"Ltn. Ame. and\nthe Car.",
+                                  ifelse(str_detect(un_sub_region,"Australia"),"Aus. and New Z.",
+                                         ifelse(str_detect(un_sub_region,"Sub-Saharan"),"Sub-Saharan\nAfrica",
+                                                paste(un_sub_region)))
+    ),
+    # For number labels
+    un_sub_region = paste(un_sub_region," (n = ",n_eezs,")",sep="")
+    )
   
   
   boxplot_data$un_sub_region <- boxplot_data$un_sub_region %>% 
