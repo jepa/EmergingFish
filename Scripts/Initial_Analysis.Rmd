@@ -2281,7 +2281,7 @@ Eez_d_hist <- Eme_Res %>%
   group_by(eezid,sau_fishing_entity,tresh) %>% 
   # summarise(n_tax = length(unique(taxon_key))) %>% 
   summarise(
-    mean_yr = median(emerging_yr,na.rm=T),
+    mean_yr = mean(emerging_yr,na.rm=T),
     sd_yr = sd(emerging_yr,na.rm=T),
     n_taxa = length(unique(taxon_key))
     ) %>% 
