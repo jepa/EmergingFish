@@ -61,8 +61,6 @@ We have made the following modifications to the manuscript:
   - Line XX, *We estimated the participation of the transboundary stocks that are shifting between neighboring EEZs relative to the total revenue from all transboundary stocks that each EEZ has. On average, shifting transboundary stocks represented 27% to 23% (1 and 2 s.d. thresholds) of annual revenue from fisheries targeting transboundary stocks across the world's EEZs between 2004 and 2010 (Fig. \@ref(fig:toeFigure2)A).*
 
 
-
-
 Specific comments:
 
 Abstract:
@@ -104,19 +102,35 @@ Results:
 
 Lines 244 and 246- check your math here. The percentages seem off. For example, if 4119 stock is 45% of the total, how is 5745 stocks 33% more stocks? If, as stated in the Methods, there are 9132 stocks, then 5745 is ~63% (not 67%) of all stocks, and it is <20% more than 4119 stocks. Please check these numbers and clarify
 
-- **Response:**
+- **Response:** Thank you for pointing this out. In the original manuscript we were showing the percentage difference between the two numbers (i.e., $x = \frac{|45-63|}{|\frac{45+63}{2}|}*100$), hence the 33.3% difference. However, now we realize this can be misleading and have adopted a more straightforward computation. We also corrected the 63% typo (not 67%). It now reads:
+
+  - - Line XX; *Using a less conservative threshold (i.e., one s.d. representing a probability of 67% that the stock has shifted) results in 18% (n = 5,745) more shifting stocks, that is, 63% of all studied stocks*
 
 Fig. 3 - While I like the idea of Figure 3, I feel that there is too much conveyed in this figure. It is confusing to have two different scales (for land polygons and EEZs, respectively) on the same color ramp, even though they show completely different things. Moreover, see my comments on averaging above. Why is average year used for coloring EEZs, but median year used in Fig 3B?
 
-- **Response:**
+- **Response:** Thank you for your commnets on our fiugre 3. We have devided the responses by each point you make. Please see below
+
+  While I like the idea of Figure 3, I feel that there is too much conveyed in this figure. It is confusing to have two different scales (for land polygons and EEZs, respectively) on the same color ramp, even though they show completely different things.
+
+  - **Response:**  **NOTE: I do not (fully) agree with this comment. yes, the figure is complex, but I do not think having different color scales will make it any less complex. I actually think it will make it even harder to read. Do you think we can counter-argue this comment?** 
+
+  Moreover, see my comments on averaging above. 
+
+  - **Response:** Please see our response to the comment above.
+
+  Why is average year used for coloring EEZs, but median year used in Fig 3B?
+
+  - **Response:** In the case of Fig.3B we used the median because this figure talks directly to the statistical non-parametric analysis (Kruskal-Wallis) looking at differences in the time of emergence by geographic region. **NOTE: Shall we change Fig.3A to show the median instead of the mean, for the sake of consistency (and make the reviewer happy)?**
 
 Year of range shift- is this the median emergence year for all stocks that experience a shift? A shift beyond the threat point? Does it include stocks that are transboundary but don’t shift? Please clarify how this median is calculated.
 
-- **Response:**
+- **Response:** Yes, this refers to the median emergence year for all shifting stocks in each region. This is now included in the figure legend. 
+
+  - - Fig. 3 legend, *B) Year of shared distribution shifts by UN sub-regions. Points color coded by the median year for all shifting stocks in the region.*
 
 Lines 261-266: I think this is an interesting result, and is lost in the averaging of the range shifts. It would be interesting to see a figure or Table with some of the biggest “winners and losers” in terms of high-value species that are shifting out of or into particular EEZs. Or, could there be a figure displaying the 10-20 biggest/highest-value stocks that are expected to shift? Which countries are expected to lose/gain these species?
 
-- **Response:**
+- **Response:** We intended to show this information in Figure 4. However, the message in the figure is not clear, as the reviewer pointed out in the next comment. We have modified figure 4 to show this as a figure.
 
 Fig. 4- This figure is a bit messy, and seems to be relating two dubiously-related statistics (that is, the projected average year of range shift with the current value of transboundary fisheries) by world region. I am just not sure what the main message of this figure is. If the point is to show the value of species that may shift over time, I would suggest a time series (by country and/or region), simply showing the total (present) value of transboundary stocks over time.
 
@@ -140,7 +154,7 @@ The Discussion is well-organized and lays out the major implications of the work
 
 This MS estimates both the extent and expected timing of range shifts of transboundary species due to climate change. Overall, the MS is well-written and methods are clearly explained (except Fig. 1 could be slightly modified- see comments below). The authors provided good examples and appropriately place their results into both a global sustainability framework as well as detail the potential application in regional management. From my perspective, this is a great contribution to the field of adaptation planning, and my comments below are to strengthen the connection to adaptation planning.
 
-- **Response:**
+- **Response:** Thank you so much for taking the time to revise our manuscript and for your words of encouragement. 
 
 Comments:
 
@@ -161,13 +175,29 @@ Number of countries reporting progress in multi-stakeholder development effectiv
 
 Line 60: I suggest re-naming this Transboundary Shift and Emergence Index or Transboundary Shift Index. Something a little more descriptive. TI is so vague.
 
-- **Response:**
+- **Response:** Thank you for this comment. We have now changed the term to "*Transboundary Shift Index (TSI)*"
+
 Fig. 1: This is a wonderful schematic, my concerns: 1) stocks that do not occur as ovals but occur in patches or blobs instead-- the centroid may be too crude to detect movement of non-centric distributions- I don;t think your approach should change but re-cast as a proof of concept, researchers interested in applying the technique would be able to apply it at a regional level, and perhaps adapt it to patch distributions (separate centroids).
+
+- **Response:** We agree with the reviewer that the distribution of fish stocks in the ocean is not necessarily oval. In fact, the distribution of some of our stocks does not follow this patter. Nevertheless, we believe our method responds well to other patterns (as long as they are considered one single stock unit) since the centroid of the stock's distribution is based on the "high biomass-level" grid cells. We have included a clarification regarding the stocks distribution in the figure legend of the revised manuscript. 
+
+  - - *Hypothetical distribution range and shape of a shared stock.*
+
+
 2) I don;t know what the empty red circle means in bottom panel, I can’t find it. do you mean the white area since the red dot?
+
+- **Response:** Red circles represent the years the TI is larger than the historical variation. These were quite faded in the original diagram and have made them clearer in the revised figure. 
+
 3) what is diff btwn distributional and geographic centroid? (suggest using one term or other).
+
+- **Response:** The distributional centroid represent's the stocks centroid while "geographical" centroid is the EEZs centroid. We have changed the second term as suggested by the reviewer, it is now called simply "EEZ centroid".
+ 
+
 4) WHat if EEZ Ca moves at the same rate in the same direction as EEZ Cb. Is the TI only useful if one (more northerly) stock is static? What about adding and index of each Ca and EEZb distance to border? Given how great this MS is, I imagine a lot of thought went through what constitutes a “shift”, so If I have misunderstood index. OH! Now I think I get it, after reading equations 5 and 6, is it possible to include more details in Fig 1?
 
-- **Response:**
+- **Response:** Ca and Cb represent the centroid of the EEZs, and thus, they do not move. What moves is the centroid of the stock (the smaller blue circle) along the whole distribution of the stock that spans both EEZs. We realize this was not clear in the legend and have now change it.
+
+  - - : *say EEZ $C_A$: Centroid of the Exclusive Economic Zone A and EEZ $C_B$: Centroid of the Exclusive Economic Zone B*
 
 Line 109- type- an habitat> a habitat
 
@@ -191,7 +221,7 @@ Line 249- From an adaptation planning perspective, the sds mean that the average
 
 Line 256: See previous comment on SDG 17
 
-- **Response:**
+- **Response:** See our previous response on SDG 17
 
 ~Line 274 To re-iterate previous statement, this information can be used in a risk assessment framework/scenario planning to estimate risk/loss of revenue if adaptation is not developed cooperatively.
 
@@ -207,5 +237,5 @@ Line 341- This last sentence will be of most interest to decision-makers. As Sum
 
 Line 401-I really like this closing sentence and following paragraphs. Your work provides context and a starting point for regional application. The global scale study provides information to identify global hotspots, and this para discusses how estimates could be "down-scaled", so it is the approach or framework that is a useful starting point.
 
-- **Response:**
+- **Response:** Thank you very much for your kind words
 
