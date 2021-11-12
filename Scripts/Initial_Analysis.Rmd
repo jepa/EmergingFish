@@ -1922,16 +1922,16 @@ Eez_centroid_sf <-st_as_sf(Eez_centroid,
 n_stock <- 9132
 n_eez <- length(unique(Eez_centroid_sf$eez_name))
 
+### ------------ ##
+# Select a treshold
+selected_tresh <- "tresh_two"
+### ------------ ##
+
 ```
 
 ###  Year of Eergence Analysis
 
 ```{r ToE_generals,  eval = F, echo = T}
-
-### ------------ ##
-# Select a treshold
-selected_tresh <- "tresh_two"
-### ------------ ##
 
 # Total number of emerging stocks
 
@@ -2631,8 +2631,7 @@ for(i in 1:2){
 ##### Fig. N3 Mapping the time of emergence Of Top stocks
 
 ```{r emergence_map, eval = F}
-
-
+  
 top_stocks_per_country <- Eme_Res %>% 
   rename(geo_region = un_sub_region) %>% 
   group_by(sau_fishing_entity,fishing_entity_id,geo_region,tresh,taxon_key) %>% 
@@ -2640,8 +2639,6 @@ top_stocks_per_country <- Eme_Res %>%
   left_join(Sau_data,
             by = c("fishing_entity_id","taxon_key")) %>% 
   filter(!is.na(variable)) %>% 
-  # group_by(sau_fishing_entity,fishing_entity_id,tresh,variable) %>% 
-  # summarise(sum_value = sum(value,na.rm=T)) %>% 
   group_by(sau_fishing_entity,geo_region,tresh,variable) %>% 
   # Select top 5 most valuable stocks
   top_n(5,value)
@@ -2651,7 +2648,6 @@ top_stocks_per_country <- Eme_Res %>%
 top_toe <- Eme_Res %>% 
   rename(geo_region = un_sub_region) %>% 
   group_by(eezid,sau_fishing_entity,geo_region,tresh,taxon_key) %>% 
-  # summarise(n_tax = length(unique(taxon_key))) %>% 
   summarise(mean_yr = mean(emerging_yr,na.rm=T)) %>% 
   right_join(top_stocks_per_country,
              by = c("sau_fishing_entity","geo_region","tresh","taxon_key")
@@ -2664,23 +2660,49 @@ top_toe <- Eme_Res %>%
     geo_region = ifelse(is.na(geo_region),"Other",geo_region)
   )
 
-
 # Numbers for paper
-x <- top_toe %>% 
-  filter(mean_yr <= 2021,
-         variable == "value",
-         tresh == selected_tresh)
+Eme_Res %>% 
+  rename(geo_region = un_sub_region) %>% 
+  group_by(eezid,sau_fishing_entity,geo_region,tresh,taxon_key) %>% 
+  summarise(mean_yr = mean(emerging_yr,na.rm=T)) %>% 
+  right_join(top_stocks_per_country,
+             by = c("sau_fishing_entity","geo_region","tresh","taxon_key")
+             ) %>% 
+  group_by(variable,tresh) %>% 
+  summarise_at(vars(mean_yr),
+               c("mean"=mean,
+                 "sd" = sd))
 
-length(unique(x$sau_fishing_entity))/length(unique(Sau_data$fishing_entity_id))
 
+# Number of coastal nations
+Eme_Res %>% 
+  rename(geo_region = un_sub_region) %>% 
+  group_by(eezid,sau_fishing_entity,geo_region,tresh,taxon_key) %>% 
+  summarise(mean_yr = mean(emerging_yr,na.rm=T)) %>% 
+  right_join(top_stocks_per_country,
+             by = c("sau_fishing_entity","geo_region","tresh","taxon_key")
+             ) %>% 
+  filter(mean_yr <= 2021) %>% 
+  group_by(variable,tresh) %>% 
+  summarise(
+    n_countries = length(unique(sau_fishing_entity))
+  ) %>% 
+  mutate(per = n_countries/length(unique(Sau_data$fishing_entity_id)))
 
 # Number of shifting stocks per geo-region
-x %>% 
+Eme_Res %>% 
+  rename(geo_region = un_sub_region) %>% 
+  group_by(eezid,sau_fishing_entity,geo_region,tresh,taxon_key) %>% 
+  summarise(mean_yr = mean(emerging_yr,na.rm=T)) %>% 
+  right_join(top_stocks_per_country,
+             by = c("sau_fishing_entity","geo_region","tresh","taxon_key")
+             ) %>% 
+  filter(mean_yr <= 2021) %>% 
   group_by(geo_region) %>% 
   tally() %>% 
   arrange(n) %>% 
-  top_frac(0.2,n) # top 20%
-    
+  top_frac(0.25,n) # top 25%
+
 ```
 
 ###### The bar option by UN sub region
@@ -2839,22 +2861,13 @@ Top_map_data <- top_toe %>%
          variable == "value") # tried with catch but is quite the same
 
 
-mean(Top_map_data$mean)
-sd(Top_map_data$mean)
-
-World_map_top <- World_map %>%
+World_map_top <- World_eez_sf %>% 
+  left_join(Matching_names) %>% 
   full_join(Top_map_data,
             by = c("sau_fishing_entity")
   ) %>% 
   filter(!is.na(variable))
   
-
-# These are regions without transboundary species
-grey_land <- World_map %>% 
-  filter(!sau_fishing_entity %in% Top_map_data$sau_fishing_entity) %>% 
-  filter(!sovereignt %in% c("Antarctica"))
-
-
 # Map with countries without ToE
   
   russia_churchil <- World_eez_sf %>% 
@@ -2862,12 +2875,12 @@ grey_land <- World_map %>%
   
   no_toe_eez <- World_eez_sf %>% 
     filter(eez_name %in% Neighbours$eez_name, # Filter EEZs without Transboundary spp
-           !eez_name %in% toe_map_data$eez_name) %>%  # Filter EEZs with ToE stocks
+           !eez_name %in% World_map_top$eez_name) %>%  # Filter EEZs with ToE stocks
     rbind(russia_churchil)
   
   no_toe_land <- World_map %>% 
     filter(name %in% Neighbours$eez_name, # Filter EEZs without Transboundary spp
-           !name %in% World_map_part$name) # Filter EEZs with ToE stocks
+           !name %in% World_map_top$name) # Filter EEZs with ToE stocks
     
     
   map <- ggplot(World_map_top) +
@@ -2881,11 +2894,11 @@ grey_land <- World_map %>%
     ) +
     # grey maps
     # ggplot() +
-    geom_sf(data = grey_land, aes(), fill = "grey50", color =  "white",size = 0.1) +
-    # geom_sf(data = no_toe_eez, aes(), fill = "lightblue", color =  "white",size = 0.1) +
-    geom_sf(data = no_toe_land, aes(), fill = "lightblue", color =  "white",size = 0.1) +
+    geom_sf(data = World_map, aes(), fill = "grey50", color =  "white",size = 0.1) +
+    geom_sf(data = no_toe_eez, aes(), fill = "lightblue", color =  "white",size = 0.1) +
+    # geom_sf(data = no_toe_land, aes(), fill = "lightblue", color =  "white",size = 0.1) +
     # Set Participation labels
-    scale_fill_viridis("Average year of range shift",
+    scale_fill_viridis("Average year of range shift of top valued transboundary stocks",
                        limits = c(2000,2100),
                        breaks = seq(2000,2100,25),
                        direction = -1

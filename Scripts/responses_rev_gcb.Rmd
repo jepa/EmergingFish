@@ -51,7 +51,7 @@ I have a number of questions and concerns about this approach to stock definitio
 
   How does the choice of stock definition influence the calculation of SSR?
     
-- **Response:** The definition of "stock" will likely influence the results as it is a fundamental part of the analysis. Replicating this analysis at the species level will undoubtedly result in multiple countries sharing each species. For example, in the case of Atlantic Cod, this would be shared by US, Canada and Greenland (and maybe enven northern Europe). Choosing this approach invariably comes with the assumption that fishing Cod in, e.g., the Gulf of Maine, will have direct impact on e.g., Greenland fisheries. While this might be true for some few highly migratory species (e.g., tunas) we believe is a stretch for all other species in this analysis. 
+- **Response:** The definition of "stock" will likely influence the results as it is a fundamental part of the analysis. Replicating this analysis at the species level will undoubtedly result in multiple countries sharing each species. For example, in the case of Atlantic Cod, this would be shared by US, Canada and Greenland (and maybe even northern Europe). Choosing this approach invariably comes with the assumption that fishing Cod in, e.g., the Gulf of Maine, will have direct impact on e.g., Greenland fisheries. While this might be true for some few highly migratory species (e.g., tunas) we believe is a stretch for all other species in this analysis. 
   
   However, even when a stock of non highly-migratory species does span along the coast of more than two countries, our results seem to be similar (this relates to the part regarding Mexico US and Canada). For example, Pacific halibut (*Hippoglossus stenolepis*) is considered to be one single stock that extends along the Pacific coast of the US contiguous states, Canada, and Alaska [@iphc_iphc_2016_report_2016]. Palacios-Abrantes *et al.* (2020) analyzed the shift in SSR between the three parties and found that the US contiguous states will likely loose SSR to Canada while Canada will loose to Alaska. A similar patter shown in the present study.
   
@@ -103,7 +103,7 @@ Line 78-79: Is this the definition of a stock? What if a species spans more than
 
 Line 79: where is “this study's definition of a transboundary stock?”
 
-- **Response:** Please see responses to the reviewer's main comments. We have defined a transboundary stock as follows;
+- **Response:** The definition is now clearly stated in the revised manuscript as follows;
 
   - Methods Line XX, *We define a (transboundary) "stock" unit when a species was shared by a pair of neighboring EEZs [@PalaciosAbrantes:2020tv; @Teh:2015gd], resulting in a total of 9,132 transboundary stocks*
 
@@ -122,17 +122,17 @@ Results:
 
 Lines 244 and 246- check your math here. The percentages seem off. For example, if 4119 stock is 45% of the total, how is 5745 stocks 33% more stocks? If, as stated in the Methods, there are 9132 stocks, then 5745 is ~63% (not 67%) of all stocks, and it is <20% more than 4119 stocks. Please check these numbers and clarify
 
-- **Response:** Thank you for pointing this out. In the original manuscript we were showing the percentage difference between the two numbers (i.e., $x = \frac{|45-63|}{|\frac{45+63}{2}|}*100$), hence the 33.3% difference. However, now we realize this can be misleading and have adopted a more straightforward computation. We also corrected the 63% typo (not 67%). It now reads:
+- **Response:** Thank you for pointing this out. In the original manuscript we were showing the percentage difference between the two numbers (i.e., $x = \frac{|45-63|}{|\frac{45+63}{2}|}*100$), hence the 33.3% difference. However, now we realize this can be misleading and have adopted a more straightforward computation that aligns with the reviewer's math. We also corrected the 63% typo (not 67%). It now reads:
 
   - - Line XX; *Using a less conservative threshold (i.e., one s.d. representing a probability of 67% that the stock has shifted) results in 18% (n = 5,745) more shifting stocks, that is, 63% of all studied stocks*
 
 Fig. 3 - While I like the idea of Figure 3, I feel that there is too much conveyed in this figure. It is confusing to have two different scales (for land polygons and EEZs, respectively) on the same color ramp, even though they show completely different things. Moreover, see my comments on averaging above. Why is average year used for coloring EEZs, but median year used in Fig 3B?
 
-- **Response:** Thank you for your commnets on our fiugre 3. We have devided the responses by each point you make. Please see below
+- **Response:** Thank you for your comments on our figure 3 and see below the responses to each point you make. 
 
   While I like the idea of Figure 3, I feel that there is too much conveyed in this figure. It is confusing to have two different scales (for land polygons and EEZs, respectively) on the same color ramp, even though they show completely different things.
 
-  - **Response:**  **NOTE: I do not (fully) agree with this comment. yes, the figure is complex, but I do not think having different color scales will make it any less complex. I actually think it will make it even harder to read. Do you think we can counter-argue this comment?** 
+  - **Response:**  **NOTE: I do not (fully) agree with this comment, Do you think we can counter-argue it? (We had the same type of plot in the Sci. Rep. paper). Yes, the figure is complex, but I do not think having different color scales will make it any less complex. I actually think it will make it even harder to read.** 
 
   Moreover, see my comments on averaging above. 
 
@@ -140,7 +140,7 @@ Fig. 3 - While I like the idea of Figure 3, I feel that there is too much convey
 
   Why is average year used for coloring EEZs, but median year used in Fig 3B?
 
-  - **Response:** In the case of Fig.3B we used the median because this figure talks directly to the statistical non-parametric analysis (Kruskal-Wallis) looking at differences in the time of emergence by geographic region. **NOTE: Shall we change Fig.3A to show the median instead of the mean, for the sake of consistency (and make the reviewer happy)?**
+  - **Response:** In the case of Fig.3B we used the median because this figure talks directly to the statistical non-parametric analysis (Kruskal-Wallis) looking at differences in the time of emergence by geographic region . **NOTE: Shall we change Fig.3A to show the median instead of the mean, for the sake of consistency or the inverse? (and make the reviewer happy)?**
 
 Year of range shift- is this the median emergence year for all stocks that experience a shift? A shift beyond the threat point? Does it include stocks that are transboundary but don’t shift? Please clarify how this median is calculated.
 
@@ -150,11 +150,11 @@ Year of range shift- is this the median emergence year for all stocks that exper
 
 Lines 261-266: I think this is an interesting result, and is lost in the averaging of the range shifts. It would be interesting to see a figure or Table with some of the biggest “winners and losers” in terms of high-value species that are shifting out of or into particular EEZs. Or, could there be a figure displaying the 10-20 biggest/highest-value stocks that are expected to shift? Which countries are expected to lose/gain these species?
 
-- **Response:** We intended to show this information in Figure 4. However, the message in the figure is not clear, as the reviewer pointed out in the next comment. We have modified figure 4 to show this as a figure.
+- **Response:** We agree with the reviewer that showing the biggest “winners and losers” in terms of high-value species would be interesting. Thus, we have included a new figure and text in this section showing the year of range shift of the 5 most valuable stocks per country (see response to main comments). 
 
 Fig. 4- This figure is a bit messy, and seems to be relating two dubiously-related statistics (that is, the projected average year of range shift with the current value of transboundary fisheries) by world region. I am just not sure what the main message of this figure is. If the point is to show the value of species that may shift over time, I would suggest a time series (by country and/or region), simply showing the total (present) value of transboundary stocks over time.
 
-- **Response:**
+- **Response:NOTE THINKING ON CHANGEING FIGURES** Our original intention was to show the importance in terms of value, of shifting stocks. However, we agree that this figure is confusing and it's message was ambiguous. Moreover, we think that the reviewers suggestion of the most valuable species brings home a mor important message and have decided to remove this figure from the revised manuscript and include the "top 5 most valuable stocks" figure instead. 
 
 Fig. 5- this figure is hard to read, and is another figure that may be misleading if not weighted by abundance or value. It is strange to “average” across a unitless ratio (SSR). For example, a country could “gain” a small share of an extremely high-value species, perhaps enough to offset economically a number of losses of smaller or less valuable stocks. However, in the figure, the “average” SSR for that country would be negative (arrow going out). The authors should distinguish (in the text and in this figure) different possible situations like this.
 
