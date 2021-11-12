@@ -2641,9 +2641,8 @@ top_stocks_per_country <- Eme_Res %>%
   # summarise(sum_value = sum(value,na.rm=T)) %>% 
   group_by(sau_fishing_entity,geo_region,tresh,variable) %>% 
   # Select top 10 most valuable stocks
-  top_n(5,value)
 
-
+  
 # Per EEZs
 top_toe <- Eme_Res %>% 
   rename(geo_region = un_sub_region) %>% 
@@ -2660,7 +2659,24 @@ top_toe <- Eme_Res %>%
   mutate(
     geo_region = ifelse(is.na(geo_region),"Other",geo_region)
   )
-  
+
+
+# Numbers for paper
+x <- top_toe %>% 
+  filter(mean_yr <= 2021,
+         variable == "value",
+         tresh == selected_tresh)
+
+length(unique(x$sau_fishing_entity))/length(unique(Sau_data$fishing_entity_id))
+
+
+# Number of shifting stocks per geo-region
+x %>% 
+  group_by(geo_region) %>% 
+  tally() %>% 
+  arrange(n) %>% 
+  top_frac(0.2,n) # top 20%
+    
 ```
 
 ###### The bar option by UN sub region
@@ -2818,6 +2834,9 @@ Top_map_data <- top_toe %>%
   filter(tresh == selected_tresh,
          variable == "value") # tried with catch but is quite the same
 
+
+mean(Top_map_data$mean)
+sd(Top_map_data$mean)
 
 World_map_top <- World_map %>%
   full_join(Top_map_data,

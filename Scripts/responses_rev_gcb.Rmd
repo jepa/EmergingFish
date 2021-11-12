@@ -71,10 +71,12 @@ Further, I am concerned about the averaging and weighting of species that is don
 
 Weighting comes up again in the analyses that result in Figures 3, 4, and 5. Having one major, valuable species shift rapidly is a much bigger concern for many countries than having many small or low-value stocks shift slowly. These sorts of dynamics, while interesting, are difficult if not impossible to parse from the current Figures. For example, would the arrows look different in Figure 5 if the averages were weighted by each fish stock’s value?
 
+- **Response:** This is a very good observation and we believe it has increased the impact of our manuscript. We have included two new figure (**Supplement Figure XX**) showing the average range shift of the top 5 most valuable transboundary stocks per country in addition to the following text on line XX:
 
+  - Line XX: *Having high-valuable stocks shifting sooner could be a much bigger concern than having many low-value stocks shifting. On average, countries will see a range shift of the top 5 most valuable stocks by 2038 $\pm$ 16 years (Figure S-NEW). Moreover, our projections suggest that these high value stocks are already shifting in 66% of coastal nations, with the regions of Polynesia (n = 22), Sub-Saharan Africa (n = 36) and Latin America and the Caribbean (n = 62) presenting the larger number of shifting stocks (20% of total high value stocks).*
 
+![Top 5](../Figures/top_toe_map.png)
 
-- **Response (INCOMPLETE):** We were not clear in our message and have worked on clarifying all of these results. Specifically, in figure three we are showing the participation of the transboundary stocks that are shifting between neighbouring EEZs relative to the total revenue from all transboundary stocks that each EEZ has. So, for example, the transboundary stocks that are shifting in the Mexican Pacific coast to/from US and Guatemala represent about 15% of Mexico's total revenue from transboundary stocks. They average year of shift is ~2025. Indeed as the reviewer suggests, Figure 4 does not include any weight value, but rather absolute revenue amounts. The figure's objective is not only to inform the reader about the economic importance, in terms of absolute USD, of these shifting transboundary stocks (rather than their weighted value that is presented in Figure 3) but also highlight that these shifts are happening close to the UN 2030 Agenda. Finally, Figure 5 does indeed show weighted values. Here, we are showing the...
 
 We have made the following modifications to the manuscript: 
 
