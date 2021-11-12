@@ -286,11 +286,7 @@ grid.raster(img)
 
 We estimated the participation of the transboundary stocks that are shifting between neighboring EEZs relative to the total revenue from all transboundary stocks that each EEZ has. On average, shifting transboundary stocks represented 27% to 23% (1 and 2 s.d. thresholds) of annual revenue from fisheries targeting transboundary stocks across the world's EEZs between 2004 and 2010 (Fig. \@ref(fig:toeFigure2)A). However, large variation exists, with shifting stocks representing less than 1% of fishing revenue in some countries (e.g., Ireland) and over 90% in others (e.g., Marshall Islands). Moreover, in some EEZs, while few transboundary stocks are projected to shift beyond historical variability, they still represent a large proportion of revenue derived from fisheries within that EEZ (e.g., Peru). 
 
-**Having high-valuable stocks shifting sooner could be a much bigger concern than having many low-value stocks shifting. On average, countries will see a range shift of the top 5 most valuable stocks by 2038 $\pm$ 16 years (Figure S-NEW). Moreover, our projections suggest that these high value stocks are already shifting in 66% of coastal nations, with the regions of Polynesia (n = 22), Sub-Saharan Africa (n = 36) and Latin America and the Caribbean (n = 62) presenting the larger number of shifting stocks.** 
-
-
-
-(**New Figuree**). 
+**Having high-valuable stocks shifting sooner could be a much bigger concern than having many low-value stocks shifting. On average, countries will see a range shift of the top 5 most valuable stocks by 2038 $\pm$ 16 years (Figure S-NEW). Moreover, our projections suggest that these high value stocks are already shifting in 66% of coastal nations, with the regions of Polynesia (n = 22), Sub-Saharan Africa (n = 36) and Latin America and the Caribbean (n = 62) presenting the larger number of shifting stocks (20% of total high value stocks).** 
 
 
 

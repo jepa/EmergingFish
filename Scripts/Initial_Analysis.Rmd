@@ -1390,7 +1390,7 @@ test_map <- World_eez_sf %>%
     breaks = seq(2000,2070,10)#,
     # direction = -1
   ) +
-  my_ggtheme_m() +
+  my_ggtheme_m(leg_pos = "bottom") +
   ggsave("botTemp_ToE.png",
          width = 12,
          height = 10,
@@ -1601,6 +1601,9 @@ EEZProp <- function(taxon_list,links="NA"){
   return(eez_summary)
   
 }
+
+
+SummaryProp(taxon_key)
 
 ```
 
@@ -2640,7 +2643,8 @@ top_stocks_per_country <- Eme_Res %>%
   # group_by(sau_fishing_entity,fishing_entity_id,tresh,variable) %>% 
   # summarise(sum_value = sum(value,na.rm=T)) %>% 
   group_by(sau_fishing_entity,geo_region,tresh,variable) %>% 
-  # Select top 10 most valuable stocks
+  # Select top 5 most valuable stocks
+  top_n(5,value)
 
   
 # Per EEZs
@@ -2888,7 +2892,6 @@ grey_land <- World_map %>%
     ) +
     my_ggtheme_m(leg_pos = "bottom") +
     theme(legend.key.width = unit(5, "line")) +
-    
     guides(
       fill=guide_colorbar(title.position="top", 
                         title.hjust =0.5)
@@ -2904,38 +2907,6 @@ grey_land <- World_map %>%
   
 
 ```
-
-
-
-##### New Fig. 4. Top shifting stocks/EEZs weighted (proportion)
-
-```{r, top_stocks_eez, eval = F, echo = F}
-
-Value_map_data %>% 
-  group_by(variable,tresh) %>% 
-  top_frac(0.10,participation) %>% 
-  filter(tresh == "tresh_two",
-         variable == "value") %>% 
-  # View()
-  left_join(Sau_data) %>% 
-  group_by(variable,tresh) %>% 
-  top_frac(0.10,value) %>%
-  left_join(my_path("G","SAU","exploited_species_list.csv",read = T)) %>% 
-  ggplot() +
-  geom_bar(
-    aes(
-      x = common_name,
-      y = value
-    ),
-    stat = "identity"
-  ) +
-  facet_wrap(~sau_fishing_entity,
-             scale = "free") +
-  theme(axis.text.x = element_text(angle = 90))
-
-
-```
-
 
 
 ##### Fig. 4. Bubble plot
@@ -3512,7 +3483,7 @@ for(i in 1:2){
     #           fill = NA,
     #           linetype = "dashed"
     # ) +
-    my_ggtheme_m() +
+    my_ggtheme_m(leg_pos = "bottom") +
     scale_colour_viridis(
       name= "Changes in catch proportion \nand changing stocks (%)",
       limits = c(0,max(Map_data$per_plot)),
@@ -3588,7 +3559,7 @@ for(i in 1:2){
     labs(x = "", y = "") +
     scale_x_continuous(breaks = seq(-100,60,10)) +
     scale_y_continuous(breaks = seq(10,30,10)) +
-    my_ggtheme_m() +
+    my_ggtheme_m(leg_pos = "bottom") +
     theme(legend.position = "",
           panel.background = element_rect(fill = "white", color = "white"),
           panel.grid.major =  element_line(color = "white")
@@ -3744,7 +3715,7 @@ for(i in 1:2){
     labs(x = "", y = "") +
     scale_y_continuous(breaks = seq(45,65,10)) +
     # scale_x_continuous(breaks = seq(45,65,5)) +
-    my_ggtheme_m() +
+    my_ggtheme_m(leg pos = "bottom") +
     theme(legend.position = "",
           panel.background = element_rect(fill = "white", color = "white"),
           panel.grid.major =  element_line(color = "white")
@@ -3808,6 +3779,160 @@ for(i in 1:2){
   
 }
 ```
+
+
+##### Fig. TOP 5
+
+```{r fig_map_Juan, eval = F, echo =F}
+
+top_stocks_per_country <- Eme_Res %>% 
+  rename(geo_region = un_sub_region) %>% 
+  group_by(sau_fishing_entity,fishing_entity_id,geo_region,tresh,taxon_key) %>% 
+  summarise(n()) %>% 
+  left_join(Sau_data,
+            by = c("fishing_entity_id","taxon_key")) %>% 
+  filter(!is.na(variable)) %>% 
+  # group_by(sau_fishing_entity,fishing_entity_id,tresh,variable) %>% 
+  # summarise(sum_value = sum(value,na.rm=T)) %>% 
+  group_by(sau_fishing_entity,geo_region,tresh,variable) %>% 
+  # Select top 5 most valuable stocks
+  top_n(5,value)
+
+
+top_taxon_list <-  unique(top_stocks_per_country$taxon_key)
+# Read proportion results
+suppressMessages(
+top_prop_results <- PropChange(top_taxon_list, links="y") %>%
+  filter(!is.na(eez_neighbour)) %>%
+  mutate(per_mid_plot =ifelse(per_mid >= 100, 100,
+                              ifelse(per_mid <= -100,-100,per_mid)
+  ),
+  per_early_plot =ifelse(per_early >= 100, 100,
+                         ifelse(per_early <= -100,-100,per_early)
+  )
+  )
+)
+
+
+# Prepare data from results
+top_data <- top_prop_results %>% 
+  # get coords for sources
+  left_join(Eez_centroid,
+            by = "eez_name") %>%
+  rename(source = eez_name,
+         start_lon = longitude,
+         start_lat = latitude,
+         eez_name=eez_neighbour) %>% 
+  # get coords for targets
+  left_join(Eez_centroid,
+            by = "eez_name") %>% 
+  rename(target = eez_name,
+         end_lon = longitude,
+         end_lat = latitude) %>% 
+  ungroup() %>% 
+  # Plot miscs
+  mutate(
+    per_early = ifelse(is.na(per_early),0,per_early),
+    per_mid = ifelse(is.na(per_mid),0,per_mid)
+  ) %>% 
+  drop_na() %>%
+  # gather("variable","value",per_early:per_early_plot) %>% 
+  filter(
+    variable %in% c("mean_eez","n_spp")#,
+    # source %in% c("Brazil","Argentina","Chile","Peru","Uruguay")
+  )
+
+# Convert to data to spatial
+top_network_data_sf <- top_data %>%
+  select(start_lon, start_lat, end_lon, end_lat) %>% 
+  purrr::transpose() %>% 
+  purrr::map(~ matrix(flatten_dbl(.), nrow = 2, byrow = TRUE)) %>% 
+  purrr::map(st_linestring) %>%
+  st_sfc(crs = 4326) %>%
+  # st_sfc(crs = "+proj=eck4") %>% # for tbular plot
+  st_sf(geometry = .)%>%
+  bind_cols(top_data) %>%
+  select(everything(), geometry) %>% 
+  # Set circles ('cus the world is not flat!)
+  st_segmentize(units::set_units(100, km)) %>% 
+  mutate(geometry = (geometry + c(180,90)) %% c(360) - c(180,90)) %>%
+  st_wrap_dateline(options = c("WRAPDATELINE=YES",  "DATELINEOFFSET=180"), quiet = TRUE) %>%
+  sf::st_sf(crs = 4326)
+  # sf::st_sf(crs = "+proj=eck4") # for tbular plot
+
+
+#  unpack the coordinates of each feature 
+coord_data <- as.data.frame( st_coordinates(st_cast(top_network_data_sf,"MULTILINESTRING")$geometry))
+
+c(top_network_data_sf$line_id, top_network_data_sf$coords) %<-% (
+  coord_data %>% 
+    rename(subline_id = L1) %>%   
+    nest(-L2)
+)
+
+# Create data path for line connections
+top_paths <- network_data_sf %>% 
+  sf::st_set_geometry(NULL) %>% 
+  unnest(cols = c(coords)) %>%
+  mutate_at(vars(X,Y), round,2) %>% 
+  gather("time_step","per_chng",per_early:per_mid) %>% 
+  mutate(per_plot = ifelse(per_chng > 50,50,per_chng),
+         direction = ifelse(per_chng > 0,"positive","negative")
+         )
+  
+# Plot it!
+
+# Proportion map data 
+top_map_data <- top_data %>% 
+  gather("time_step","per_chng",per_early:per_mid) %>% 
+  mutate(per_plot = ifelse(per_chng > 50,50,per_chng))
+
+time <- "per_early"
+  
+top_rop_map <- ggplot() +
+  geom_sf(data = World_eez_sf, size = 0.1, fill = "white", col = "gray30") +
+  geom_sf(data = World_map, size = 0.1, fill = "grey50", col = "gray30") + # created for figure 2
+  geom_point(data = subset(top_map_data, variable =="mean_eez" & time_step == time & per_plot < 0), 
+             aes(start_lon,
+                 start_lat
+             ),
+             size = 0.05,
+             col = "gray80",
+             shape = 20,
+             stroke = 1.5) +
+  geom_path(data = subset(top_paths, variable =="mean_eez" & time_step == time & per_plot > 0), # filter data 
+            aes(X,
+                Y,
+                group = interaction(line_id,subline_id),
+                col = per_plot
+            ),
+            size = 0.9,
+            lineend = "round",
+            arrow = arrow(length = unit(0.008, "npc"),
+                          ends = "first"),
+            show.legend = NA) +
+  my_ggtheme_m(leg_pos = "bottom") +
+  scale_colour_viridis(
+    name= "Changes in catch proportion",
+    limits = c(0,max(Map_data$per_plot)),
+    breaks = seq(0,max(Map_data$per_plot),10),
+    labels = c(seq(0,max(Map_data$per_plot-10),10),">50")
+  ) + guides(
+      color=guide_colorbar(title.position="top", 
+                        title.hjust =0.5)
+  )
+
+ggsave(
+  plot = top_rop_map,
+  filename = "./Figures/top_ssr.png",
+  width = 12,
+  height = 8,
+  units = "in"
+)
+  
+  
+```
+
 
 ##### Fig S2 (Histogram of change)
 
@@ -4485,7 +4610,7 @@ tresh_list <- "tresh_two"
                        breaks = seq(2000,2100,25),
                        labels = c(">2100",seq(2075,2000,-25)) # not inluding the > because we
     ) +
-    my_ggtheme_m() +
+    my_ggtheme_m(leg_pos = "bottom") +
     facet_wrap(~method,
                nrow = 2)
   

@@ -63,25 +63,23 @@ The above are just example situations. I do not mean to be nitpicky about defini
   
   - - **Another important source of uncertainty in this study is the utilization of political boundaries (EEZ) to define stocks, rather than biologically-defined populations. While this method might define some stocks that do not necessarily align with biologically-defined sub-populations within an EEZ, in many EEZs, fisheries are often managed at the species level [@MAP:2017uf] and sub-populations are potentially interconnected [@Ramesh:2019va], thus, providing additional ecological ground for our analysis [@Dunn:2019ca]. Moreover, not limiting the species to, at least, an EEZ could result in an overestimation of our results (**NOTE:** See Ovando *et al.* https://www.pnas.org/content/118/23/e2025958118).**
   
-Further, I am concerned about the averaging and weighting of species that is done across species in this analysis. As one example, why is the geographic centroid (used in the calculation of TI) not weighted by probability of occurrence? Fish stocks are not evenly distributed across their entire range, and unweighted centroids can severely skew the actual distribution of the species. 
+Further, I am concerned about the averaging and weighting of species that is done across species in this analysis. As one example, why is the geographic centroid (used in the calculation of TI) not weighted by probability of occurrence? Fish stocks are not evenly distributed across their entire range, and un-weighted centroids can severely skew the actual distribution of the species. 
 
-- **Response:** We agree with the reviewer that and unweighted centroid can severely skew the actual distribution of the species and influence our results. We have revised the manuscript to clarify that we did account for the heterogeneous distribution of fish stocks across their entire range. The geographic centroid of each stock is indeed weighted by the abundance of the stock. The DBEM uses the species probability of occurrence to estimate the biomass of the species at each 0.5 x 0.5 gridcell as indicated from lines XX to XX of the methods. The centroid of a transboundary stock was determined by the average latitude and longitude ($lon_{ts}$) of the grid cells holding the specified percentile ($per^{th}$) of the projected transboundary stock abundance (see below). This is, we determined the centroid of the stock using only those regions where abundance was higher (i.e., using the probability of occurrence of the DBEM). Moreover, we estimated the sensitivity of our results to the (arbitrarily) $per^{th} = 95^{th}$ percentile threshold as described in lines XX and shown in Figure S6 of the supplements. It reads as follows in line XX:
+- **Response:** We agree with the reviewer that and un-weighted centroid can severely skew the actual distribution of the species and influence our results. We have revised the manuscript to clarify that we did account for the heterogeneous distribution of fish stocks across their entire range. The geographic centroid of each stock is indeed weighted by the abundance of the stock. The DBEM uses the species probability of occurrence to estimate the biomass of the species at each 0.5 x 0.5 gridcell as indicated from lines XX to XX of the methods. The centroid of a transboundary stock was determined by the average latitude and longitude ($lon_{ts}$) of the grid cells holding the specified percentile ($per^{th}$) of the projected transboundary stock abundance (see below). This is, we determined the centroid of the stock using only those regions where abundance was higher (i.e., using the probability of occurrence of the DBEM). Moreover, we estimated the sensitivity of our results to the (arbitrarily) $per^{th} = 95^{th}$ percentile threshold as described in lines XX and shown in Figure S6 of the supplements. It reads as follows in line XX:
 
   - Line XX, *Fish stocks are not evenly distributed across their entire range, thus we focus on areas where transboundary stocks are more abundant and fishing activities are more likely to take place. Thus, we estimated the centroid of a stock only including grid cells where the projected stock abundance within the neighboring EEZs sharing the stock was above the $95^{th}$ percentile.*
 
 Weighting comes up again in the analyses that result in Figures 3, 4, and 5. Having one major, valuable species shift rapidly is a much bigger concern for many countries than having many small or low-value stocks shift slowly. These sorts of dynamics, while interesting, are difficult if not impossible to parse from the current Figures. For example, would the arrows look different in Figure 5 if the averages were weighted by each fish stock’s value?
 
-- **Response:** This is a very good observation and we believe it has increased the impact of our manuscript. We have included two new figure (**Supplement Figure XX**) showing the average range shift of the top 5 most valuable transboundary stocks per country in addition to the following text on line XX:
+- **Response:   (INCOMPLETE)** This is a very good observation and we believe it has increased the impact of our manuscript. We have included two new figures (**Supplement Figures XX and XX**) showing the average range shift and SSR of the top 5 most valuable transboundary stocks per country (Please note that figure 4 has been removed from the revised manuscript).
 
-  - Line XX: *Having high-valuable stocks shifting sooner could be a much bigger concern than having many low-value stocks shifting. On average, countries will see a range shift of the top 5 most valuable stocks by 2038 $\pm$ 16 years (Figure S-NEW). Moreover, our projections suggest that these high value stocks are already shifting in 66% of coastal nations, with the regions of Polynesia (n = 22), Sub-Saharan Africa (n = 36) and Latin America and the Caribbean (n = 62) presenting the larger number of shifting stocks (20% of total high value stocks).*
+  - Range shift, line XX: *Having high-valuable stocks shifting sooner could be a much bigger concern than having many low-value stocks shifting. On average, countries will see a range shift of the top 5 most valuable stocks by 2038 $\pm$ 16 years (Figure S-NEW). Moreover, our projections suggest that these high value stocks are already shifting in 66% of coastal nations, with the regions of Polynesia (n = 22), Sub-Saharan Africa (n = 36) and Latin America and the Caribbean (n = 62) presenting the larger number of shifting stocks (20% of total high value stocks).*
 
 ![Top 5](../Figures/top_toe_map.png)
 
+- SSR , line XX: **
 
-We have made the following modifications to the manuscript: 
-
-  - Line XX, *We estimated the participation of the transboundary stocks that are shifting between neighboring EEZs relative to the total revenue from all transboundary stocks that each EEZ has. On average, shifting transboundary stocks represented 27% to 23% (1 and 2 s.d. thresholds) of annual revenue from fisheries targeting transboundary stocks across the world's EEZs between 2004 and 2010 (Fig. \@ref(fig:toeFigure2)A).*
-
+![Top 5](../Figures/top_ssr.png)
 
 Specific comments:
 
@@ -95,17 +93,17 @@ Line 10: what does this line mean: “showing early, and sometimes past shifts�
 Introduction:
 Be careful of verb tense. The Introduction mixes past with present tense. For example, the first two sentences starting at Line 57.
 
-- **Response: (Incomplete)** Many thanks for this observation. We have revised the whole manuscript to be sure verb tense is maintained through the document. 
+- **Response: (INCOMPLETE)** Many thanks for this observation. We have revised the whole manuscript to be sure verb tense is maintained through the document. 
 
 Methods:
 
 Line 78-79: Is this the definition of a stock? What if a species spans more than two EEZs? What if it is a straddling stock? Please be more explicit about what kinds of stocks are included (and not) in your analysis.
 
-- **Response:** This is indeed the definition of our stock. Please refer to our responses to the main comment.
+- **Response:** This is indeed the definition of our stock. We do not deferenciate between transboundary and straddling stocks as per defined in Palacios-Abanes *et al.* (2020). Please refer to our responses to the main comment.
 
 Line 79: where is “this study's definition of a transboundary stock?”
 
-- **Response:** Please see reposes to the reviewer's main comments. We have defined a trnaboundary stock as follows;
+- **Response:** Please see responses to the reviewer's main comments. We have defined a transboundary stock as follows;
 
   - Methods Line XX, *We define a (transboundary) "stock" unit when a species was shared by a pair of neighboring EEZs [@PalaciosAbrantes:2020tv; @Teh:2015gd], resulting in a total of 9,132 transboundary stocks*
 
