@@ -24,7 +24,7 @@ In this work, the authors analyze potential shifts in harvested marine species u
 
 - **Response:** We are glad that the reviewer found our manuscript to be interesting. We have revised the manuscript paying special attention to clarifying the parts the reviewer flagged. We thank the reviewer for his/her comments as they have strengthen our paper. Please find below direct responses to the reviewer's comments. 
 
-Major comments:
+## Major comments:
 I am concerned about the lack of a clear definition of “fish stock” in this manuscript, since it is absolutely central to the analysis. I cannot find where in the manuscript the definition of stocks is laid out. In most literature (and especially in fisheries science), stocks have a specific (if flexible) definition as populations of a species with some degree of demographic isolation from other stocks, such that the population dynamics of separate stocks may be considered independent. In this manuscript, it seems that instead, a transboundary stock is simply defined as any pair of EEZs that share a species distribution. I would recommend that the authors define the precise definition of fish stock explicitly within the manuscript, including how their definition is different from the definition in other, related literature.
 
 - **Response:** Thank you for this comment. We acknowledge that we did not defined clearly our concept of stock in the previous version of the manuscript. The definition of stock has now been included in the revised manuscript in both the introduction and the methods as follows;
@@ -41,7 +41,7 @@ I have a number of questions and concerns about this approach to stock definitio
 
 - **Response:** We acknowledged that this was not fully clear in the previous version of the manuscript and have work towards improving clarity in the revise manuscript. For example, pacific sardine is a species present along the coast of Mexico, the United States (US) and, sometimes, British Columbia (BC) [@cisneros-montemayor_ecosystem-based_2020]. For the purpose of our study, we define two stocks: One that is shared by Mexico and the US and one shared by the US and BC. We have made this explicit in the following section of the methods, hopefully clarifying our definition;
 
-    - Methods Line XX, *Let us consider the transboundary species Atlantic cod (*Gadus morhua*) as an example. Atlantic cod's distribution in the Northwest Atlantic ranges from the United States to Greenland. Based on the previous definition of a transboundary stock, the United States and Canada share a stock of Atlantic cod, and Canada and Greenland share a separate stock of Atlantic cod, but the United States and Greenland do not share a stock as they do not have juxtaposing EEZs.* 
+  - Methods Line XX, *Let us consider the transboundary species Atlantic cod (Gadus morhua) as an example. Atlantic cod's distribution in the Northwest Atlantic ranges from the United States to Greenland. Based on the previous definition of a transboundary stock, the United States and Canada share a stock of Atlantic cod, and Canada and Greenland share a separate stock of Atlantic cod, but the United States and Greenland do not share a stock as they do not have juxtaposing EEZs.*
     
     How does the choice of stock definition influence the calculation of SSR? Given the same sample as above, can the US lose SSR of one stock of a species to Canada, while gaining SSR of the same species from Mexico?
     
@@ -65,41 +65,36 @@ The above are just example situations. I do not mean to be nitpicky about defini
   
 Further, I am concerned about the averaging and weighting of species that is done across species in this analysis. As one example, why is the geographic centroid (used in the calculation of TI) not weighted by probability of occurrence? Fish stocks are not evenly distributed across their entire range, and un-weighted centroids can severely skew the actual distribution of the species. 
 
-- **Response:** We agree with the reviewer that and un-weighted centroid can severely skew the actual distribution of the species and influence our results. We have revised the manuscript to clarify that we did account for the heterogeneous distribution of fish stocks across their entire range. The geographic centroid of each stock is indeed weighted by the abundance of the stock. The DBEM uses the species probability of occurrence to estimate the biomass of the species at each 0.5 x 0.5 gridcell as indicated from lines XX to XX of the methods. The centroid of a transboundary stock was determined by the average latitude and longitude ($lon_{ts}$) of the grid cells holding the specified percentile ($per^{th}$) of the projected transboundary stock abundance (see below). This is, we determined the centroid of the stock using only those regions where abundance was higher (i.e., using the probability of occurrence of the DBEM). Moreover, we estimated the sensitivity of our results to the (arbitrarily) $per^{th} = 95^{th}$ percentile threshold as described in lines XX and shown in Figure S6 of the supplements. It reads as follows in line XX:
+- **Response:** We agree with the reviewer that and un-weighted centroid can severely skew the actual distribution of the species and influence our results. We have revised the manuscript to clarify that we did account for the heterogeneous distribution of fish stocks across their entire range. Specifically, the geographic centroid of each stock is indeed weighted by the abundance of the stock. The DBEM uses the species probability of occurrence to estimate the biomass of the species at each 0.5 x 0.5 gridcell as indicated from lines XX to XX of the methods. The centroid of a transboundary stock was determined by the average latitude and longitude ($lon_{ts}$) of the grid cells holding the specified percentile ($per^{th}$) of the projected transboundary stock abundance (see below). This is, we determined the centroid of the stock using only those regions where abundance was higher (i.e., using the probability of occurrence of the DBEM). Moreover, we estimated the sensitivity of our results to the (arbitrarily) $per^{th} = 95^{th}$ percentile threshold as described in lines XX and shown in Figure S6 of the supplements. It reads as follows in line XX:
 
   - Line XX, *Fish stocks are not evenly distributed across their entire range, thus we focus on areas where transboundary stocks are more abundant and fishing activities are more likely to take place. Thus, we estimated the centroid of a stock only including grid cells where the projected stock abundance within the neighboring EEZs sharing the stock was above the $95^{th}$ percentile.*
 
 Weighting comes up again in the analyses that result in Figures 3, 4, and 5. Having one major, valuable species shift rapidly is a much bigger concern for many countries than having many small or low-value stocks shift slowly. These sorts of dynamics, while interesting, are difficult if not impossible to parse from the current Figures. For example, would the arrows look different in Figure 5 if the averages were weighted by each fish stock’s value?
 
-- **Response:   (INCOMPLETE)** This is a very good observation and we believe it has increased the impact of our manuscript. We have included two new figures (**Supplement Figures XX and XX**) showing the average range shift and SSR of the top 5 most valuable transboundary stocks per country (Please note that figure 4 has been removed from the revised manuscript).
+- **Response:** This is a very good observation and we believe it has increased the impact of our manuscript. We have included two new figures (**Figure 4** and **Figure SXX**) showing the average range shift of the top 5 most valuable transboundary stocks per country (Please note that the old figure 4 has been removed from the revised manuscript, see response to the Fig. 4 comment, below).
 
-  - Range shift, line XX: *Having high-valuable stocks shifting sooner could be a much bigger concern than having many low-value stocks shifting. On average, countries will see a range shift of the top 5 most valuable stocks by 2038 $\pm$ 16 years (Figure S-NEW). Moreover, our projections suggest that these high value stocks are already shifting in 66% of coastal nations, with the regions of Polynesia (n = 22), Sub-Saharan Africa (n = 36) and Latin America and the Caribbean (n = 62) presenting the larger number of shifting stocks (20% of total high value stocks).*
+  - Range shift, line XX: *Having high-valuable stocks shifting sooner could be a much bigger concern than having many low-value stocks shifting. On average, countries will see a range shift of the top 5 most valuable stocks by 2038 $\pm$ 16 years (Figure SXX). Moreover, our projections suggest that these high value stocks are already shifting in 66% of coastal nations, with the regions of Polynesia (n = 22), Sub-Saharan Africa (n = 36) and Latin America and the Caribbean (n = 62) presenting the larger number of shifting stocks (20% of total high value stocks).*
 
 ![Top 5](../Figures/top_toe_map.png)
 
-- SSR , line XX: **
+## Specific comments:
 
-![Top 5](../Figures/top_ssr.png)
-
-Specific comments:
-
-Abstract:
+### Abstract:
 Line 10: what does this line mean: “showing early, and sometimes past shifts”?
 
 - **Response:** We have modify this sentence to now read:
 
   - Abstract Line XX; *Many countries that are highly dependent on fisheries for income, food and nutrition security, as well as livelihoods emerge as hotspots for transboundary shifts. These hotspots are characterized for showing early shifts in the distribution of important transboundary stocks.*
 
-Introduction:
+### Introduction:
 Be careful of verb tense. The Introduction mixes past with present tense. For example, the first two sentences starting at Line 57.
 
 - **Response: (INCOMPLETE)** Many thanks for this observation. We have revised the whole manuscript to be sure verb tense is maintained through the document. 
-
-Methods:
+### Methods:
 
 Line 78-79: Is this the definition of a stock? What if a species spans more than two EEZs? What if it is a straddling stock? Please be more explicit about what kinds of stocks are included (and not) in your analysis.
 
-- **Response:** This is indeed the definition of our stock. We do not deferenciate between transboundary and straddling stocks as per defined in Palacios-Abanes *et al.* (2020). Please refer to our responses to the main comment.
+- **Response:** This is indeed the definition of our stock. We do not differentiate between transboundary and straddling stocks as per defined in Palacios-Abanes *et al.* (2020). Please refer to our responses to the main comment.
 
 Line 79: where is “this study's definition of a transboundary stock?”
 
@@ -109,16 +104,9 @@ Line 79: where is “this study's definition of a transboundary stock?”
 
 Lines 220-226: How does the threat point analysis align with my concerns about the definition of stocks described above? Can an EEZ both lose and gain SSR that exceeds a threshold, but of the same species? If so, this seems misleading.
 
-- **Response:** Thank you for your concern. In short the answer is yes, an EEZ could both lose and gain SSR of the same *species* but not of the same *stock.* This is because, according to our definition of stock, a species who spans multiple EEZs has multiple stocks (see response to the previous question and the main comment). let us use the Peruvian anchoveta (*Engraulis ringens*) as an example.
+- **Response:** Thank you for your concern. In short the answer is yes, an EEZ *could* both lose and gain SSR of the same *species* but not of the same *stock.* This is because, according to our definition of stock, a species who spans multiple EEZs has multiple stocks (see response to the previous question and the main comment). Please refer above to our response to the question *How does the choice of stock definition influence the calculation of SSR?*
 
-Peru has identified two main stocks of Peruvian anchoveta. one in the central/norther part of the EEZ and one in the south, shared with Chile. Although the northern stocks is not considered transboundary [@Cashion:2018cg; @PalaciosAbrantes:2020tv] and Equador hardly ever reports anchoveta landings (wwww.searaundus.org), in some few years, environmental variability has pushed the central/north stock towards the EEZ of Ecuador. In those years one could argue that, the Peruvian anchoveta SSR of Peru-Ecuador favors Ecuador.
-
-At the same time, there are regional concerns that the Peruvian southern stock of anchoveta, shared with Chile, has been slowly shifting south into Chilean waters to the point that these two nations are now pushing towards cooperative management of such stock. In this case, the SSR of Peru-Chile, favors Chile. 
-
-This is only and example as our study is not capable of capturing this specific nuisance since we are not able to differentiate stocks within an EEZ nor more detailed, local, environmental factors (in this case, for example, the Humboldt current). However, we believe this 
-
-
-Results:
+### Results:
 
 Lines 244 and 246- check your math here. The percentages seem off. For example, if 4119 stock is 45% of the total, how is 5745 stocks 33% more stocks? If, as stated in the Methods, there are 9132 stocks, then 5745 is ~63% (not 67%) of all stocks, and it is <20% more than 4119 stocks. Please check these numbers and clarify
 
@@ -154,17 +142,42 @@ Lines 261-266: I think this is an interesting result, and is lost in the averagi
 
 Fig. 4- This figure is a bit messy, and seems to be relating two dubiously-related statistics (that is, the projected average year of range shift with the current value of transboundary fisheries) by world region. I am just not sure what the main message of this figure is. If the point is to show the value of species that may shift over time, I would suggest a time series (by country and/or region), simply showing the total (present) value of transboundary stocks over time.
 
-- **Response:NOTE THINKING ON CHANGEING FIGURES** Our original intention was to show the importance in terms of value, of shifting stocks. However, we agree that this figure is confusing and it's message was ambiguous. Moreover, we think that the reviewers suggestion of the most valuable species brings home a mor important message and have decided to remove this figure from the revised manuscript and include the "top 5 most valuable stocks" figure instead. 
+- **Response:NOTE THINKING ON CHANGING FIGURES** Our original intention was to show the importance in terms of value, of shifting stocks. However, we agree that this figure is confusing and it's message was ambiguous. Moreover, we think that the reviewer's suggestion of the most valuable species brings home a more important message and have decided to remove this figure from the revised manuscript and include the "top 5 most valuable stocks" figure instead. 
 
 Fig. 5- this figure is hard to read, and is another figure that may be misleading if not weighted by abundance or value. It is strange to “average” across a unitless ratio (SSR). For example, a country could “gain” a small share of an extremely high-value species, perhaps enough to offset economically a number of losses of smaller or less valuable stocks. However, in the figure, the “average” SSR for that country would be negative (arrow going out). The authors should distinguish (in the text and in this figure) different possible situations like this.
 
-- **Response:**
+- **Response:**  Thank you for your comment. See below responses to both parts of the question. 
+
+Fig. 5- this figure is hard to read, 
+
+- **Response:** We agree with the reviewer that this figure is quite busy and have divided the figure in two. Figure 5 is now just panel A while the regional zooms were sent to the supplemental material. We believe that the arrows are now easier to appreciate. 
+
+![New Figure 5](../Figures/Fig5n.png)
+
+![New Figure SX for regional](../Figures/Fig5SX_ssr)
+
+and is another figure that may be misleading if not weighted by abundance or value. It is strange to “average” across a unitless ratio (SSR). 
+
+- **Response:** We would like to clarify here that that the Stock Share Ratio (SSR) is not unit less. It represents the percentage of the shared distribution of a stock that each EEZ has. So for example, Canada and the US share Pacific halibut the SSR for Canada is 20% and that of the US is 80%, meaning that Canada holds 20% of the distribution of the stock within its waters and the US the other 80%. We have modified the methods to make sure this is clearer now:
+
+  - - *This way, if, Canada and the US share a specific stock the SSR for Canada could be 20% and that of the US 80%, meaning that Canada holds 20% of the distribution of the stock within its waters and the US the other 80%.*
+
+For example, a country could “gain” a small share of an extremely high-value species, perhaps enough to offset economically a number of losses of smaller or less valuable stocks. However, in the figure, the “average” SSR for that country would be negative (arrow going out). The authors should distinguish (in the text and in this figure) different possible situations like this.
+
+- **Response:** Yes, we agree with the reviewer and just like for Fig. 3, believe including a figure of high-value stocks will increased the impact of our manuscript. We have included such figure in the supplements and the following text in the results section:
+
+- line XX: **Shifts in the SSR of the top 5 most valuable transboundary stocks of each country are projected to be 61 $\pm$ 18% by 2030 and 72 $\pm$ 17% by 2050 in 83% of the world's EEZs (Figure SX). In some cases, the SSR of one EEZ is projected increase in more than double relative to their neighbors (e.g., from 10% to 30% SSR). Some of these EEZs include Guatemala gaining from Mexico in the Pacific, Cyprus from Greece and Turkey in the Mediterranean Sea, and Russia from Norway and Japan in the Barents Sea and Western Pacific, respectively**
+
+![Top 5](../Figures/Fig5SXX_top.png)
 
 Can you determine from your analyses where the biggest positive or negative changes might be in stock distributions, by nation/EEZ? In other words, are there nations with a greater number of stocks entering than exiting, and if so, where are they? This would be an interesting addition to the manuscript
 
-- **Response:**
+- **Response:** We show that result in Figure 5 in the land polygon as the percentage of stocks that are changing but realize we did not include an in-text description of the result. It now reads on line XX: 
 
-Discussion 
+  - - **Most EEZs are expected to see a relative small number of stocks shifting their SSR (Fig. \@ref(fig:toeFigure4)A). On average, EEZs are expected to see changes in SSR on 16% $\pm$ 10 of transboundary stocks increasing to 20% $\pm$ 11 by mid of the $21^{st}$ century. However, this result masks large changes, specially on island territories. By early century, the EEZs of French Guiana (54%), South Africa (59%), Falkland Isl. (61%), Brazil (75%) and Kerguelen Isl., and Pitcairn (both 100%) are projected to see changes in SSR of over 50% in their transboundary stocks. On the other hand, some island territories such as Anguilla are projected to see changes in as low as 2% of their transboundary stocks.**
+
+
+### Discussion 
 
 The Discussion is well-organized and lays out the major implications of the work. I particularly commend the authors on their discussion of specific fisheries and cases where the transboundary issue is already a concern, as well as the description of examples of management approaches to deal with transboundary species. I do not have any major comments.
 

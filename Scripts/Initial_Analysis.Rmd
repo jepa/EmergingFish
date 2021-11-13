@@ -2641,7 +2641,8 @@ top_stocks_per_country <- Eme_Res %>%
   filter(!is.na(variable)) %>% 
   group_by(sau_fishing_entity,geo_region,tresh,variable) %>% 
   # Select top 5 most valuable stocks
-  top_n(5,value)
+  top_n(5,value) %>% 
+  left_join(Exploited_spp_list)
 
   
 # Per EEZs
@@ -3313,7 +3314,6 @@ TukeyHSD(Hab_aov) %>%
 # http://jsmayorga.com/post/mapping-the-global-network-of-transnational-fisheries/
 
 ### Median number of stocks changing in each time step
-
 Prop_results %>% 
   filter(variable == "n_per") %>% 
   group_by() %>% 
@@ -3422,8 +3422,21 @@ n_taxa_data <- Prop_results %>%
   gather("time_step","avrg_spp_per",early:mid) %>% 
   group_by(sau_fishing_entity,fishing_entity_id,time_step) %>%
   summarise(avrg_spp_per = mean(avrg_spp_per,na.rm=T)) %>% 
-  mutate(time_step = ifelse(time_step == "early","per_early","per_mid")) %>% 
-  mutate(avrg_spp_per = ifelse(avrg_spp_per > 50,50,avrg_spp_per))
+  mutate(time_step = ifelse(time_step == "early","per_early","per_mid")) %>%
+  mutate(avrg_spp_per_100 = avrg_spp_per,
+    avrg_spp_per = ifelse(avrg_spp_per > 50,50,avrg_spp_per))
+
+
+# Paper numbers for Rev. 1
+
+n_taxa_data %>% 
+  group_by(time_step) %>% 
+  summarise_at(vars(avrg_spp_per),
+               c(mean,sd,min,max),
+               na.rm=T)
+
+
+
 
 # Included in map
 n_taxa_map <- World_map %>% 
@@ -3448,7 +3461,7 @@ grey_land <- World_map %>%
 
 
 time_sets <- c("per_early","per_mid")
-# i = 1
+i = 1
 for(i in 1:2){
   gc()# clean ram
   
@@ -3481,21 +3494,11 @@ for(i in 1:2){
                   group = interaction(line_id,subline_id),
                   col = per_plot
               ),
-              size = 0.3,
+              size = 1,
               lineend = "round",
               arrow = arrow(length = unit(0.008, "npc"),
                             ends = "first"),
               show.legend = NA) +
-    # Closeup Rectangles 
-    # geom_rect(data=Rectangles,
-    #           aes(xmin=x1, 
-    #               xmax=x2,
-    #               ymin=y1,
-    #               ymax=y2),
-    #           color="grey50", 
-    #           fill = NA,
-    #           linetype = "dashed"
-    # ) +
     my_ggtheme_m(leg_pos = "bottom") +
     scale_colour_viridis(
       name= "Changes in catch proportion \nand changing stocks (%)",
@@ -3514,11 +3517,14 @@ for(i in 1:2){
       # option="magma",
       # direction = -1
     ) #+
-  # ggsave("./Figures/fig_sup_1.png",
-  # width = 12,
-  # height = 8,
-  # units = "in"
-  # )
+  
+  ggsave(
+    plot = Prop_map,
+    filename = "./Figures/fig_5n.png",
+    width = 10,
+    height = 5,
+    units = "in"
+  )
   
   ## ------------------- ##
   # Regional Plots
@@ -3826,6 +3832,20 @@ top_prop_results <- PropChange(top_taxon_list, links="y") %>%
   )
 )
 
+### Median number of stocks changing in each time step
+
+top_prop_results %>% 
+  filter(variable == "n_per") %>% 
+  group_by() %>% 
+  summarise_at(vars(early,mid),funs(
+    median(.,na.rm=T),
+    sd(.,na.rm=T),
+    length(unique(eez_name)),
+    length(unique(eez_name))/280*100
+  )
+  )
+
+
 
 # Prepare data from results
 top_data <- top_prop_results %>% 
@@ -3854,6 +3874,8 @@ top_data <- top_prop_results %>%
     variable %in% c("mean_eez","n_spp")#,
     # source %in% c("Brazil","Argentina","Chile","Peru","Uruguay")
   )
+
+View(top_data)
 
 # Convert to data to spatial
 top_network_data_sf <- top_data %>%
@@ -3904,7 +3926,8 @@ time <- "per_early"
   
 top_rop_map <- ggplot() +
   geom_sf(data = World_eez_sf, size = 0.1, fill = "white", col = "gray30") +
-  geom_sf(data = World_map, size = 0.1, fill = "grey50", col = "gray30") + # created for figure 2
+  geom_sf(data = subset(World_map,sovereignt != "Antarctica"), size = 0.1, fill = "grey50", col = "gray30") + # created for figure 2
+  
   geom_point(data = subset(top_map_data, variable =="mean_eez" & time_step == time & per_plot < 0), 
              aes(start_lon,
                  start_lat
@@ -3938,8 +3961,8 @@ top_rop_map <- ggplot() +
 ggsave(
   plot = top_rop_map,
   filename = "./Figures/top_ssr.png",
-  width = 12,
-  height = 8,
+  width = 10,
+  height = 5,
   units = "in"
 )
   
