@@ -1904,17 +1904,20 @@ Eez_centroid <- my_path("D", "Spatial","eez_centroids.csv",read = T)
 Eez_centroid_sf <-st_as_sf(Eez_centroid,
             coords = c("longitude", "latitude")
             ) %>% 
-  st_set_crs(4326) #%>% # to match shapefiles
-  # st_transform(crs = "+proj=eck4")
+  st_set_crs(4326) %>% # to match shapefiles
+  st_transform(crs = "+proj=eck4")
+
+ggplot(Eez_centroid_sf) +
+  geom_sf()
 
 # Transform sf to df
-# Eez_centroid_eck <- as.data.frame(Eez_centroid_sf)
+Eez_centroid_eck <- as.data.frame(Eez_centroid_sf)
 
-# Eez_centroid_eck <- do.call(rbind, st_geometry(Eez_centroid_sf)) %>% 
-#   as_tibble() %>% 
-#   setNames(c("lon","lat")) %>% 
-#   bind_cols(Eez_centroid) %>% 
-  # select(eez_name,longitude = lon,latitude = lat)
+Eez_centroid_eck <- do.call(rbind, st_geometry(Eez_centroid_sf)) %>%
+  as_tibble() %>%
+  setNames(c("lon","lat")) %>%
+  bind_cols(Eez_centroid) %>%
+select(eez_name,longitude = lon,latitude = lat)
 
 #
 
@@ -3330,6 +3333,184 @@ TukeyHSD(Hab_aov) %>%
 
 ##### Fig. 5 and S5. (Proportion + Netowrk)
 
+
+```{r}
+
+
+# Done with the help of https://www.data-to-viz.com/story/MapConnection.html
+
+# A function that makes a dateframe per connection (we will use these connections to plot each lines)
+data_for_connection=function( dep_lon, dep_lat, arr_lon, arr_lat, group){
+  inter <- gcIntermediate(c(dep_lon, dep_lat), c(arr_lon, arr_lat), n=50, addStartEnd=TRUE, breakAtDateLine=F)             
+  inter=data.frame(inter)
+  inter$group=NA
+  diff_of_lon=abs(dep_lon) + abs(arr_lon)
+  if(diff_of_lon > 180){
+    inter$group[ which(inter$lon>=0)]=paste(group, "A",sep="")
+    inter$group[ which(inter$lon<0)]=paste(group, "B",sep="")
+  }else{
+    inter$group=group
+  }
+  return(inter)
+}
+pal <- wesanderson::wes_palette("Zissou1",100,type = "continuous")
+
+# Prepare data from results
+Data <- Prop_results %>% 
+  # get coords for sources
+  left_join(Eez_centroid,
+  # left_join(Eez_centroid_eck,
+            by = "eez_name") %>%
+  rename(source = eez_name,
+         start_lon = longitude,
+         start_lat = latitude,
+         eez_name=eez_neighbour) %>% 
+  # get coords for targets
+  # left_join(Eez_centroid_eck,
+  left_join(Eez_centroid,
+            by = "eez_name") %>%
+  rename(target = eez_name,
+         end_lon = longitude,
+         end_lat = latitude) %>% 
+  ungroup() %>% 
+  # Plot miscs
+  mutate(
+    per_early = ifelse(is.na(per_early),0,per_early),
+    per_mid = ifelse(is.na(per_mid),0,per_mid)
+  ) %>% 
+  drop_na()
+
+# Get paths data
+path_data <- Data %>% 
+  filter(
+    variable %in% c("mean_eez")#,
+    # source %in% c("Brazil","Argentina","Chile","Peru","Uruguay")
+  )
+
+data_ready_plot=data.frame()
+
+for(i in c(1:nrow(path_data))){
+  tmp=data_for_connection(path_data$start_lon[i], path_data$start_lat[i], path_data$end_lon[i], path_data$end_lat[i] , i)
+  # tmp$homecontinent=summary$homecontinent[i]
+  tmp$per_early_plot=path_data$per_early_plot[i]
+  tmp$per_mid_plot=path_data$per_mid_plot[i]
+  tmp$source=path_data$source[i]
+  tmp$objective=path_data$target[i]
+  data_ready_plot=rbind(data_ready_plot,tmp)
+}
+
+data_ready_plot <- data_ready_plot %>% 
+  mutate(
+    per_early_plot = ifelse(per_early_plot >= 50,50,per_early_plot),
+    per_mid_plot = ifelse(per_mid_plot >= 50,50,per_mid_plot))
+
+sf_ready_plot <- st_as_sf(data_ready_plot,
+            coords = c("lon", "lat")
+            ) %>% 
+  st_set_crs(4326) %>% # to match shapefiles
+  st_transform(crs = "+proj=eck4")
+
+
+# Get arrow data
+arrows_data <- as.data.frame(st_coordinates(st_cast(sf_ready_plot,"POINT")$geometry)) %>% 
+  bind_cols(data_ready_plot)
+
+# Get point data
+point_data <- path_data %>% 
+  filter(per_early <= 0) %>% 
+  st_as_sf(
+    coords = c("start_lon", "start_lat")
+  ) %>% 
+  select(source,target,geometry) %>% 
+  st_set_crs(4326) %>% 
+  st_transform(crs = "+proj=eck4")
+
+#### Get the change of species 
+
+n_trans_eez <- Transboundary_spp %>% 
+  group_by(eez_name) %>% 
+  summarise(
+    # n_trans = unique(length(taxon_key))
+    n_trans = n()
+  )
+
+# Estimate the percentage changing
+n_taxa_data <- Prop_results %>% 
+  filter(variable == "n_spp") %>%
+  select(eez_name,early,mid) %>% 
+  left_join(n_trans_eez) %>% 
+  # mutate(per = (early/n_trans)*100) %>% 
+  mutate_at(vars(early,mid),
+            .funs = ~(./n_trans)*100) %>% 
+  rename(sf_eez_name = eez_name) %>% 
+  left_join(Matching_names) %>% 
+  select(sau_fishing_entity,fishing_entity_id,early,mid) %>% 
+  gather("time_step","avrg_spp_per",early:mid) %>% 
+  group_by(sau_fishing_entity,fishing_entity_id,time_step) %>%
+  summarise(avrg_spp_per = mean(avrg_spp_per,na.rm=T)) %>% 
+  mutate(time_step = ifelse(time_step == "early","per_early","per_mid")) %>%
+  mutate(avrg_spp_per_100 = avrg_spp_per,
+    avrg_spp_per = ifelse(avrg_spp_per > 50,50,avrg_spp_per))
+
+# Included in map
+n_taxa_map <- World_map %>% 
+  full_join(n_taxa_data,
+            by = c("sau_fishing_entity","fishing_entity_id")
+            )
+
+# Grey land
+grey_land <- World_map %>% 
+  filter(is.na(fishing_entity_id)) %>% 
+  filter(!sovereignt %in% c("Antarctica"))
+
+
+
+# Plot
+p <-
+  ggplot() +
+  geom_sf(data = World_eez_sf, size = 0.1, fill = "white", col = "gray30") +
+  geom_sf(data = subset(n_taxa_map, sovereignt != "Antarctica" & time_step == time),
+            aes(fill = avrg_spp_per),
+            size = 0.1,
+            col = "white") +
+  geom_sf(data = grey_land, size = 0.1, fill = "grey50", col = "gray30") +
+  geom_sf(data = subset(sf_ready_plot, per_early_plot >= 0), aes(color = per_early_plot), size = 0.1, fill = "white") +
+  geom_sf(data = point_data, aes(), color = "grey90") +
+  my_ggtheme_m(leg_pos = "bottom") +
+    geom_path(data = subset(arrows_data, per_early_plot >= 0),
+              aes(X, Y,
+                  group = group,
+                  col = per_early_plot
+              ),
+              size = 1,
+              arrow = arrow(length = unit(0.01, "npc"),
+                            ends = "first"),
+              show.legend = NA) +
+  my_ggtheme_m(leg_pos = "bottom") +
+  scale_color_gradientn(name= "Changes in catch proportion \nand changing stocks (%)",
+                        colours = pal,
+                        limits = c(0,max(data_ready_plot$per_early_plot,na.rm=T)),
+                        breaks = seq(0,max(data_ready_plot$per_early_plot,na.rm=T),10),
+                        labels = c(seq(0,max(data_ready_plot$per_early_plot-10,na.rm=T),10),">50")
+  ) +
+  scale_fill_gradientn(name= "Changes in catch proportion \nand changing stocks (%)",
+                        colours = pal,
+                        limits = c(0,max(data_ready_plot$per_early_plot,na.rm=T)),
+                        breaks = seq(0,max(data_ready_plot$per_early_plot,na.rm=T),10),
+                        labels = c(seq(0,max(data_ready_plot$per_early_plot-10,na.rm=T),10),">50")
+  ) 
+
+
+ggsave(plot =  p,
+       "./Figures/ssr_early.png",
+       width = 10,
+       height = 5,
+       units = "in")
+
+
+```
+
+
 ```{r fig_map_Juan, eval = F, echo =F}
 # Figure made thanks to Juanito!
 # http://jsmayorga.com/post/mapping-the-global-network-of-transnational-fisheries/
@@ -3350,14 +3531,16 @@ Prop_results %>%
 Data <- Prop_results %>% 
   # get coords for sources
   left_join(Eez_centroid,
+  # left_join(Eez_centroid_eck,
             by = "eez_name") %>%
   rename(source = eez_name,
          start_lon = longitude,
          start_lat = latitude,
          eez_name=eez_neighbour) %>% 
   # get coords for targets
+  # left_join(Eez_centroid_eck,
   left_join(Eez_centroid,
-            by = "eez_name") %>% 
+            by = "eez_name") %>%
   rename(target = eez_name,
          end_lon = longitude,
          end_lat = latitude) %>% 
@@ -3380,18 +3563,19 @@ network_data_sf <- Data %>%
   purrr::transpose() %>% 
   purrr::map(~ matrix(flatten_dbl(.), nrow = 2, byrow = TRUE)) %>% 
   purrr::map(st_linestring) %>%
-  st_sfc(crs = 4326) %>%
-  # st_sfc(crs = "+proj=eck4") %>% # for tbular plot
-  st_sf(geometry = .)%>%
+  # st_sfc(crs = 4326) %>%
+  st_sfc(crs = "+proj=eck4") %>% # for tubular plot
+  st_sf(geometry = .) %>%
   bind_cols(Data) %>%
   select(everything(), geometry) %>% 
   # Set circles ('cus the world is not flat!)
-  st_segmentize(units::set_units(100, km)) %>% 
-  mutate(geometry = (geometry + c(180,90)) %% c(360) - c(180,90)) %>%
-  st_wrap_dateline(options = c("WRAPDATELINE=YES",  "DATELINEOFFSET=180"), quiet = TRUE) %>%
-  sf::st_sf(crs = 4326)
-  # sf::st_sf(crs = "+proj=eck4") # for tbular plot
+  # st_segmentize(units::set_units(100, km)) %>%
+  # mutate(geometry = (geometry + c(18000000,90000000)) %% c(18000000) - c(18000000,90000000)) %>%
+  # mutate(geometry = (geometry + c(180,90)) %% c(360) - c(180,90)) %>%
+  # st_wrap_dateline(options = "WRAPDATELINE=YES", quiet = TRUE); network_data_sf # for tubular plot
+  st_wrap_dateline(options = c("WRAPDATELINE=YES",  "DATELINEOFFSET=60"), quiet = TRUE) 
 
+network_data_sf
 
 #  unpack the coordinates of each feature 
 coord_data <- as.data.frame( st_coordinates(st_cast(network_data_sf,"MULTILINESTRING")$geometry))
@@ -3457,8 +3641,6 @@ n_taxa_data %>%
                na.rm=T)
 
 
-
-
 # Included in map
 n_taxa_map <- World_map %>% 
   full_join(n_taxa_data,
@@ -3483,7 +3665,7 @@ grey_land <- World_map %>%
 
 time_sets <- c("per_early","per_mid")
 i = 1
-for(i in 1:2){
+# for(i in 1:2){
   gc()# clean ram
   
   time <- time_sets[i]
@@ -3541,7 +3723,7 @@ for(i in 1:2){
   
   ggsave(
     plot = Prop_map,
-    filename = "./Figures/fig_5n.png",
+    filename = "./Figures/test.png",
     width = 10,
     height = 5,
     units = "in"
