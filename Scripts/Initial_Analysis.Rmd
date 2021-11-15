@@ -2413,75 +2413,80 @@ sf::st_transform(crs = "+proj=eck4")  # Filter EEZs with ToE stocks
     geom_sf(data = no_toe_land, aes(), fill = "lightblue", color =  "white",size = 0.1) +
     # Set Participation labels
     annotate("text",
-             x =-150,
-             y = -69,
-             label = "Transboundary fishing revenue (%)",
+             x = -14012580,
+             y = -8357450,
+             label = "Transboundary fish revenue (%)",
              color="black",
              size=5,
              angle=0,
              fontface="bold",
              hjust=0) +
-    annotate("text", 
-             x = c(-72,-35,5,46,82),
-             y = -69,
+    annotate("text",
+             x = c(-3812580,-4500,3800000,7700000,11512580),
+             y = -8400000,
              # x =(c(-8500000,-3000000,2500000,7500000,12800000)),
              # y = -9050000,
-             label = c(0,25,50,75,100), 
-             color="black", 
-             size=4, 
-             angle=0, 
+             label = c(0,25,50,75,100),
+             color="black",
+             size=4,
+             angle=0,
              # fontface="bold",
              hjust=0) +
-    # Set ToE labels
-    annotate("text", 
-             x =-150,
-             y = -85,
+    # # Set ToE labels
+    annotate("text",
+             # x =-150,
+             # y = -85,
+             x = -13012580,
+             y = -9657450,
              label = "Average year of range shift",
-             color="black", 
-             size=5, 
-             angle=0, 
+             color="black",
+             size=5,
+             angle=0,
              fontface="bold",
              hjust=0) +
-    annotate("text", 
-             x = c(-79,-39,2,42,81),
-             y = -85,
+    annotate("text",
+             # x = c(-79,-39,2,42,81),
+             # y = -85,
+             x = c(-4412580,-430000,3410000,7300000,11312580),
+             y = -9657450,
              # label = seq(2100,2000,-25), # original
              label = c(">2100",seq(2075,2000,-25)), # not inluding the > because we dont know
-             color="black", 
-             size=4, 
-             angle=0, 
+             color="black",
+             size=4,
+             angle=0,
              # fontface="bold",
              hjust=0) +
-    # Set No emergence label
+    # # Set No emergence label
     annotate("text",
-             x =110,
-             y = -77,
+             # x =110,
+             # y = -77,
+             x = 13000000,
+             y = -9000000,
              label = "No shift",
              color="black",
              size=5,
              angle=0,
              fontface="bold",
              hjust=0) +
+     annotate("rect", 
+             xmin = 15500000, 
+             xmax = 16500000, 
+             ymin = -8600000, 
+             ymax = -9300000,
+           fill = "lightblue") +
     scale_fill_viridis("",
                        limits = c(2000,2100),
                        breaks = seq(2000,2100,25),
                        labels = c("","","","","")#,
                        # direction = -1
     ) +
-    # scale_fill_gradientn("",
-    #                      limits = c(2000,2100),
-    #                      breaks = seq(2000,2100,25),
-    #                       labels = c("","","","",""),
-    #                      colours = pal
-    # ) +
-    # geom_hline(yintercept = c(-50,0,50,80)) +
     my_ggtheme_m(leg_pos = "bottom") +
     theme(
-      legend.box.margin = margin(t = -62, l = 252),
+      legend.box.margin = margin(t = -61,l = 180),
       legend.text = element_blank(),
+      legend.background = element_blank(),
       legend.key.width = unit(5, "line")
     )
-  
   
   
   ## --------------- ##
@@ -2600,6 +2605,7 @@ sf::st_transform(crs = "+proj=eck4")  # Filter EEZs with ToE stocks
       strip.text.x = element_text(size = 18, colour = "black"), 
       axis.title.y = element_text(size = 18),
       axis.text.y = element_text(size = 16), 
+      panel.background = element_rect(colour = "white", fill = "white"),
       # axis.ticks.x = element_blank(),
       legend.position = ""
     );boxplot
@@ -2612,25 +2618,27 @@ sf::st_transform(crs = "+proj=eck4")  # Filter EEZs with ToE stocks
     # ToE Latitudinal plot
     # draw_plot(Eez_hist, x = 0.873, y = 0.53, width = 0.124, height = 0.37) +
     # Time of Emergence Map
-    draw_plot(map, x = 0, y = 0.4, width = 1, height = 0.6) +
+    draw_plot(map, x = 0, y = 0.39, width = 1, height = 0.70) +
     # Regional boxplot
     draw_plot(boxplot, x = 0, y = -0.03, width = 1, height = 0.44) +
     # Labels
     draw_plot_label(label = c("A", "B"), 
                     size = 20,
                     x = c(0, 0), 
-                    y = c(0.95, 0.46)
-    )
+                    y = c(0.98, 0.46)
+    ) + 
+  theme(plot.background = element_rect(fill="white", color = NA))
   
   
+   
   save_plot(
     name_save,
+      # "./Figures/test.png",
     p,
     base_height = 11,
     base_width = 12
   )
-  
-}
+  }
 
 
 ```
