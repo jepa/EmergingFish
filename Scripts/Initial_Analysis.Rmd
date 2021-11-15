@@ -2334,12 +2334,15 @@ World_map_nemer <- World_map %>%
   full_join(Value_map_data,
             by = c("sau_fishing_entity","fishing_entity_id")
   ) %>% 
-  filter(!is.na(participation))
+  filter(!is.na(participation)) %>% 
+sf::st_transform(crs = "+proj=eck4") 
+  
 
 # These are regions without transboundary species
 grey_land <- World_map %>% 
   filter(!fishing_entity_id %in% Value_map_data$fishing_entity_id) %>% 
-  filter(!sovereignt %in% c("Antarctica"))
+  filter(!sovereignt %in% c("Antarctica"))%>% 
+sf::st_transform(crs = "+proj=eck4") 
 
 # grey_eez <- World_eez_sf %>% 
 #   filter(!eezid %in% Eez_d_hist$eezid,
@@ -2365,21 +2368,25 @@ for(i in 1:2){
     left_join(Eez_d_hist,
               by = "eezid") %>% 
     filter(tresh == tresh_list[i],
-           metric == "mean_yr")
+           metric == "mean_yr")%>% 
+sf::st_transform(crs = "+proj=eck4") 
   
   # Map with countries without ToE
   
   russia_churchil <- World_eez_sf %>% 
-    filter(eez_name %in% c("Russia (Kara Sea)","Russia (Laptev to Chukchi Sea)"))
+    filter(eez_name %in% c("Russia (Kara Sea)","Russia (Laptev to Chukchi Sea)"))%>% 
+sf::st_transform(crs = "+proj=eck4") 
   
   no_toe_eez <- World_eez_sf %>% 
     filter(eez_name %in% Neighbours$eez_name, # Filter EEZs without Transboundary spp
            !eez_name %in% toe_map_data$eez_name) %>%  # Filter EEZs with ToE stocks
-    rbind(russia_churchil)
+    rbind(russia_churchil)%>% 
+sf::st_transform(crs = "+proj=eck4") 
   
   no_toe_land <- World_map %>% 
     filter(name %in% Neighbours$eez_name, # Filter EEZs without Transboundary spp
-           !name %in% World_map_part$name) # Filter EEZs with ToE stocks
+           !name %in% World_map_part$name)%>% 
+sf::st_transform(crs = "+proj=eck4")  # Filter EEZs with ToE stocks
     
     
   map <- ggplot(toe_map_data) +
@@ -2628,7 +2635,7 @@ for(i in 1:2){
 
 ```
 
-##### Fig. N3 Mapping the time of emergence Of Top stocks
+##### Fig. 4N Mapping the time of emergence Of Top stocks
 
 ```{r emergence_map, eval = F}
   
@@ -2867,21 +2874,27 @@ World_map_top <- World_eez_sf %>%
   full_join(Top_map_data,
             by = c("sau_fishing_entity")
   ) %>% 
-  filter(!is.na(variable))
+  filter(!is.na(variable)) %>% 
+  sf::st_transform(crs = "+proj=eck4")
   
 # Map with countries without ToE
   
   russia_churchil <- World_eez_sf %>% 
-    filter(eez_name %in% c("Russia (Kara Sea)","Russia (Laptev to Chukchi Sea)"))
+    filter(eez_name %in% c("Russia (Kara Sea)","Russia (Laptev to Chukchi Sea)"))%>% 
+    sf::st_transform(crs = "+proj=eck4")
   
   no_toe_eez <- World_eez_sf %>% 
+    sf::st_transform(crs = "+proj=eck4") %>% 
     filter(eez_name %in% Neighbours$eez_name, # Filter EEZs without Transboundary spp
            !eez_name %in% World_map_top$eez_name) %>%  # Filter EEZs with ToE stocks
-    rbind(russia_churchil)
+    rbind(russia_churchil)%>% 
+    sf::st_transform(crs = "+proj=eck4")
   
   no_toe_land <- World_map %>% 
     filter(name %in% Neighbours$eez_name, # Filter EEZs without Transboundary spp
-           !name %in% World_map_top$name) # Filter EEZs with ToE stocks
+           !name %in% World_map_top$name
+           ) %>% 
+    sf::st_transform(crs = "+proj=eck4")
     
     
   map <- ggplot(World_map_top) +
@@ -2895,7 +2908,7 @@ World_map_top <- World_eez_sf %>%
     ) +
     # grey maps
     # ggplot() +
-    geom_sf(data = World_map, aes(), fill = "grey50", color =  "white",size = 0.1) +
+    geom_sf(data = subset(World_map, sovereignt != "Antarctica"), aes(), fill = "grey50", color =  "white",size = 0.1) +
     geom_sf(data = no_toe_eez, aes(), fill = "lightblue", color =  "white",size = 0.1) +
     # geom_sf(data = no_toe_land, aes(), fill = "lightblue", color =  "white",size = 0.1) +
     # Set Participation labels
@@ -2914,7 +2927,7 @@ World_map_top <- World_eez_sf %>%
   ggsave(
     plot = map,
     "./Figures/top_toe_map.png",
-    width = 10,
+    width = 8,
     height = 5,
     units = "in"
   )
@@ -3892,8 +3905,8 @@ top_network_data_sf <- top_data %>%
   st_segmentize(units::set_units(100, km)) %>% 
   mutate(geometry = (geometry + c(180,90)) %% c(360) - c(180,90)) %>%
   st_wrap_dateline(options = c("WRAPDATELINE=YES",  "DATELINEOFFSET=180"), quiet = TRUE) %>%
-  sf::st_sf(crs = 4326)
-  # sf::st_sf(crs = "+proj=eck4") # for tbular plot
+  # sf::st_sf(crs = 4326)
+  sf::st_sf(crs = "+proj=eck4") # for tbular plot
 
 
 #  unpack the coordinates of each feature 
@@ -3923,7 +3936,13 @@ top_map_data <- top_data %>%
   mutate(per_plot = ifelse(per_chng > 50,50,per_chng))
 
 time <- "per_early"
-  
+
+World_eez_sf <- World_eez_sf %>% 
+sf::st_transform(crs = "+proj=eck4")
+
+World_map <- World_map %>% 
+sf::st_transform(crs = "+proj=eck4")  
+
 top_rop_map <- ggplot() +
   geom_sf(data = World_eez_sf, size = 0.1, fill = "white", col = "gray30") +
   geom_sf(data = subset(World_map,sovereignt != "Antarctica"), size = 0.1, fill = "grey50", col = "gray30") + # created for figure 2
