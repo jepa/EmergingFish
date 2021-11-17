@@ -1603,7 +1603,7 @@ EEZProp <- function(taxon_list,links="NA"){
 }
 
 
-SummaryProp(taxon_key)
+# SummaryProp(taxon_key)
 
 ```
 
@@ -1863,8 +1863,8 @@ Sau_data <-fread(paste(my_path("D"),"SAU/sau_catch_value_country_taxon_JEPA.csv"
 
 World_eez_sf <- st_read(my_path("G", extra_path = "Spatial/SAU/SAU_Shapefile", "SAUEEZ_July2015.shp")) %>% 
   rename(eez_name = Name) %>% 
-  st_transform(crs = 4326) %>% # 4326
-  # st_transform(crs = "+proj=eck4") %>% # for tbular plot
+  # st_transform(crs = 4326) %>% # 4326
+  st_transform(crs = "+proj=eck4") %>% # for tbular plot
   st_simplify(preserveTopology = TRUE, dTolerance = 0.1) %>% 
   clean_names()
 
@@ -1886,8 +1886,8 @@ World_map_dat <- Matching_names %>%
 World_map <- rnaturalearth::ne_countries(scale = 'small', returnclass = c("sf")) %>%
   clean_names() %>% 
   select(iso_a3,sovereignt,sov_a3,name,name_long,region_wb,continent,geometry) %>% 
-  # st_transform(crs = "+proj=eck4") %>%
-  st_transform(crs = 4326) %>% # 4326
+  st_transform(crs = "+proj=eck4") %>%
+  # st_transform(crs = 4326) %>% # 4326
   mutate(iso_a3 = ifelse(sovereignt == "Norway","NOR",
                          ifelse(name == "France","FRA",
                                 iso_a3)
@@ -1907,8 +1907,10 @@ Eez_centroid_sf <-st_as_sf(Eez_centroid,
   st_set_crs(4326) %>% # to match shapefiles
   st_transform(crs = "+proj=eck4")
 
-ggplot(Eez_centroid_sf) +
-  geom_sf()
+# ggplot(Eez_centroid_sf) +
+#   geom_sf() +
+#   geom_sf(data = World_map, aes(), fill = "grey") +
+#   geom_sf(data = World_eez_sf, aes(), fill = "white")
 
 # Transform sf to df
 Eez_centroid_eck <- as.data.frame(Eez_centroid_sf)
@@ -2645,6 +2647,149 @@ sf::st_transform(crs = "+proj=eck4")  # Filter EEZs with ToE stocks
 
 
 ```
+
+
+### Splitted Figure 3 for supplements
+
+Note this chunk needs the previous one to be ran up to the forloop
+
+```{r supplement_figure_splitted}
+  
+
+  # Value Map
+  World_map_part <- World_map_nemer %>% 
+  filter(
+    tresh ==  "tresh_two",
+    variable == "value"
+  )
+  
+  # ToE Map 
+  toe_map_data <- World_eez_sf %>% 
+    left_join(Eez_d_hist,
+              by = "eezid") %>% 
+    filter(tresh == "tresh_two",
+           metric == "mean_yr")%>% 
+sf::st_transform(crs = "+proj=eck4") 
+  
+  # Map with countries without ToE
+  
+  russia_churchil <- World_eez_sf %>% 
+    filter(eez_name %in% c("Russia (Kara Sea)","Russia (Laptev to Chukchi Sea)"))%>% 
+sf::st_transform(crs = "+proj=eck4") 
+  
+  no_toe_eez <- World_eez_sf %>% 
+    filter(eez_name %in% Neighbours$eez_name, # Filter EEZs without Transboundary spp
+           !eez_name %in% toe_map_data$eez_name) %>%  # Filter EEZs with ToE stocks
+    rbind(russia_churchil)%>% 
+sf::st_transform(crs = "+proj=eck4") %>% 
+    mutate(value = NA)
+  
+  no_toe_land <- World_map %>% 
+    filter(name %in% Neighbours$eez_name, # Filter EEZs without Transboundary spp
+           !name %in% World_map_part$name)%>% 
+sf::st_transform(crs = "+proj=eck4") %>%   # Filter EEZs with ToE stocks 
+    mutate(value = NA)
+  
+  # Grey land
+grey_land <- World_map %>% 
+  # filter(is.na(fishing_entity_id)) %>% 
+  filter(!sovereignt %in% c("Antarctica"))
+
+    
+  
+  # Inlcude the participation of species
+    
+    #   geom_sf(data = no_toe_land, aes(), fill = "lightblue", color =  "white",size = 0.1) +
+    #   geom_sf(data = grey_land, aes(), fill = "grey50", color =  "white",size = 0.1) +
+  
+    
+eez_map <- ggplot(toe_map_data) +
+  geom_sf(aes(fill = value), # for 2000 to 2100),
+          color =  "white",
+          size = 0.1
+  ) +
+  geom_sf(data = grey_land, aes(),
+          fill = "grey50", 
+          color =  "white",
+          size = 0.1) +
+  geom_sf(data = no_toe_eez, aes(fill = as.numeric(value)),
+          color =  "white",
+          size = 0.1) +
+  scale_fill_viridis("Average year of range shift",
+                     limits = c(2000,2100),
+                     breaks = seq(2000,2100,25),
+                     labels = seq(2000,2100,25),
+                     direction = -1,
+                     na.value = "lightblue"
+  ) +
+  my_ggtheme_m(leg_pos = "bottom") +
+  theme(legend.key.width = unit(3, "line")) +
+  guides(
+    fill=guide_colorbar(title.position="top", 
+                        title.hjust =0.5)
+  )
+
+
+land_map <- ggplot(World_map_part) +
+  geom_sf(aes(fill = participation-2000),
+          color =  "white",
+          size = 0.1
+  ) +
+  geom_sf(data = no_toe_land, aes(fill = as.numeric(value)),
+          color =  "white",
+          size = 0.1) +
+  scale_fill_viridis("Transboundary fish revenue (%)",
+                     limits = c(0,100),
+                     breaks = seq(0,100,25),
+                     labels = seq(0,100,25),
+                     direction = 1,
+                     na.value = "lightblue",
+                     option = "A"
+  ) +
+  my_ggtheme_m(leg_pos = "bottom") +
+  theme(legend.key.width = unit(3, "line")) +
+  guides(
+    fill=guide_colorbar(title.position="top", 
+                        title.hjust =0.5)
+  )
+    
+
+# ggsave(
+#   plot = land_map,
+#   width = 8,
+#   height = 6,
+#   units = "in",
+#   filename = "./Figures/eez_map_supp.png"
+# )
+
+## --------------- ##
+  # Combine plots and save them
+  ## --------------- ##
+  
+  p <- ggdraw() +
+    draw_plot(eez_map, x = 0, y = 0.5, width = 1, height = 0.5) +
+    # Regional boxplot
+    draw_plot(land_map, x = 0, y = 0, width = 1, height = 0.5) +
+    # Labels
+    draw_plot_label(label = c("A", "B"), 
+                    size = 20,
+                    x = c(0, 0), 
+                    y = c(0.98, 0.46)
+    ) + 
+  theme(plot.background = element_rect(fill="white", color = NA))
+  
+  
+   
+  save_plot(
+      "./Figures/FigSplitSX.png",
+    p,
+    base_height = 10,
+    base_width = 10
+  )
+    
+```
+
+
 
 ##### Fig. 4N Mapping the time of emergence Of Top stocks
 
@@ -3401,23 +3546,38 @@ for(i in c(1:nrow(path_data))){
 
 data_ready_plot <- data_ready_plot %>% 
   mutate(
-    per_early_plot = ifelse(per_early_plot >= 50,50,per_early_plot),
-    per_mid_plot = ifelse(per_mid_plot >= 50,50,per_mid_plot))
+    per_early = ifelse(per_early_plot >= 50,50,per_early_plot),
+    per_mid = ifelse(per_mid_plot >= 50,50,per_mid_plot)) %>% 
+  gather("time_step","percentage",per_early,per_mid)
 
-sf_ready_plot <- st_as_sf(data_ready_plot,
-            coords = c("lon", "lat")
-            ) %>% 
+
+
+# SELECT A TIME STEP
+# time_toplot <- "per_mid"
+time_toplot <- "per_early"
+
+# ----------------------------- #
+
+
+
+sf_ready_plot <- data_ready_plot %>% 
+  filter(time_step == time_toplot) %>% 
+  st_as_sf(coords = c("lon", "lat")) %>% 
   st_set_crs(4326) %>% # to match shapefiles
-  st_transform(crs = "+proj=eck4")
-
+  st_transform(crs = "+proj=eck4") 
 
 # Get arrow data
 arrows_data <- as.data.frame(st_coordinates(st_cast(sf_ready_plot,"POINT")$geometry)) %>% 
-  bind_cols(data_ready_plot)
+  bind_cols(data_ready_plot %>% 
+              filter(time_step == time_toplot)
+            )
+
 
 # Get point data
 point_data <- path_data %>% 
-  filter(per_early <= 0) %>% 
+  gather("time_step","percentage",per_early:per_mid) %>% 
+  filter(time_step == time_toplot,
+    percentage <= 0) %>% 
   st_as_sf(
     coords = c("start_lon", "start_lat")
   ) %>% 
@@ -3450,7 +3610,8 @@ n_taxa_data <- Prop_results %>%
   summarise(avrg_spp_per = mean(avrg_spp_per,na.rm=T)) %>% 
   mutate(time_step = ifelse(time_step == "early","per_early","per_mid")) %>%
   mutate(avrg_spp_per_100 = avrg_spp_per,
-    avrg_spp_per = ifelse(avrg_spp_per > 50,50,avrg_spp_per))
+    avrg_spp_per = ifelse(avrg_spp_per > 50,50,avrg_spp_per)) %>% 
+  filter(time_step == time_toplot)
 
 # Included in map
 n_taxa_map <- World_map %>% 
@@ -3469,18 +3630,18 @@ grey_land <- World_map %>%
 p <-
   ggplot() +
   geom_sf(data = World_eez_sf, size = 0.1, fill = "white", col = "gray30") +
-  geom_sf(data = subset(n_taxa_map, sovereignt != "Antarctica" & time_step == time),
+  geom_sf(data = subset(n_taxa_map, sovereignt != "Antarctica"),
             aes(fill = avrg_spp_per),
             size = 0.1,
             col = "white") +
   geom_sf(data = grey_land, size = 0.1, fill = "grey50", col = "gray30") +
-  geom_sf(data = subset(sf_ready_plot, per_early_plot >= 0), aes(color = per_early_plot), size = 0.1, fill = "white") +
+  geom_sf(data = subset(sf_ready_plot, percentage >= 0), aes(color = percentage), size = 0.1, fill = "white") +
   geom_sf(data = point_data, aes(), color = "grey90") +
   my_ggtheme_m(leg_pos = "bottom") +
-    geom_path(data = subset(arrows_data, per_early_plot >= 0),
+    geom_path(data = subset(arrows_data, percentage >= 0),
               aes(X, Y,
                   group = group,
-                  col = per_early_plot
+                  col = percentage
               ),
               size = 1,
               arrow = arrow(length = unit(0.01, "npc"),
@@ -3489,24 +3650,102 @@ p <-
   my_ggtheme_m(leg_pos = "bottom") +
   scale_color_gradientn(name= "Changes in catch proportion \nand changing stocks (%)",
                         colours = pal,
-                        limits = c(0,max(data_ready_plot$per_early_plot,na.rm=T)),
-                        breaks = seq(0,max(data_ready_plot$per_early_plot,na.rm=T),10),
-                        labels = c(seq(0,max(data_ready_plot$per_early_plot-10,na.rm=T),10),">50")
+                        limits = c(0,max(sf_ready_plot$percentage,na.rm=T)),
+                        breaks = seq(0,max(sf_ready_plot$percentage,na.rm=T),10),
+                        labels = c(seq(0,max(sf_ready_plot$percentage-10,na.rm=T),10),">50")
   ) +
   scale_fill_gradientn(name= "Changes in catch proportion \nand changing stocks (%)",
                         colours = pal,
-                        limits = c(0,max(data_ready_plot$per_early_plot,na.rm=T)),
-                        breaks = seq(0,max(data_ready_plot$per_early_plot,na.rm=T),10),
-                        labels = c(seq(0,max(data_ready_plot$per_early_plot-10,na.rm=T),10),">50")
+                        limits = c(0,max(sf_ready_plot$percentage,na.rm=T)),
+                        breaks = seq(0,max(sf_ready_plot$percentage,na.rm=T),10),
+                        labels = c(seq(0,max(sf_ready_plot$percentage-10,na.rm=T),10),">50")
   ) 
 
 
+name <- paste0("./Figures/ssr_",time_toplot,".png")
+# Save figure
 ggsave(plot =  p,
-       "./Figures/ssr_early.png",
+       name,
        width = 10,
        height = 5,
        units = "in")
 
+
+## ------------------- ##
+  # Regional Plots
+  ## ------------------- ##
+  
+  Lat_am_land <- World_map %>% 
+    filter(region_wb %in% c("Latin America & Caribbean") |
+             sau_fishing_entity %in% c("USA","Mexico")
+    )
+  
+  Lat_am_eez <- World_eez_sf %>% 
+    select(sf_eez_name = eez_name,everything()) %>% 
+    left_join(Matching_names) %>% 
+    filter(
+      !str_detect(sf_eez_name,"Pacific"),
+      !sf_eez_name %in% c("USA (East Coast)","Suriname","Guyana","French Guiana","Bermuda (UK)","Brazil","El Salvador")
+    )
+  
+  Lat_am_data <- sf_ready_plot %>% 
+    filter(source %in% Lat_am_eez$sf_eez_name)
+  
+  Lat_am_paths <- sf_ready_plot %>% 
+    filter(source %in% Lat_am_eez$sf_eez_name,
+           objective %in% Lat_am_eez$sf_eez_name)
+  
+  Lat_am_points <- point_data %>% 
+    filter(source %in% Lat_am_eez$sf_eez_name,
+           target %in% Lat_am_eez$sf_eez_name)
+  
+  
+  Lat_am_map <- ggplot() +
+    geom_sf(data = Lat_am_eez, size = 0.1, fill = "white", col = "gray30") +
+    geom_sf(data = grey_land, size = 0.1, fill = "grey50", col = "gray30") +
+    geom_sf(data = subset(n_taxa_map, sovereignt != "Antarctica" & time_step == time_toplot),
+            aes(fill = avrg_spp_per),
+            size = 0.1,col = "white") +
+    geom_sf(data = Lat_am_points, aes(), color = "grey90") +
+  my_ggtheme_m(leg_pos = "bottom") +
+    geom_path(data = subset(Lat_am_paths, percentage > 0),
+              aes(X, Y,
+                  group = interaction(line_id,subline_id),
+                  col = per_plot
+              ),
+              size = 1,
+              arrow = arrow(length = unit(0.05, "npc"),
+                            ends = "first"),
+              show.legend = NA) +
+    coord_sf(xlim = c(-100, -55),ylim = c(9, 30)) + 
+    labs(x = "", y = "") +
+    scale_x_continuous(breaks = seq(-100,60,10)) +
+    scale_y_continuous(breaks = seq(10,30,10)) +
+    my_ggtheme_m(leg_pos = "bottom") +
+    theme(legend.position = "",
+          panel.background = element_rect(fill = "white", color = "white"),
+          panel.grid.major =  element_line(color = "white")
+    ) +
+    scale_colour_viridis(
+      name="Average Gain of\nStock-Share Ratio (%)",
+      limits = c(0,max(Lat_am_data$percentage)),
+      breaks = seq(0,max(Lat_am_data$percentage),10),
+      # option="magma",
+      # direction = -1
+    )+
+    scale_fill_viridis(
+      name="Average Gain of\nStock-Share Ratio (%)",
+      limits = c(0,max(Lat_am_data$percentage)),
+      breaks = seq(0,max(Lat_am_data$percentage),10),
+      # option="magma",
+      # direction = -1
+    )
+  
+  ggsave(plot =  Lat_am_map,
+       "test.png",
+       width = 10,
+       height = 5,
+       units = "in")
 
 ```
 

@@ -121,7 +121,7 @@ Fig. 3 - While I like the idea of Figure 3, I feel that there is too much convey
 
   While I like the idea of Figure 3, I feel that there is too much conveyed in this figure. It is confusing to have two different scales (for land polygons and EEZs, respectively) on the same color ramp, even though they show completely different things.
 
-  - **Response:**  **NOTE: I do not (fully) agree with this comment, Do you think we can counter-argue it? (We had the same type of plot in the Sci. Rep. paper). Yes, the figure is complex, but I do not think having different color scales will make it any less complex. I actually think it will make it even harder to read.** 
+  - **Response:** We understand the reviewer’s concern with the complexity of our figure. However, after some tryouts, we concluded that having different color scales does not make it any less complex. Thus, We have made an extra effort to describe it as clearly as possible in the figure legend (see below). In addition, we have split up the land and polygons into two maps and include them in the supplemental figures (See supplement FX).
 
 Moreover, see my comments on averaging above. 
 
@@ -135,7 +135,7 @@ Year of range shift- is this the median emergence year for all stocks that exper
 
 - **Response:** Yes, this refers to the median emergence year for all shifting stocks in each region. This is now included in the figure legend. 
 
-  - Fig. 3 legend, *B) Year of shared distribution shifts by UN sub-regions. Points color coded by the median year for all shifting stocks in the region.*
+  - Fig. 3 legend, - *Year of change in the shared distribution of 4,119 transboundary stocks. A) Land polygons show the contribution of shifting stocks to a country or territory's total fishing revenue from transboundary stocks. Exclusive Economic Zone polygons display average year of range shifts within them (Note that the year scale goes from end of the century to recently). Warm colors are indicative of an early shift and high fishing revenue contribution from transboundary stocks while cold colors represent a later shift and low fishing revenue. EEZs with no distributional shift between 2006 and 2100 are represented in pale blue. See Figure SXX for a detached version. B) Year of shared distribution shifts by UN sub-regions. Points color coded by the median year for all shifting stocks in the region reflecting the Kruskal-Wallis test. Horizontal dashed line represents the year by which countries have committed to reach full implementation of the 2030 Agenda. N = North, S = South, W = West and E = East. Ltn. Ame. and the Car. = Latin America and the Caribbean. Aus and New Z. = Australia and New Zealand.*
 
 Lines 261-266: I think this is an interesting result, and is lost in the averaging of the range shifts. It would be interesting to see a figure or Table with some of the biggest “winners and losers” in terms of high-value species that are shifting out of or into particular EEZs. Or, could there be a figure displaying the 10-20 biggest/highest-value stocks that are expected to shift? Which countries are expected to lose/gain these species?
 
