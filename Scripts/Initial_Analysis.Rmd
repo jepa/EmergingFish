@@ -2649,9 +2649,12 @@ sf::st_transform(crs = "+proj=eck4")  # Filter EEZs with ToE stocks
 ```
 
 
-### Splitted Figure 3 for supplements
+###### Splitted Figure 3 for supplements
 
-Note this chunk needs the previous one to be ran up to the forloop
+Note this chunk needs the previous one to be ran up to the for-loop
+
+Year of change in the shared distribution of 4,119 transboundary stocks and their contribution to fishing revenue. A) Contribution of shifting stocks to a country or territory's total fishing revenue from transboundary stocks. B) Average year of range shift across an EEZ’s transboundary stocks. EEZs with no distributional shift between 2006 and 2100 are represented in pale blue. This figure is a detached version of Figure 3
+
 
 ```{r supplement_figure_splitted}
   
@@ -2767,9 +2770,9 @@ land_map <- ggplot(World_map_part) +
   ## --------------- ##
   
   p <- ggdraw() +
-    draw_plot(eez_map, x = 0, y = 0.5, width = 1, height = 0.5) +
+    draw_plot(eez_map, x = 0, y = 0, width = 1, height = 0.5) +
     # Regional boxplot
-    draw_plot(land_map, x = 0, y = 0, width = 1, height = 0.5) +
+    draw_plot(land_map, x = 0, y = 0.5, width = 1, height = 0.5) +
     # Labels
     draw_plot_label(label = c("A", "B"), 
                     size = 20,
