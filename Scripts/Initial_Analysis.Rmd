@@ -3050,7 +3050,7 @@ kurtosis(Stats_data$emerging_yr) #2.82
 
 ```
 
-## Regional differences
+#### Regional differences
 
 ```{r multiple_reg, eval = F, echo = F}
 
@@ -3096,7 +3096,7 @@ TukeyHSD(Reg_aov) %>%
 
 ```
 
-## Habitat preference differences
+#### Habitat preference differences
 
 ```{r multiple_reg, eval = F, echo = F}
 
@@ -3146,15 +3146,13 @@ TukeyHSD(Hab_aov) %>%
 ```
 
 
-####  Prooportion Analysis
+##  Prooportion Analysis
 
-##### Fig. 5 and S5. (Proportion + Netowrk)
+### Fig. 5 and S5 Proportion + Netowrk
 
+Note that this map is based on the data viz site: https://www.data-to-viz.com/story/MapConnection.html
 
-```{r}
-
-
-# Done with the help of https://www.data-to-viz.com/story/MapConnection.html
+```{r fig5_paths, eval = T, echo = T}
 
 # A function that makes a dateframe per connection (we will use these connections to plot each lines)
 data_for_connection=function( dep_lon, dep_lat, arr_lon, arr_lat, group){
@@ -3309,7 +3307,6 @@ p <-
   geom_sf(data = grey_land, size = 0.1, fill = "grey50", col = "gray30") +
   geom_sf(data = subset(sf_ready_plot, percentage >= 0), aes(color = percentage), size = 0.1, fill = "white") +
   geom_sf(data = point_data, aes(), color = "grey90") +
-  my_ggtheme_m(leg_pos = "bottom") +
     geom_path(data = subset(arrows_data, percentage >= 0),
               aes(X, Y,
                   group = group,
@@ -3320,50 +3317,63 @@ p <-
                             ends = "first"),
               show.legend = NA) +
   my_ggtheme_m(leg_pos = "bottom") +
-  scale_color_gradientn(name= "Changes in catch proportion \nand changing stocks (%)",
+  scale_color_gradientn(name= "Changes in catch proportion and changing stocks (%)",
                         colours = pal,
                         limits = c(0,max(sf_ready_plot$percentage,na.rm=T)),
                         breaks = seq(0,max(sf_ready_plot$percentage,na.rm=T),10),
                         labels = c(seq(0,max(sf_ready_plot$percentage-10,na.rm=T),10),">50")
   ) +
-  scale_fill_gradientn(name= "Changes in catch proportion \nand changing stocks (%)",
+  scale_fill_gradientn(name= "Changes in catch proportion and changing stocks (%)",
                         colours = pal,
                         limits = c(0,max(sf_ready_plot$percentage,na.rm=T)),
                         breaks = seq(0,max(sf_ready_plot$percentage,na.rm=T),10),
                         labels = c(seq(0,max(sf_ready_plot$percentage-10,na.rm=T),10),">50")
-  ) 
+  ) + guides(
+      color=guide_colorbar(title.position="top")
+  ) +
+  theme(legend.key.width = unit(4,"line"))
 
 
-name <- paste0("./Figures/ssr_",time_toplot,".png")
+# name <- paste0("./Figures/ssr_",time_toplot,".png")
 # Save figure
-ggsave(plot =  p,
-       name,
-       width = 10,
-       height = 5,
-       units = "in")
+# ggsave(plot =  p,
+#        name,
+#        width = 8,
+#        height = 5,
+#        units = "in")
 
+```
+
+### Figure S6. Regional plots
+
+Note that the following chunk needs the previous one to be ran
+
+```{r}
 
 ## ------------------- ##
   # Regional Plots
   ## ------------------- ##
   
-  Lat_am_land <- World_map %>% 
-    filter(region_wb %in% c("Latin America & Caribbean") |
-             sau_fishing_entity %in% c("USA","Mexico")
-    )
+  # Lat_am_land <- World_map %>% 
+    # filter(region_wb %in% c("Latin America & Caribbean") |
+             # sau_fishing_entity %in% c("USA","Mexico")
+    # )
   
+
   Lat_am_eez <- World_eez_sf %>% 
     select(sf_eez_name = eez_name,everything()) %>% 
     left_join(Matching_names) %>% 
     filter(
+      un_sub_region == "Latin America and the Caribbean",
       !str_detect(sf_eez_name,"Pacific"),
       !sf_eez_name %in% c("USA (East Coast)","Suriname","Guyana","French Guiana","Bermuda (UK)","Brazil","El Salvador")
     )
   
   Lat_am_data <- sf_ready_plot %>% 
-    filter(source %in% Lat_am_eez$sf_eez_name)
+    filter(source %in% Lat_am_eez$sf_eez_name,
+           objective %in% Lat_am_eez$sf_eez_name)
   
-  Lat_am_paths <- sf_ready_plot %>% 
+  Lat_am_paths <- arrows_data %>% 
     filter(source %in% Lat_am_eez$sf_eez_name,
            objective %in% Lat_am_eez$sf_eez_name)
   
@@ -3371,53 +3381,121 @@ ggsave(plot =  p,
     filter(source %in% Lat_am_eez$sf_eez_name,
            target %in% Lat_am_eez$sf_eez_name)
   
+  Lat_am_n_taxa <- n_taxa_map %>% 
+    filter(
+      region_wb == "Latin America & Caribbean",
+      # !str_detect(sf_eez_name,"Pacific"),
+      # !sf_eez_name %in% c("USA (East Coast)","Suriname","Guyana","French Guiana","Bermuda (UK)","Brazil","El Salvador")
+    )
   
-  Lat_am_map <- ggplot() +
-    geom_sf(data = Lat_am_eez, size = 0.1, fill = "white", col = "gray30") +
-    geom_sf(data = grey_land, size = 0.1, fill = "grey50", col = "gray30") +
-    geom_sf(data = subset(n_taxa_map, sovereignt != "Antarctica" & time_step == time_toplot),
+  
+  lat_am_map <- ggplot() +
+  geom_sf(data = Lat_am_eez, size = 0.1, fill = "white", col = "gray30") +
+  geom_sf(data = subset(Lat_am_n_taxa, sovereignt != "Antarctica"),
             aes(fill = avrg_spp_per),
-            size = 0.1,col = "white") +
-    geom_sf(data = Lat_am_points, aes(), color = "grey90") +
-  my_ggtheme_m(leg_pos = "bottom") +
-    geom_path(data = subset(Lat_am_paths, percentage > 0),
+            size = 0.1,
+            col = "white") +
+  # geom_sf(data = grey_land, size = 0.1, fill = "grey50", col = "gray30") +
+  geom_sf(data = subset(Lat_am_data, percentage >= 0), aes(color = percentage), size = 0.1, fill = "white") +
+  geom_sf(data = Lat_am_points, aes(), color = "grey90") +
+    geom_path(data = subset(Lat_am_paths, percentage >= 0),
               aes(X, Y,
-                  group = interaction(line_id,subline_id),
-                  col = per_plot
+                  group = group,
+                  col = percentage
               ),
               size = 1,
-              arrow = arrow(length = unit(0.05, "npc"),
+              arrow = arrow(length = unit(0.01, "npc"),
                             ends = "first"),
               show.legend = NA) +
-    coord_sf(xlim = c(-100, -55),ylim = c(9, 30)) + 
+  my_ggtheme_m(leg_pos = "bottom") +
+    coord_sf(xlim = c(-9000000,-5000000),ylim = c(1000000, 4000000)) + 
     labs(x = "", y = "") +
-    scale_x_continuous(breaks = seq(-100,60,10)) +
-    scale_y_continuous(breaks = seq(10,30,10)) +
+    # scale_x_continuous(breaks = seq(-100,60,10)) +
+    # scale_y_continuous(breaks = seq(10,30,10)) +
     my_ggtheme_m(leg_pos = "bottom") +
-    theme(legend.position = "",
+    theme(
           panel.background = element_rect(fill = "white", color = "white"),
           panel.grid.major =  element_line(color = "white")
     ) +
-    scale_colour_viridis(
-      name="Average Gain of\nStock-Share Ratio (%)",
-      limits = c(0,max(Lat_am_data$percentage)),
-      breaks = seq(0,max(Lat_am_data$percentage),10),
-      # option="magma",
-      # direction = -1
-    )+
-    scale_fill_viridis(
-      name="Average Gain of\nStock-Share Ratio (%)",
-      limits = c(0,max(Lat_am_data$percentage)),
-      breaks = seq(0,max(Lat_am_data$percentage),10),
-      # option="magma",
-      # direction = -1
-    )
+    scale_color_gradientn(name= "Changes in catch proportion and changing stocks (%)",
+                        colours = pal,
+                        limits = c(0,max(Lat_am_data$percentage)),
+                        breaks = seq(0,max(Lat_am_data$percentage),10)
+  ) +
+  scale_fill_gradientn(name= "Changes in catch proportion and changing stocks (%)",
+                        colours = pal,
+                        limits = c(0,max(Lat_am_data$percentage)),
+                       breaks = seq(0,max(Lat_am_data$percentage),10)
+  ) + guides(
+      color=guide_colorbar(title.position="top", 
+                        title.hjust =0.5)
+  ) +
+  theme(legend.key.width = unit(4,"line"))
+
   
-  ggsave(plot =  Lat_am_map,
-       "test.png",
-       width = 10,
-       height = 5,
-       units = "in")
+  ggsave(filename = "lat_am_mid.png",
+         lat_am_map,
+         width = 6,
+         height = 6)
+  
+  
+  
+  ## ------------------- ##
+  # Northern Europe
+  ## ------------------- ##
+  
+
+  EU_data <- sf_ready_plot %>% 
+    filter(source %in% EU_eez$sf_eez_name)
+  
+EU_map <- ggplot() +
+  geom_sf(data = World_eez_sf, size = 0.1, fill = "white", col = "gray30") +
+  geom_sf(data = subset(n_taxa_map, sovereignt != "Antarctica"),
+            aes(fill = avrg_spp_per),
+            size = 0.1,
+            col = "white") +
+  # geom_sf(data = grey_land, size = 0.1, fill = "grey50", col = "gray30") +
+  geom_sf(data = subset(sf_ready_plot, percentage >= 0), aes(color = percentage), size = 0.1, fill = "white") +
+  geom_sf(data = point_data, aes(), color = "grey90") +
+    geom_path(data = subset(arrows_data, percentage >= 0),
+              aes(X, Y,
+                  group = group,
+                  col = percentage
+              ),
+              size = 1,
+              arrow = arrow(length = unit(0.03, "npc"),
+                            ends = "first"),
+              show.legend = NA) +
+  # my_ggtheme_m(leg_pos = "bottom") +
+    coord_sf(xlim = c(-1300000,2000000),ylim = c(5500000, 7500000))  +
+  labs(x = "", y = "") +
+  scale_x_continuous(breaks = seq(-100,60,10)) +
+  scale_y_continuous(breaks = seq(10,30,10)) +
+    my_ggtheme_m(leg_pos = "bottom") +
+    theme(
+          panel.background = element_rect(fill = "white", color = "white"),
+          panel.grid.major =  element_line(color = "white")
+    ) +
+    scale_color_gradientn(name= "Changes in catch proportion and changing stocks (%)",
+                        colours = pal,
+                        limits = c(0,max(EU_data$percentage)),
+                        breaks = seq(0,max(EU_data$percentage),10)
+  ) +
+  scale_fill_gradientn(name= "Changes in catch proportion and changing stocks (%)",
+                        colours = pal,
+                        limits = c(0,max(EU_data$percentage)),
+                       breaks = seq(0,max(EU_data$percentage),10)
+  ) + guides(
+      color=guide_colorbar(title.position="top",
+                        title.hjust =0.5)
+  ) +
+  theme(legend.key.width = unit(4,"line"))
+  
+    ggsave(filename = "EU_early.png",
+         EU_map,
+         width = 6,
+         height = 6)
+  
 
 ```
 
