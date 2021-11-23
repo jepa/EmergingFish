@@ -2794,7 +2794,7 @@ land_map <- ggplot(World_map_part) +
 
 
 
-##### Fig. 4N Mapping the time of emergence Of Top stocks
+##### Fig. 4 Mapping the time of emergence Of Top stocks
 
 ```{r emergence_map, eval = F}
   
@@ -2872,152 +2872,6 @@ Eme_Res %>%
 
 ```
 
-###### The bar option by UN sub region
-
-```{r}
-
-# Create data
-Species_Data <- top_toe %>% 
-  filter(tresh == selected_tresh,
-         variable == "value") %>% 
-  mutate(mean = mean-2000,
-         group = geo_region)
-
-# Set a number of 'empty bar' to add at the end of each group
-Char <- as.factor(Species_Data$group)
-empty_bar <- 5
-to_add <- data.frame( matrix(NA, empty_bar*nlevels(Char), ncol(Species_Data)) )
-colnames(to_add) <- colnames(Species_Data)
-to_add$group <- rep(levels(Char), each=empty_bar)
-Species_Data <- rbind(Species_Data, to_add)
-Species_Data <- Species_Data %>% arrange(group,mean)
-Species_Data$id <- seq(1, nrow(Species_Data))
-
-# Species_Data$id <- seq(1, nrow(Species_Data))
-
-# Get the name and the y position of each label
-label_data <- Species_Data 
-number_of_bar <- nrow(label_data)
-angle <- 90 - 360 * (label_data$id-0.5) /number_of_bar
-label_data$hjust <- ifelse( angle < -90, 1, 0)
-label_data$angle <- ifelse(angle < -90, angle+180, angle)
-
-
-# prepare a data frame for base lines
-base_data <- Species_Data %>% 
-  group_by(group) %>% 
-  summarize(start=min(id), 
-            end=max(id) - empty_bar, 
-            median = median(mean, na.rm = T)
-  ) %>% 
-  rowwise() %>% 
-  mutate(title=mean(c(start, end)))
-
-
-
-# prepare a data frame for grid (scales)
-grid_data <- base_data
-grid_data$end <- grid_data$end[ c( nrow(grid_data), 1:nrow(grid_data)-1)] + 1
-grid_data$start <- grid_data$start - 1
-# grid_data <- grid_data[-1,]
-# grid_data[1,2] <- 5 # Manually include bathydemerssal
-# grid_data[1,3] <- 1 
-
-
-
-un_regions <- grid_data %>% 
-  select(group) 
-
-ggplot(Species_Data, 
-       aes(x=as.factor(id), 
-           y=mean,
-           fill=mean)
-) +       # Note that id is a factor. If x is numeric, there is some space between the first bar
-  geom_bar(aes(x=as.factor(id),
-               y=mean,
-               fill=mean),
-           stat="identity",
-           alpha=0.5
-  ) +
-  geom_segment(data=grid_data,
-               aes(x = end, y = 30, xend = start, yend = 30),
-               colour = "grey90", alpha=1, size=0.3, inherit.aes = FALSE) +
-  geom_bar(aes(x=as.factor(id),
-               y=mean,
-               fill=mean
-  ),
-  stat="identity",
-  alpha=0.5) +
-  annotate("text", 
-           x = 0.5,
-           y = 37,
-           label = "UN Agenda",
-           color= "grey60", 
-           size=3, 
-           angle=-5
-  ) +
-  # Country names
-  geom_text(data=label_data,
-            aes(x=id, 
-                y= 100,
-                label=sau_fishing_entity,
-                hjust=hjust),
-            color="black",
-            fontface="italic",
-            alpha = 1,
-            size = 4 ,
-            angle = label_data$angle,
-            inherit.aes = FALSE) +
-  # Continents labels
-  # geom_text(data=base_data,
-  #           aes(x = title,
-  #               y = 85, 
-  #               label=group), 
-  #           # hjust=c(1,1,1,0,0,0),
-  #           colour = "black",
-  #           # angle = myAng,
-  #           size=5,
-  #           fontface="bold",
-  #           inherit.aes = FALSE) +
-  ylim(-100,100) + # sets the circle the first value the central the last value how wide
-  theme_minimal() +
-  theme(
-    legend.position = c(0.5,0.5),
-    legend.text = element_text(size = 13),
-    legend.title = element_text(size = 14, face = "bold"),
-    legend.title.align = 0.5,
-    axis.text = element_blank(),
-    axis.title = element_blank(),
-    panel.grid = element_blank(),
-    panel.background = element_rect(colour = "white"),
-    legend.direction="horizontal",
-    legend.key.width = unit(3, 
-                            "line")
-  ) +
-  coord_polar(start = 0) +
-  scale_fill_viridis("Average year of range shift\nfor top 5 most valuable stocks",
-                     limits = c(0,100),
-                     breaks = seq(0,100,20),
-                     labels = seq(2000,2100,20),
-                     direction = -1
-  ) +
-  guides(
-    fill=guide_colorbar(title.position="top", 
-                        title.hjust =0.5)
-  )
-
-
-ggsave(
-  plot = last_plot(),
-  width = 13,
-  height = 13,
-  units = "in",
-  filename = "./Figures/top_stocks_circular_trend.png"
-)
-
-```
-
-
 ###### The Map option with tops
 
 ```{r the map}
@@ -3093,191 +2947,6 @@ World_map_top <- World_eez_sf %>%
   
 
 ```
-
-
-##### Fig. 4. Bubble plot
-
-```{r, buble_plot, eval = F, echo = F}
-
-# Needs previous chunk
-
-Buble_data <- Eez_d_hist %>% 
-  filter(metric == "mean_yr") %>% 
-  group_by(sau_fishing_entity,tresh) %>% 
-  summarise(mean_yr = mean(value)) %>% 
-  left_join(Eme_value_data,
-            by = c("sau_fishing_entity","tresh")) %>% 
-  filter(#tresh == selected_tresh, # tresh hold selection
-         variable == "value") %>% 
-  mutate(
-    weight_toe = sum_value/mean_yr,
-    sum_value_bi = sum_value/1000000000,
-    log_value = log10(sum_value_bi)
-    ) %>%   # Billion usd
-  left_join(Matching_names,
-            by = c("sau_fishing_entity","fishing_entity_id")) %>% 
-  distinct(sau_fishing_entity,tresh,.keep_all = TRUE) %>%
-  filter(!is.na(un_geo_region)) %>% 
-  ungroup()# %>%  # no more asterisk
-  # mutate(
-  #   sau_fishing_entity = ifelse(sum_value_bi >= 1 & !sau_fishing_entity %in% c("Spain"), paste(sau_fishing_entity,"*",sep = ""),sau_fishing_entity))
-
-### Function for estimating percentile
-
-quibble <- function(x, q = p) {
-        tibble(x = quantile(x, q), q = q)
-}
-
-Percentile_value <- Buble_data %>% 
-  group_by(tresh) %>%  # for whole distribution
-        do(quibble(.$log_value, 0.75))
-
-
-## Top fishing nations close to SDGs
-Buble_data %>% 
-  filter(log_value > Percentile_value$x & mean_yr < 2036) %>% 
-  View()
-  group_by(tresh) %>% 
-  summarise(sum(sum_value_bi),
-            sum(n_taxa))
-
-## All fishing nations close to SDGs
-Buble_data %>% 
-  filter(mean_yr < 2036) %>% 
-  # nrow() # 76  countries
-  View()
-  group_by(tresh) %>% 
-  summarise(sum(sum_value_bi),
-            sum(n_taxa))
-
-76/length(unique(Buble_data$sau_fishing_entity))
-134/length(unique(Buble_data$sau_fishing_entity))
-
-# Labels Data
-
-Labels_data <- tibble(
-  x = c(2029,
-        # 2050,2070,
-        2007),
-  y = c(-5.2,
-        # -5.8,-5.8,
-        Percentile_value$x+.1),
-  label = c("UN 2030 Agenda", 
-            # "Mid shift","Late shift",
-            "Fisheries > 75th percentile")
-)
-
-
-# Plot the bubbles!
-ggplot(Buble_data) +
-  geom_point(
-    aes(
-      x = mean_yr,
-      y = log_value,
-      size = n_taxa,
-      colour = un_geo_region,
-      shape = un_geo_region
-    ),
-    alpha = 0.7
-  ) +
-  # Right side labels
-  geom_label_repel(data = subset(Buble_data, log_value > Percentile_value$x & mean_yr < 2036 & mean_yr > 2034),
-                  aes(
-                    x = mean_yr,
-                    y = log_value,
-                    label = sau_fishing_entity
-                  ),
-                  arrow = arrow(length = unit(0.009, "npc"),
-                                type = "closed",
-                                ends = "first"),
-                  force = 1,
-                  box.padding = 0.2,
-                  fill = "NA",
-                  nudge_x = 2066 - subset(Buble_data,log_value > Percentile_value$x & mean_yr < 2036 & mean_yr > 2034)$mean_yr, # set distance from point
-                  nudge_y = subset(Buble_data, log_value > Percentile_value$x & mean_yr < 2034)$log_value  +1.1 , # set vertical position
-                  segment.size  = 0.1,
-                  segment.color = "grey50",
-                  direction     = "y",
-                  hjust         = 1
-  ) +
-  # LEFT side labels
-  geom_label_repel(data = subset(Buble_data, log_value > Percentile_value$x & mean_yr < 2034),
-                  aes(
-                    x = mean_yr,
-                    y = log_value,
-                    label = sau_fishing_entity
-                  ),
-                  arrow = arrow(length = unit(0.009, "npc"),
-                                type = "closed",
-                                ends = "first"),
-                  force = 1,
-                  box.padding = 0.2,
-                  fill = "NA",
-                  nudge_x = 2025 - subset(Buble_data, log_value > Percentile_value$x & mean_yr < 2034)$mean_yr, # set horizontal position
-                  nudge_y = subset(Buble_data, log_value > Percentile_value$x & mean_yr < 2034)$log_value  +1.1 , # set vertical position
-                  segment.size  = 0.1,
-                  segment.color = "grey50",
-                  direction     = "y",
-                  hjust         = 1
-  ) +
-  # Divisory lines and labels
-  geom_vline(xintercept = 2030, color = "grey50", size = 0.5, linetype = "dashed") +
-  geom_text(data = subset(Labels_data, x == 2029),
-            aes(
-              x = x,
-              y = y,
-              label = label
-            ),
-            size = 4,
-            color = "grey30",
-            angle = 90
-  ) +
-  geom_hline(data = Percentile_value,
-             aes(yintercept = x),
-             color = "grey50"
-  )  +
-  geom_text(data = subset(Labels_data, x == 2007),
-            aes(
-              x = x,
-              y = y,
-              label = label
-            ),
-            size = 4,
-            color = "grey30"
-  ) + 
-  scale_shape("Region") +
-  scale_color_viridis(name="Region",
-                      discrete = T) +
-  scale_x_continuous("Average year of range shift",
-                     limits = c(2000,2080),
-                     breaks = seq(2000,2080,10)
-  ) +
-  scale_y_continuous("Fishing revenue (log10)",
-                     limits = c(-6,2),
-                     breaks = seq(-6,2,2),
-                     expand = c(0,0)
-  ) +
-  scale_size("Number of\nshifting stocks") +
-  my_ggtheme_p(leg_pos = "right") +
-  ggsave("./Figures/bubble_plot.png",
-         width = 12,
-         height = 8,
-         units = "in"
-  )
-
-```
-
-
-```{r participation_text, eval = T, echo=F}
-
-Value_map_data %>% 
-  group_by(tresh,variable) %>% 
-  summarise(m = mean(participation)-2000,
-            sd = sd(participation-2000)
-            )
-
-```
-
 
 
 ### Species level analysis
@@ -5118,14 +4787,6 @@ tresh_list <- "tresh_two"
 
 
 
-
-
-
-
-
-
-
-
 # Troubleshooting
 
 ### Weird connections from Australia
@@ -5296,8 +4957,6 @@ ggtheme_map() +
 
 ###### Table.1 Multy linear model
 
-```{r multiple_reg, eval = F, echo = F}
-
 Arctic <- c("Canada (Arctic)","USA (Alaska, Arctic)", "Russia (Laptev to Chukchi Sea)")
 
 
@@ -5350,7 +5009,6 @@ Eme_Res %>%
 
 
 ```
-
 
 
 ```{r TransIndex, eval = F, echo = F}
@@ -5893,7 +5551,6 @@ ggplot() +
 ```
 
 
-
 ```{r histo,  eval = F, echo = T}
 
 # First time a Species becomes emergent
@@ -6209,4 +5866,338 @@ data_stock %>%
     )
   )
   
+```
+
+
+
+# Old code
+
+## Fig. 4. Bubble plot
+
+```{r, buble_plot, eval = F, echo = F}
+
+# Needs previous chunk
+
+Buble_data <- Eez_d_hist %>% 
+  filter(metric == "mean_yr") %>% 
+  group_by(sau_fishing_entity,tresh) %>% 
+  summarise(mean_yr = mean(value)) %>% 
+  left_join(Eme_value_data,
+            by = c("sau_fishing_entity","tresh")) %>% 
+  filter(#tresh == selected_tresh, # tresh hold selection
+         variable == "value") %>% 
+  mutate(
+    weight_toe = sum_value/mean_yr,
+    sum_value_bi = sum_value/1000000000,
+    log_value = log10(sum_value_bi)
+    ) %>%   # Billion usd
+  left_join(Matching_names,
+            by = c("sau_fishing_entity","fishing_entity_id")) %>% 
+  distinct(sau_fishing_entity,tresh,.keep_all = TRUE) %>%
+  filter(!is.na(un_geo_region)) %>% 
+  ungroup()# %>%  # no more asterisk
+  # mutate(
+  #   sau_fishing_entity = ifelse(sum_value_bi >= 1 & !sau_fishing_entity %in% c("Spain"), paste(sau_fishing_entity,"*",sep = ""),sau_fishing_entity))
+
+### Function for estimating percentile
+
+quibble <- function(x, q = p) {
+        tibble(x = quantile(x, q), q = q)
+}
+
+Percentile_value <- Buble_data %>% 
+  group_by(tresh) %>%  # for whole distribution
+        do(quibble(.$log_value, 0.75))
+
+
+## Top fishing nations close to SDGs
+Buble_data %>% 
+  filter(log_value > Percentile_value$x & mean_yr < 2036) %>% 
+  View()
+  group_by(tresh) %>% 
+  summarise(sum(sum_value_bi),
+            sum(n_taxa))
+
+## All fishing nations close to SDGs
+Buble_data %>% 
+  filter(mean_yr < 2036) %>% 
+  # nrow() # 76  countries
+  View()
+  group_by(tresh) %>% 
+  summarise(sum(sum_value_bi),
+            sum(n_taxa))
+
+76/length(unique(Buble_data$sau_fishing_entity))
+134/length(unique(Buble_data$sau_fishing_entity))
+
+# Labels Data
+
+Labels_data <- tibble(
+  x = c(2029,
+        # 2050,2070,
+        2007),
+  y = c(-5.2,
+        # -5.8,-5.8,
+        Percentile_value$x+.1),
+  label = c("UN 2030 Agenda", 
+            # "Mid shift","Late shift",
+            "Fisheries > 75th percentile")
+)
+
+
+# Plot the bubbles!
+ggplot(Buble_data) +
+  geom_point(
+    aes(
+      x = mean_yr,
+      y = log_value,
+      size = n_taxa,
+      colour = un_geo_region,
+      shape = un_geo_region
+    ),
+    alpha = 0.7
+  ) +
+  # Right side labels
+  geom_label_repel(data = subset(Buble_data, log_value > Percentile_value$x & mean_yr < 2036 & mean_yr > 2034),
+                  aes(
+                    x = mean_yr,
+                    y = log_value,
+                    label = sau_fishing_entity
+                  ),
+                  arrow = arrow(length = unit(0.009, "npc"),
+                                type = "closed",
+                                ends = "first"),
+                  force = 1,
+                  box.padding = 0.2,
+                  fill = "NA",
+                  nudge_x = 2066 - subset(Buble_data,log_value > Percentile_value$x & mean_yr < 2036 & mean_yr > 2034)$mean_yr, # set distance from point
+                  nudge_y = subset(Buble_data, log_value > Percentile_value$x & mean_yr < 2034)$log_value  +1.1 , # set vertical position
+                  segment.size  = 0.1,
+                  segment.color = "grey50",
+                  direction     = "y",
+                  hjust         = 1
+  ) +
+  # LEFT side labels
+  geom_label_repel(data = subset(Buble_data, log_value > Percentile_value$x & mean_yr < 2034),
+                  aes(
+                    x = mean_yr,
+                    y = log_value,
+                    label = sau_fishing_entity
+                  ),
+                  arrow = arrow(length = unit(0.009, "npc"),
+                                type = "closed",
+                                ends = "first"),
+                  force = 1,
+                  box.padding = 0.2,
+                  fill = "NA",
+                  nudge_x = 2025 - subset(Buble_data, log_value > Percentile_value$x & mean_yr < 2034)$mean_yr, # set horizontal position
+                  nudge_y = subset(Buble_data, log_value > Percentile_value$x & mean_yr < 2034)$log_value  +1.1 , # set vertical position
+                  segment.size  = 0.1,
+                  segment.color = "grey50",
+                  direction     = "y",
+                  hjust         = 1
+  ) +
+  # Divisory lines and labels
+  geom_vline(xintercept = 2030, color = "grey50", size = 0.5, linetype = "dashed") +
+  geom_text(data = subset(Labels_data, x == 2029),
+            aes(
+              x = x,
+              y = y,
+              label = label
+            ),
+            size = 4,
+            color = "grey30",
+            angle = 90
+  ) +
+  geom_hline(data = Percentile_value,
+             aes(yintercept = x),
+             color = "grey50"
+  )  +
+  geom_text(data = subset(Labels_data, x == 2007),
+            aes(
+              x = x,
+              y = y,
+              label = label
+            ),
+            size = 4,
+            color = "grey30"
+  ) + 
+  scale_shape("Region") +
+  scale_color_viridis(name="Region",
+                      discrete = T) +
+  scale_x_continuous("Average year of range shift",
+                     limits = c(2000,2080),
+                     breaks = seq(2000,2080,10)
+  ) +
+  scale_y_continuous("Fishing revenue (log10)",
+                     limits = c(-6,2),
+                     breaks = seq(-6,2,2),
+                     expand = c(0,0)
+  ) +
+  scale_size("Number of\nshifting stocks") +
+  my_ggtheme_p(leg_pos = "right") +
+  ggsave("./Figures/bubble_plot.png",
+         width = 12,
+         height = 8,
+         units = "in"
+  )
+
+```
+
+
+```{r participation_text, eval = T, echo=F}
+
+Value_map_data %>% 
+  group_by(tresh,variable) %>% 
+  summarise(m = mean(participation)-2000,
+            sd = sd(participation-2000)
+            )
+
+```
+
+## Fig. 4N Top fishers on bars
+
+The bar option by UN sub region of Figure 4N of top fishers
+
+```{r}
+
+# Create data
+Species_Data <- top_toe %>% 
+  filter(tresh == selected_tresh,
+         variable == "value") %>% 
+  mutate(mean = mean-2000,
+         group = geo_region)
+
+# Set a number of 'empty bar' to add at the end of each group
+Char <- as.factor(Species_Data$group)
+empty_bar <- 5
+to_add <- data.frame( matrix(NA, empty_bar*nlevels(Char), ncol(Species_Data)) )
+colnames(to_add) <- colnames(Species_Data)
+to_add$group <- rep(levels(Char), each=empty_bar)
+Species_Data <- rbind(Species_Data, to_add)
+Species_Data <- Species_Data %>% arrange(group,mean)
+Species_Data$id <- seq(1, nrow(Species_Data))
+
+# Species_Data$id <- seq(1, nrow(Species_Data))
+
+# Get the name and the y position of each label
+label_data <- Species_Data 
+number_of_bar <- nrow(label_data)
+angle <- 90 - 360 * (label_data$id-0.5) /number_of_bar
+label_data$hjust <- ifelse( angle < -90, 1, 0)
+label_data$angle <- ifelse(angle < -90, angle+180, angle)
+
+
+# prepare a data frame for base lines
+base_data <- Species_Data %>% 
+  group_by(group) %>% 
+  summarize(start=min(id), 
+            end=max(id) - empty_bar, 
+            median = median(mean, na.rm = T)
+  ) %>% 
+  rowwise() %>% 
+  mutate(title=mean(c(start, end)))
+
+
+
+# prepare a data frame for grid (scales)
+grid_data <- base_data
+grid_data$end <- grid_data$end[ c( nrow(grid_data), 1:nrow(grid_data)-1)] + 1
+grid_data$start <- grid_data$start - 1
+# grid_data <- grid_data[-1,]
+# grid_data[1,2] <- 5 # Manually include bathydemerssal
+# grid_data[1,3] <- 1 
+
+
+
+un_regions <- grid_data %>% 
+  select(group) 
+
+ggplot(Species_Data, 
+       aes(x=as.factor(id), 
+           y=mean,
+           fill=mean)
+) +       # Note that id is a factor. If x is numeric, there is some space between the first bar
+  geom_bar(aes(x=as.factor(id),
+               y=mean,
+               fill=mean),
+           stat="identity",
+           alpha=0.5
+  ) +
+  geom_segment(data=grid_data,
+               aes(x = end, y = 30, xend = start, yend = 30),
+               colour = "grey90", alpha=1, size=0.3, inherit.aes = FALSE) +
+  geom_bar(aes(x=as.factor(id),
+               y=mean,
+               fill=mean
+  ),
+  stat="identity",
+  alpha=0.5) +
+  annotate("text", 
+           x = 0.5,
+           y = 37,
+           label = "UN Agenda",
+           color= "grey60", 
+           size=3, 
+           angle=-5
+  ) +
+  # Country names
+  geom_text(data=label_data,
+            aes(x=id, 
+                y= 100,
+                label=sau_fishing_entity,
+                hjust=hjust),
+            color="black",
+            fontface="italic",
+            alpha = 1,
+            size = 4 ,
+            angle = label_data$angle,
+            inherit.aes = FALSE) +
+  # Continents labels
+  # geom_text(data=base_data,
+  #           aes(x = title,
+  #               y = 85, 
+  #               label=group), 
+  #           # hjust=c(1,1,1,0,0,0),
+  #           colour = "black",
+  #           # angle = myAng,
+  #           size=5,
+  #           fontface="bold",
+  #           inherit.aes = FALSE) +
+  ylim(-100,100) + # sets the circle the first value the central the last value how wide
+  theme_minimal() +
+  theme(
+    legend.position = c(0.5,0.5),
+    legend.text = element_text(size = 13),
+    legend.title = element_text(size = 14, face = "bold"),
+    legend.title.align = 0.5,
+    axis.text = element_blank(),
+    axis.title = element_blank(),
+    panel.grid = element_blank(),
+    panel.background = element_rect(colour = "white"),
+    legend.direction="horizontal",
+    legend.key.width = unit(3, 
+                            "line")
+  ) +
+  coord_polar(start = 0) +
+  scale_fill_viridis("Average year of range shift\nfor top 5 most valuable stocks",
+                     limits = c(0,100),
+                     breaks = seq(0,100,20),
+                     labels = seq(2000,2100,20),
+                     direction = -1
+  ) +
+  guides(
+    fill=guide_colorbar(title.position="top", 
+                        title.hjust =0.5)
+  )
+
+
+ggsave(
+  plot = last_plot(),
+  width = 13,
+  height = 13,
+  units = "in",
+  filename = "./Figures/top_stocks_circular_trend.png"
+)
+
 ```
