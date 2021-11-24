@@ -1748,14 +1748,14 @@ Eme_Res <- bind_rows(lapply(Paths, fread)) %>%
 
 # Write data file for Github
 
-toe_data <- bind_rows(lapply(Paths, fread)) %>% 
-  filter(
-    n_ens == 10
-  ) %>% 
-  left_join(Exploited_spp_list) %>% 
-            select(taxon_key,taxon_name,common_name,everything(),-genus,-species)
-
-write_csv(toe_data, "./Data/toe_data.csv")
+# toe_data <- bind_rows(lapply(Paths, fread)) %>% 
+#   filter(
+#     n_ens == 10
+#   ) %>% 
+#   left_join(Exploited_spp_list) %>% 
+#             select(taxon_key,taxon_name,common_name,everything(),-genus,-species)
+# 
+# write_csv(toe_data, "./Data/toe_data.csv")
 
 # View(Eme_Res)
 
@@ -1852,7 +1852,7 @@ selected_tresh <- "tresh_two"
 
 ```
 
-
+### Centroid Supplemental Figure
 ```{r}
 
 centroid_map <- ggplot() +
