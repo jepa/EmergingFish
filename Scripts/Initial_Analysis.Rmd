@@ -1472,13 +1472,13 @@ ggsave(map,filename="/Users/william/Google Drive/Projects/MHWs Global/MHW_SST_pl
 
 ## Percentage Change
 
-This results only shows the average percentage change in proportion of all speecies within an EEZ without relationship with neighbors
+This results only shows the average percentage change in proportion of all species within an EEZ without relationship with neighbours
 
 ### Functions and Data needed
 
 #### Fun `SummaryProp`
 
-This function estimates the total change in MCP proportion of each species for each EEZ. It looses the connection with neighbors as you only know for x species how much is the proportion changing.
+This function estimates the total change in MCP proportion of each species for each EEZ. It looses the connection with neighbours as you only know for x species how much is the proportion changing.
 
 ```{r fun_SummaryProp, eval = F, echo =F}
 
@@ -1538,7 +1538,7 @@ SummaryProp <- function(taxon_key,links="NA"){
 
 #### Fun `EEZProp`
 
-The next step is to summarize all species per eez so our results shows average change of all species within an EEZ towards a neighbour. 
+The next step is to summarize all species per EEZ so our results shows average change of all species within an EEZ towards a neighbour. 
 
 **Note: Contains step to filter out changes less than +-2 s.d.**
 
@@ -1670,7 +1670,7 @@ Spp_env_pref <- rbind(species(Exploited_spp_list, #species from rfishbase packag
               clean_names(),
             by = "taxon_name")
 
-# Neighbor list and their respective id (see chunk 3)
+# Neighbor list and their respective id from Palacios-Abrantes et al 2020 (FishForVisa)
 Neighbours <- my_path("D", extra_path = "Spatial/", name="Neighbours_eez_id.csv", read = TRUE)
 
 Neighbours_n <- Neighbours %>% 
@@ -1766,23 +1766,6 @@ Eez_biogeo <- EEZ_CellID %>%
   select(-nbiom) %>% 
   distinct(eezid, .keep_all = T) # Croatia is 1/2. We arbitrary allocated the first one
 
-# Species catch trend (from FishForVisa)
-
-# Catch_trend <- my_path("D","Species","Catch_trend.csv", read = T) %>% 
-#   clean_names() %>% 
-#   filter(taxon_key %in% Taxon_list_emer) %>% 
-#   rename(sau_fishing_entity = territory) %>% 
-#   left_join(Fishing_names,
-#             by = "sau_fishing_entity") %>% 
-#   filter(status != "No Trend") %>% 
-#   mutate(category = ifelse(status %in% c("Developing","Rebuilding"),"Category A",
-#                          ifelse(status == "Max Exploited","Category B",
-#                                 ifelse(status %in% c("Over Exploited","Collapsed","Category C"),"Category C", "No Category")
-#                          )
-#          )
-#   )
-
-
 # --------------- #
 # Load Proportion results
 # --------------- #
@@ -1809,8 +1792,8 @@ suppressMessages(
     )
 )
 # For dat availability
-# write_csv(prop_results,
-# "proportion_change_2005.csv")
+# write_csv(Prop_results,
+# "Data/ssr_data.csv")
 
 # --------------- #
 # Load year of emergence results
@@ -1833,6 +1816,17 @@ Eme_Res <- bind_rows(lapply(Paths, fread)) %>%
   mutate(tresh = str_to_lower(tresh))
 
 # warnings() for empty data species # New version of package being a pain in the arse
+
+# Write data file for Github
+
+toe_data <- bind_rows(lapply(Paths, fread)) %>% 
+  filter(
+    n_ens == 10
+  ) %>% 
+  left_join(Exploited_spp_list) %>% 
+            select(taxon_key,taxon_name,common_name,everything(),-genus,-species)
+
+write_csv(toe_data, "./Data/toe_data.csv")
 
 # View(Eme_Res)
 
@@ -2422,13 +2416,16 @@ for(i in 1:2){
     # Inlcude the participation of species
     geom_sf(data = World_map_part,
             # aes(fill = participation+2000), #original map
-            aes(fill = participation),
-            color =  "white",
+            aes(fill = participation, 
+                color = participation),
+            # color =  "white",
             size = 0.1
     ) +
     # grey maps
     # ggplot() +
-    geom_sf(data = grey_land, aes(), fill = "grey50", color =  "white",size = 0.1) +
+    geom_sf(data = grey_land, aes(), fill = "grey50", 
+            # color =  "white",
+            size = 0.1) +
     # geom_sf(data = grey_eez, aes(), fill = "white", color =  "grey50",size = 0.1) +
     geom_sf(data = no_toe_eez, aes(), fill = "lightblue", color =  "white",size = 0.1) +
     geom_sf(data = no_toe_land, aes(), fill = "lightblue", color =  "white",size = 0.1) +
@@ -2496,6 +2493,12 @@ for(i in 1:2){
              ymax = -9300000,
              fill = "lightblue") +
     scale_fill_viridis("",
+                       limits = c(2000,2100),
+                       breaks = seq(2000,2100,25),
+                       labels = c("","","","","")#,
+                       # direction = -1
+    ) +
+    scale_color_viridis("",
                        limits = c(2000,2100),
                        breaks = seq(2000,2100,25),
                        labels = c("","","","","")#,
