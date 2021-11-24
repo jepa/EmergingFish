@@ -121,6 +121,13 @@ grid.raster(img)
 
 \clearpage
 
+```{r toeFigureS10, eval = T,  echo = F, fig.width=7, fig.height=5, fig.cap = "Changes in the stock share proportion of top 5 most valuable stocks by 2030 (2021-2040) relative to 1951-2005. Lines represent the average change in transboundary stock share ratio (Methods) with arrows going from EEZ with decreasing stock share (point) to those gaining shares (arrowhead).}
+
+img <- readPNG("../Figures/FigS10.png")
+grid.raster(img)
+
+```
+
 # Tables
 
 
