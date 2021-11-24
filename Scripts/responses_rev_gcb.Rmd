@@ -167,7 +167,7 @@ For example, a country could “gain” a small share of an extremely high-value
 
 - **Response:** Yes, we agree with the reviewer and just like for Fig. 3, believe including a figure of high-value stocks will increased the impact of our manuscript. We have included such figure in the supplements and the following text in the results section:
 
-- line XX: *Shifts in the SSR of the top 5 most valuable transboundary stocks of each country are projected to be 61 $\pm$ 18% by 2030 and 72 $\pm$ 17% by 2050 in 83% of the world's EEZs (Figure SX). In some cases, the SSR of one EEZ is projected to increase more than double relative to their neighbors (e.g., from 10% to 30% SSR). Some of these EEZs include Guatemala gaining from Mexico in the Pacific, Cyprus from Greece and Turkey in the Mediterranean Sea, and Russia from Norway and Japan in the Barents Sea and Western Pacific, respectively*
+- line XX: *Shifts in the SSR of the top 5 most valuable transboundary stocks of each country are projected to be 65 $\pm$ 21% by 2030 and 78 $\pm$ 18% by 2050 in 77% of the world's EEZs (Figure SX). In some cases, the SSR of one EEZ is projected to increase more than double relative to their neighbors (e.g., from 10% to 30% SSR). Some of these EEZs include Guatemala gaining from Mexico in the Pacific, Mozambique from Madagascar, and Russia from Norway and Japan in the Barents Sea*
 
 ![Top 5](../Figures/Fig5SXX_top.png)
 

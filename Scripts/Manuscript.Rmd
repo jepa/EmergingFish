@@ -317,7 +317,7 @@ grid.raster(img)
 
 **Most EEZs are expected to see a relatively small number of stocks shifting their SSR (Fig. \@ref(fig:toeFigure4)). On average, EEZs are expected to see changes in SSR on 16% $\pm$ 10 of transboundary stocks increasing to 20% $\pm$ 11 by mid of the $21^{st}$ century. However, this result masks large variation in changes across EEZs. By early century, the EEZs of French Guiana (54%), South Africa (59%), Falkland Island (61%), Brazil (75%) and Kerguelen Island, and Pitcairn (both 100%) are projected to see changes in SSR of over 50% in their transboundary stocks. On the other hand, some island territories such as Anguilla are projected to see changes in as low as 2% of their transboundary stocks.**
 
-**Shifts in the SSR of the top 5 most valuable transboundary stocks of each country are projected to be 61 $\pm$ 18% by 2030 and 72 $\pm$ 17% by 2050 in 83% of the world's EEZs (Figure SX). In some cases, the SSR of one EEZ is projected to increase more than double relative to their neighbors (e.g., from 10% to 30% SSR). Some of these EEZs include Guatemala gaining from Mexico in the Pacific, Cyprus from Greece and Turkey in the Mediterranean Sea, and Russia from Norway and Japan in the Barents Sea and Western Pacific, respectively**
+**Shifts in the SSR of the top 5 most valuable transboundary stocks of each country are projected to be 65 $\pm$ 21% by 2030 and 78 $\pm$ 18% by 2050 in 77% of the world's EEZs (Figure SX). In some cases, the SSR of one EEZ is projected to increase more than double relative to their neighbors (e.g., from 10% to 30% SSR). Some of these EEZs include Guatemala gaining from Mexico in the Pacific, Mozambique from Madagascar, and Russia from Norway and Japan in the Barents Sea**
 
 
 
