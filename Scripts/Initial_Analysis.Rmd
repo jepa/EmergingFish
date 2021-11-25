@@ -2751,7 +2751,7 @@ spi_map <-  ggplot(spi_toe_map_data) +
           aes(fill = participation, 
               color = participation),
           # color =  "white",
-          size = 0.1
+          size = 1
   ) +
   # grey maps
   geom_sf(data = spi_no_toe_eez, aes(), fill = "lightblue", color =  "white",size = 0.1) +
@@ -2773,11 +2773,11 @@ spi_map <-  ggplot(spi_toe_map_data) +
   scale_x_continuous(limits = c(-120,180),
                      breaks = c(-120,180)
                      # labels =c("a","b")
-                     ) + 
+  ) + 
   my_ggtheme_m(map_type = "regional",leg_pos = "bottom") +
   theme(legend.key.width = unit(3, "line"))
 
-ggsave("spi_map.png",
+ggsave(".Figures/spi_map_bf.png",
        spi_map,
        width = 8,
        height = 6)
