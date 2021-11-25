@@ -2322,8 +2322,9 @@ grey_land <- World_map %>%
 # Call plot for both tresholds
 # -------------------------- #
 tresh_list <- c("tresh_one","tresh_two")
-i = 2
-for(i in 2){
+
+
+for(i in 1:2){
   
   name_save <- paste("./Figures/emer_map_lat_",tresh_list[i],".png",sep = "")
   
@@ -2561,8 +2562,8 @@ for(i in 2){
     geom_point(
       aes(
         x = reorder(un_sub_region,order),
-        y = mean,
-        colour = mean
+        y = med,
+        colour = med
       ),
       size = 5
     ) + 
@@ -2590,7 +2591,7 @@ for(i in 2){
       legend.position = ""
     );boxplot
   
-  ggsave("mean_boxplot.png",boxplot,width = 10)
+  # ggsave("mean_boxplot.png",boxplot,width = 10)
   
   ## --------------- ##
   # Combine plots and save them
