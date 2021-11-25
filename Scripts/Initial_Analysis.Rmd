@@ -2317,13 +2317,13 @@ grey_land <- World_map %>%
 
 ###### Plot ToE map
 
-
 ```{r emergence_map_plot, eval = F}
 # -------------------------- #
 # Call plot for both tresholds
 # -------------------------- #
 tresh_list <- c("tresh_one","tresh_two")
-for(i in 1:2){
+i = 2
+for(i in 2){
   
   name_save <- paste("./Figures/emer_map_lat_",tresh_list[i],".png",sep = "")
   
@@ -2590,6 +2590,8 @@ for(i in 1:2){
       legend.position = ""
     );boxplot
   
+  ggsave("mean_boxplot.png",boxplot,width = 10)
+  
   ## --------------- ##
   # Combine plots and save them
   ## --------------- ##
@@ -2813,12 +2815,14 @@ Eme_Res %>%
   right_join(top_stocks_per_country,
              by = c("sau_fishing_entity","geo_region","tresh","taxon_key")
   ) %>% 
+  # View()
   filter(mean_yr <= 2021) %>% 
   group_by(variable,tresh) %>% 
+  # View()
   summarise(
     n_countries = length(unique(sau_fishing_entity))
   ) %>% 
-  mutate(per = n_countries/length(unique(Sau_data$fishing_entity_id)))
+  mutate(per = n_countries/length(unique(Sau_data$fishing_entity_id))*100)
 
 # Number of shifting stocks per geo-region
 Eme_Res %>% 
@@ -2828,11 +2832,17 @@ Eme_Res %>%
   right_join(top_stocks_per_country,
              by = c("sau_fishing_entity","geo_region","tresh","taxon_key")
   ) %>% 
-  filter(mean_yr <= 2021) %>% 
-  group_by(geo_region) %>% 
+  filter(mean_yr <= 2021,
+         variable == "value",
+         tresh == "tresh_two",
+         !is.na(geo_region)) %>% 
+  group_by(geo_region,tresh) %>% 
   tally() %>% 
-  arrange(n) %>% 
-  top_frac(0.25,n) # top 25%
+  arrange(desc(n)) %>% 
+  # pull(n) %>% 
+  # sum()
+
+139/263
 
 ```
 
@@ -3002,8 +3012,8 @@ Stats_data <- Eme_Res %>%
 
 hist(Stats_data$emerging_yr) # Positively skewed
 qqnorm(Stats_data$emerging_yr) # not normally distributed
-skewness(Stats_data$emerging_yr) #1.02
-kurtosis(Stats_data$emerging_yr) #2.82
+skewness(Stats_data$emerging_yr) #0.61
+kurtosis(Stats_data$emerging_yr) #2.11
 
 # ------------------- #
 
@@ -3030,13 +3040,13 @@ Reg_kw
 # Kruskal-Wallis rank sum test
 # 
 # data:  un_sub_region by emerging_yr
-# Kruskal-Wallis chi-squared = 287.23, df = 93, p-value < 2.2e-16
+# Kruskal-Wallis chi-squared = 242.11, df = 93, p-value = 3.128e-15
 
 kruskalmc(emerging_yr~un_sub_region, data = Reg_diff_data) %>% 
   as.data.frame() %>% 
   rownames_to_column("comparrison") %>% 
   # head()
-  View()
+  # View()
 write_csv("kw_regional.csv")
 
 # Multiple differences but Eastern Asia, Lat. Ame. Car. and Polynesia are the ones who differ the most (e.g. differ with more regions).
