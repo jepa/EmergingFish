@@ -2323,7 +2323,6 @@ grey_land <- World_map %>%
 # -------------------------- #
 tresh_list <- c("tresh_one","tresh_two")
 
-
 for(i in 1:2){
   
   name_save <- paste("./Figures/emer_map_lat_",tresh_list[i],".png",sep = "")
@@ -2504,7 +2503,7 @@ for(i in 1:2){
     filter(tresh == tresh_list[i],
            !is.na(un_sub_region)) %>%
     group_by(un_sub_region) %>%
-    summarise(order = median(emerging_yr),
+    summarise(order = mean(emerging_yr),
               n_eezs = length(unique(sf_eez_name))) %>%
     # Get the rest of the data
     left_join(Eme_Res) %>%
@@ -2562,8 +2561,8 @@ for(i in 1:2){
     geom_point(
       aes(
         x = reorder(un_sub_region,order),
-        y = med,
-        colour = med
+        y = mean,
+        colour = mean
       ),
       size = 5
     ) + 
@@ -2625,6 +2624,162 @@ for(i in 1:2){
 
 
 ```
+
+###### Lat Am Figure 3 for supplements
+
+```{r}
+
+World_map_part <- World_map_nemer %>% 
+    filter(
+      variable == "value"
+    )
+  
+  # ToE Map 
+  toe_map_data <- World_eez_sf %>% 
+    left_join(Eez_d_hist,
+              by = "eezid") %>% 
+    filter(metric == "mean_yr")%>% 
+    sf::st_transform(crs = "+proj=eck4") 
+  
+  no_toe_eez <- World_eez_sf %>% 
+    filter(eez_name %in% Neighbours$eez_name, # Filter EEZs without Transboundary spp
+           !eez_name %in% toe_map_data$eez_name) %>%  # Filter EEZs with ToE stocks
+    sf::st_transform(crs = "+proj=eck4") 
+  
+  no_toe_land <- World_map %>% 
+    filter(name %in% Neighbours$eez_name, # Filter EEZs without Transboundary spp
+           !name %in% World_map_part$name)%>% 
+    sf::st_transform(crs = "+proj=eck4") 
+
+  
+lat_ammap <- ggplot(toe_map_data) +
+    geom_sf(
+      aes(
+        fill = reverse #original map
+        # fill = value
+      ),
+      color =  "white",
+      size = 0.1
+    ) +
+    # Inlcude the participation of species
+    geom_sf(data = World_map_part,
+            # aes(fill = participation+2000), #original map
+            aes(fill = participation, 
+                color = participation),
+            # color =  "white",
+            size = 0.1
+    ) +
+    # grey maps
+    # ggplot() +
+    geom_sf(data = grey_land, aes(), fill = "grey50", 
+            # color =  "white",
+            size = 0.1) +
+    # geom_sf(data = grey_eez, aes(), fill = "white", color =  "grey50",size = 0.1) +
+    geom_sf(data = no_toe_eez, aes(), fill = "lightblue", color =  "white",size = 0.1) +
+    geom_sf(data = no_toe_land, aes(), fill = "lightblue", color =  "white",size = 0.1) +
+  coord_sf(xlim = c(-9000000,-5000000),ylim = c(1000000, 4000000)) + 
+  facet_wrap(~tresh) +
+  scale_colour_viridis("",
+                         limits = c(2000,2100),
+                         breaks = seq(2000,2100,25),
+                         # labels = c("","","","",""),
+                         direction = 1
+    ) +
+    scale_fill_viridis("",
+                         limits = c(2000,2100),
+                         breaks = seq(2000,2100,25),
+                         # labels = c("","","","",""),
+                         direction = 1
+    ) +
+    my_ggtheme_m(map_type = "regional",leg_pos = "")
+
+
+  
+ggsave("lat_am_map.png",
+       lat_ammap,
+       height = 5,
+       width = 6)
+
+
+```
+
+
+###### SP Islands Figure 3 for supplements
+
+```{r}
+
+
+  # Value Map
+  spi_map_part <- World_map_nemer %>% 
+    filter(
+      # tresh ==  tresh_list[i],
+      variable == "value"
+    ) %>% 
+  sf::st_transform(crs = 3832) 
+
+
+  # ToE Map 
+  spi_toe_map_data <- World_eez_sf %>% 
+    left_join(Eez_d_hist,
+              by = "eezid") %>% 
+    filter(#tresh == tresh_list[i],
+           metric == "mean_yr")%>% 
+    sf::st_transform(crs = 3832) 
+  
+  # Map with countries without ToE
+  spi_no_toe_eez <- World_eez_sf %>% 
+    filter(eez_name %in% Neighbours$eez_name, # Filter EEZs without Transboundary spp
+           !eez_name %in% toe_map_data$eez_name) %>%  # Filter EEZs with ToE stocks
+    sf::st_transform(crs = 3832) 
+  
+  spi_no_toe_land <- World_map %>% 
+    filter(name %in% Neighbours$eez_name, # Filter EEZs without Transboundary spp
+           !name %in% World_map_part$name)%>% 
+    sf::st_transform(crs = 3832) # Filter EEZs with ToE stocks
+  
+
+
+  sp_map <-  ggplot(spi_toe_map_data) +
+    geom_sf(
+      aes(
+        fill = reverse #original map
+        # fill = value
+      ),
+      color =  "white",
+      size = 0.1
+    ) +
+    # Inlcude the participation of species
+    geom_sf(data = spi_map_part,
+            # aes(fill = participation+2000), #original map
+            aes(fill = participation, 
+                color = participation),
+            # color =  "white",
+            size = 0.1
+    ) +
+    # grey maps
+    geom_sf(data = spi_no_toe_eez, aes(), fill = "lightblue", color =  "white",size = 0.1) +
+    geom_sf(data = spi_no_toe_land, aes(), fill = "lightblue", color =  "white",size = 0.1) +
+    coord_sf(xlim = c(9500000,1000000),ylim = c(-3500000, 1900000)) + 
+    facet_wrap(~tresh) +
+    scale_colour_viridis("",
+                         limits = c(2000,2100),
+                         breaks = seq(2000,2100,25),
+                         # labels = c("","","","",""),
+                         direction = 1
+    ) +
+    scale_fill_viridis("",
+                         limits = c(2000,2100),
+                         breaks = seq(2000,2100,25),
+                         # labels = c("","","","",""),
+                         direction = 1
+    ) +
+    my_ggtheme_m(map_type = "regional",leg_pos = "bottom") +
+    theme(legend.key.width = unit(3, "line"))
+  
+
+```
+
+
 
 
 ###### Splitted Figure 3 for supplements
