@@ -81,6 +81,14 @@ grid.raster(img)
 
 \clearpage
 
+```{r toeFigureS5, eval = T,  echo = F, fig.width=7, fig.height=5, fig.cap = "Year of change in the shared distribution of transboundary stocks in the Caribbean and South Pacific Islands. Land polygons show the contribution of shifting stocks to a country or territory’s total fishing revenue from transboundary stocks. Exclusive Economic Zone polygons display average year of range shifts within them. Warm colors are indicative of an early shift/high fishing revenue contribution from transboundary stocks while cold colors represent a late shift/low fishing revenue. EEZs with no distributional shift between 2006 and 2100 are represented in pale blue."}
+
+img <- readPNG("../Figures/FigS11.png")
+grid.raster(img)
+
+```
+
+\clearpage
 
 ```{r toeFigureS6, eval = T,  echo = F, fig.width=9, fig.height=6,fig.pos= "H", fig.cap =  "Comparison of shifts in the shared distribution of transboundary stocks by species’ habitat association. Classification is based on the habitat preference information obtained from FishBase and SeaLifeBase (see Table S1). The category “Other” consists of species that have no “habitat preference” classification. The number of stocks included in this analysis for each habitat type is noted in parentheses. Dashed whiskers represent the 1.5* interquartile range. Box represents interquartile range as distance between first and third quartiles. Solid line represents the median time of emergence per habitat preference."}
 
@@ -112,7 +120,7 @@ grid.raster(img)
 
 \clearpage
 
-```{r toeFigureS9, eval = T,  echo = F, fig.width=7, fig.height=5, fig.cap = "Changes in stock proportion of neighboring Exclusive Economic Zones of Latin America and the Caribeen and Northwestern Europe by 2030 (2021-2040) and by 2060 (2041-2060) relative to 1951-2005. Lines represent the average change in transboundary stock share ratio (Methods) with arrows going from EEZ with decreasing stock share (point) to those gaining shares (arrowhead). Land polygons represent the percentage of stocks that are projected to change their stock share ratio (i.e., over two standard deviations from the historical catch proportion) beyond the identified threat point with higher gains identified in warmer colors.}
+```{r toeFigureS9, eval = T,  echo = F, fig.width=7, fig.height=5, fig.cap = "Changes in stock proportion of neighboring Exclusive Economic Zones of Latin America and the Caribeen and Northwestern Europe by 2030 (2021-2040) and by 2060 (2041-2060) relative to 1951-2005. Lines represent the average change in transboundary stock share ratio (Methods) with arrows going from EEZ with decreasing stock share (point) to those gaining shares (arrowhead). Land polygons represent the percentage of stocks that are projected to change their stock share ratio (i.e., over two standard deviations from the historical catch proportion) beyond the identified threat point with higher gains identified in warmer colors."}
 
 img <- readPNG("../Figures/FigS9.png")
 grid.raster(img)
@@ -121,12 +129,15 @@ grid.raster(img)
 
 \clearpage
 
-```{r toeFigureS10, eval = T,  echo = F, fig.width=7, fig.height=5, fig.cap = "Changes in the stock share proportion of top 5 most valuable stocks by 2030 (2021-2040) relative to 1951-2005. Lines represent the average change in transboundary stock share ratio (Methods) with arrows going from EEZ with decreasing stock share (point) to those gaining shares (arrowhead).}
+```{r toeFigureS10, eval = T,  echo = F, fig.width=7, fig.height=5, fig.cap = "Changes in the stock share proportion of top 5 most valuable stocks by 2030 (2021-2040) relative to 1951-2005. Lines represent the average change in transboundary stock share ratio (Methods) with arrows going from EEZ with decreasing stock share (point) to those gaining shares (arrowhead)."}
 
 img <- readPNG("../Figures/FigS10.png")
 grid.raster(img)
 
 ```
+
+\clearpage
+
 
 # Tables
 
