@@ -1468,6 +1468,137 @@ ggsave(map,filename="/Users/william/Google Drive/Projects/MHWs Global/MHW_SST_pl
 
 ```
 
+
+## Figures for F1
+
+This is a hypothetical figure to show the idea behind the ToE. It does not follow the actual method but only shows the trend. 
+
+```{r tsi_figure, eval = F}
+
+# Create dummy data
+dummy_data <- data.frame(
+  year = seq(1951,2100,1),
+  tsi = c(runif(80,-10,10),
+          runif(20,-10,4),
+          runif(30,-12,0),
+          runif(20,-14,-4)),
+  tsia = c(runif(80,-10,10),
+          runif(20,-10,4),
+          runif(30,-12,0),
+          runif(20,-14,-4)),
+  tsib = c(runif(80,-10,10),
+           runif(20,-10,4),
+           runif(30,-12,0),
+           runif(20,-14,-4)),
+  tsic = c(runif(80,-10,10),
+           runif(20,-10,4),
+           runif(30,-12,0),
+           runif(20,-14,-4))
+) %>% 
+    rowwise() %>% 
+    mutate(
+      mean_tsi = mean(c(tsi,tsia,tsib,tsic),na.rm=T)
+    ) %>% 
+    ungroup() %>% 
+  group_by() %>% 
+  mutate_all(funs(zoo::rollmean(., 
+                          10, 
+                          align = "left", 
+                          fill = NA,
+                          na.rm=T)
+  )) %>% 
+  gather("eme","value",tsi:tsic)
+
+
+# Get min, max and toe for box/noise
+min <- dummy_data %>% 
+  filter(year < 2006) %>% 
+  pull(value) %>% 
+  min()
+
+max <- dummy_data %>% 
+  filter(year < 2006) %>% 
+  pull(value) %>% 
+  max()
+
+# ToE
+toe <- dummy_data %>% 
+  filter(year > 2005 & mean_tsi < min+0.5) %>% 
+  slice(1)
+
+
+# Make hypotetical figure
+ggplot(dummy_data) +
+  # Historical variation box (noise)
+  geom_rect(
+    aes(xmin=1951,
+        xmax=2100,
+        ymin=min+0.5,
+        ymax=max-1),
+    fill="grey80",
+    alpha = 0.5
+  ) +
+  # Historical mean
+  geom_rect(
+    aes(xmin=1951,
+            xmax=2100,
+            ymin = mean(c(min,max)),
+            ymax = mean(c(min,max)),
+            ),
+    color = "grey60",
+    size = 0.1
+    ) +
+  # Each ensemle
+  geom_line(
+    aes(
+      x = year,
+      y = value,
+      fill = eme
+    ),
+    alpha = 0.8,
+    color = "#F8AFA8"
+  ) +
+  # Average of ensembles (trend)
+  geom_line(
+    aes(
+      x = year,
+      y = mean_tsi
+    ),
+    color = "black"
+  ) +
+  # Mark ToE
+  geom_point( data = toe,
+    aes(
+      x = year,
+      y = mean_tsi
+    ),
+    color = "#FF0000",
+    size = 5,
+    alpha = 0.8
+  ) +
+  # Historical / Future division line
+  geom_vline(xintercept = 2005, color = "#046C9A") +
+  # Aesthetics
+  scale_color_brewer(palette = "Oranges") +
+  theme_classic()+
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank())+
+  labs(x = "Transboundary shift index (TSI)",
+       y = "Year")
+    
+
+# save image
+ggsave(
+  filename = "./Figures/tsi_fig.png",
+  plot = last_plot(),
+  width = 8,
+  height = 4
+)
+
+
+```
+
+
 # Results
 
 ## Percentage Change
