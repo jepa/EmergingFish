@@ -2809,7 +2809,7 @@ lat_am_map <- ggplot(toe_map_data) +
     geom_sf(data = no_toe_eez, aes(), fill = "lightblue", color =  "white",size = 0.1) +
     geom_sf(data = no_toe_land, aes(), fill = "lightblue", color =  "white",size = 0.1) +
   coord_sf(xlim = c(-9000000,-5000000),ylim = c(1000000, 4000000)) + 
-  facet_wrap(~tresh) +
+  facet_wrap(~tresh, ncol = 1) +
   scale_colour_viridis("",
                          limits = c(2000,2100),
                          breaks = seq(2000,2100,25),
@@ -2824,10 +2824,10 @@ lat_am_map <- ggplot(toe_map_data) +
     ) +
     my_ggtheme_m(map_type = "regional",leg_pos = "")
 
-ggsave("lat_am_map.png",
+ggsave("Figures/lat_am_map.png",
        lat_am_map,
-       width = 8,
-       height = 6)
+       width = 6,
+       height = 8)
 
 ```
 
@@ -2888,7 +2888,7 @@ spi_map <-  ggplot(spi_toe_map_data) +
   geom_sf(data = spi_no_toe_eez, aes(), fill = "lightblue", color =  "white",size = 0.1) +
   geom_sf(data = spi_no_toe_land, aes(), fill = "lightblue", color =  "white",size = 0.1) +
   coord_sf(xlim = c(9500000,1000000),ylim = c(-3500000, 1900000)) + 
-  facet_wrap(~tresh) +
+  facet_wrap(~tresh, ncol = 1) +
   scale_colour_viridis("",
                        limits = c(2000,2100),
                        breaks = seq(2000,2100,25),
@@ -2908,10 +2908,11 @@ spi_map <-  ggplot(spi_toe_map_data) +
   my_ggtheme_m(map_type = "regional",leg_pos = "bottom") +
   theme(legend.key.width = unit(3, "line"))
 
-ggsave(".Figures/spi_map_bf.png",
+
+ggsave("Figures/spi_map_bf.png",
        spi_map,
-       width = 8,
-       height = 6)
+       width = 6,
+       height = 8)
 ```
 
 
@@ -3417,7 +3418,7 @@ Note that this map is based on the data viz site: https://www.data-to-viz.com/st
 #### Prepare data
 
 ```{r ssr_map_data, eval = T, echo = T}
-# A function that makes a dateframe per connection (we will use these connections to plot each lines)
+# A function that makes a dataframe per connection (we will use these connections to plot each lines)
 data_for_connection=function( dep_lon, dep_lat, arr_lon, arr_lat, group){
   inter <- gcIntermediate(c(dep_lon, dep_lat), c(arr_lon, arr_lat), n=50, addStartEnd=TRUE, breakAtDateLine=F)             
   inter=data.frame(inter)
@@ -3488,8 +3489,8 @@ data_ready_plot <- data_ready_plot %>%
 
 ```{r}
 # SELECT A TIME STEP
-# time_toplot <- "per_mid"
-time_toplot <- "per_early"
+time_toplot <- "per_mid"
+# time_toplot <- "per_early"
 ```
 
 #### Get data ready for time step
@@ -3623,15 +3624,34 @@ Note that the following chunk needs `ssr_map_data` to work.
 ## ------------------- ##
 
 lat_am_map <- ggplot() +
-  geom_sf(data = World_eez_sf, size = 0.1, fill = "white", col = "gray30") +
+  # PLot EEZs
+  geom_sf(data = subset(World_eez_sf,
+                        !str_detect(eez_name,"Pacific") &
+                        !str_detect(eez_name,"El Salvador") &
+                        !eez_name %in% c("USA (East Coast)","Suriname","Guyana","French Guiana","Bermuda (UK)","Brazil")
+  ), size = 0.1, fill = "white", col = "gray30") +
+  # Plot Land information
   geom_sf(data = subset(n_taxa_map, sovereignt != "Antarctica"),
           aes(fill = avrg_spp_per),
           size = 0.1,
           col = "white") +
-  # geom_sf(data = grey_land, size = 0.1, fill = "grey50", col = "gray30") +
-  geom_sf(data = subset(sf_ready_plot, percentage >= 0), aes(color = percentage), size = 0.1, fill = "white") +
-  geom_sf(data = point_data, aes(), color = "grey90") +
-  geom_path(data = subset(arrows_data, percentage >= 0),
+  geom_sf(data = subset(sf_ready_plot, percentage >= 0 & 
+                          !str_detect(source,"Pacific") & 
+                        !source %in% c("USA (East Coast)","Suriname","Guyana","French Guiana","Bermuda (UK)","Brazil","El Salvador") &
+                        !str_detect(objective,"Pacific") &
+                        !objective %in% c("USA (East Coast)","Suriname","Guyana","French Guiana","Bermuda (UK)","Brazil","El Salvador")
+                        ), aes(color = percentage), size = 0.1, fill = "white") +
+  geom_sf(data = subset(point_data,
+                        !str_detect(source,"Pacific") & 
+                        !source %in% c("USA (East Coast)","Suriname","Guyana","French Guiana","Bermuda (UK)","Brazil","El Salvador") &
+                        !str_detect(target,"Pacific") &
+                        !target %in% c("USA (East Coast)","Suriname","Guyana","French Guiana","Bermuda (UK)","Brazil","El Salvador")
+                        ),
+          aes(), color = "grey90") +
+  geom_path(data = subset(arrows_data, percentage >= 0 &
+                            !str_detect(objective,"Pacific") &
+                        !objective %in% c("USA (East Coast)","Suriname","Guyana","French Guiana","Bermuda (UK)","Brazil","El Salvador")
+                        ),
             aes(X, Y,
                 group = group,
                 col = percentage
@@ -3644,20 +3664,20 @@ lat_am_map <- ggplot() +
   labs(x = "", y = "") +
   # scale_x_continuous(breaks = seq(-100,60,10)) +
   # scale_y_continuous(breaks = seq(10,30,10)) +
-  my_ggtheme_m(leg_pos = "bottom") +
+  my_ggtheme_m(map_type = "NA",leg_pos = "bottom") +
   theme(
     panel.background = element_rect(fill = "white", color = "white"),
     panel.grid.major =  element_line(color = "white")
   ) +
   scale_color_gradientn(name= "Changes in catch proportion and changing stocks (%)",
                         colours = pal,
-                        limits = c(0,max(Lat_am_data$percentage)),
-                        breaks = seq(0,max(Lat_am_data$percentage),10)
+                        limits = c(0,50),
+                        breaks = seq(0,50,10)
   ) +
   scale_fill_gradientn(name= "Changes in catch proportion and changing stocks (%)",
                        colours = pal,
-                       limits = c(0,max(Lat_am_data$percentage)),
-                       breaks = seq(0,max(Lat_am_data$percentage),10)
+                       limits = c(0,50),
+                        breaks = seq(0,50,10)
   ) + guides(
     color=guide_colorbar(title.position="top", 
                          title.hjust =0.5)
@@ -3665,7 +3685,9 @@ lat_am_map <- ggplot() +
   theme(legend.key.width = unit(4,"line"))
 
 
-ggsave(filename = "lat_am_mid.png",
+name <- paste0("Figures/lat_am_",time_toplot,".png")
+
+ggsave(filename = name,
        lat_am_map,
        width = 6,
        height = 6)
@@ -3676,6 +3698,10 @@ ggsave(filename = "lat_am_mid.png",
 # Northern Europe Map
 ## ------------------- ##
 
+# Name to save
+name_eu <- paste0("Figures/EU_",time_toplot,".png")
+
+# PLot EU map
 EU_map <- ggplot() +
   geom_sf(data = World_eez_sf, size = 0.1, fill = "white", col = "gray30") +
   geom_sf(data = subset(n_taxa_map, sovereignt != "Antarctica"),
@@ -3696,28 +3722,29 @@ EU_map <- ggplot() +
   coord_sf(xlim = c(-1300000,2000000),ylim = c(5500000, 7500000))  +
   labs(x = "", y = "") +
   scale_x_continuous(breaks = seq(-100,60,10)) +
-  scale_y_continuous(breaks = seq(10,30,10)) +
-  my_ggtheme_m(leg_pos = "bottom") +
+  # scale_y_continuous(breaks = seq(10,30,10)) +
+  my_ggtheme_m(map_type = "NA",leg_pos = "bottom") +
   theme(
     panel.background = element_rect(fill = "white", color = "white"),
     panel.grid.major =  element_line(color = "white")
   ) +
   scale_color_gradientn(name= "Changes in catch proportion and changing stocks (%)",
                         colours = pal,
-                        limits = c(0,max(EU_data$percentage)),
-                        breaks = seq(0,max(EU_data$percentage),10)
+                        limits = c(0,50),
+                        breaks = seq(0,50,10)
   ) +
   scale_fill_gradientn(name= "Changes in catch proportion and changing stocks (%)",
                        colours = pal,
-                       limits = c(0,max(EU_data$percentage)),
-                       breaks = seq(0,max(EU_data$percentage),10)
+                       limits = c(0,50),
+                        breaks = seq(0,50,10)
   ) + guides(
     color=guide_colorbar(title.position="top",
                          title.hjust =0.5)
   ) +
   theme(legend.key.width = unit(4,"line"))
 
-ggsave(filename = "EU_early.png",
+# Save map
+ggsave(filename = name_eu,
        EU_map,
        width = 6,
        height = 6)
