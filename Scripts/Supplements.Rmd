@@ -12,12 +12,14 @@ header-includes:
 - \floatplacement{figure}{H} #make every figure with caption = h
 - \floatplacement{table}{H}
 - \usepackage{caption}
-- \captionsetup[figure]{name = Figure S}
-- \captionsetup[table]{name = Table S}
 - \usepackage{lscape}
 ---
 
-```{r setup_sup, eval = T, echo=F, warning=F,message=F, results='hide'}
+
+<!-- - \captionsetup[figure]{name = Figure S} -->
+<!-- - \captionsetup[table]{name = Table S} -->
+
+```{r setup_sup, echo=F, warning=F,message=F, results='hide'}
 library(MyFunctions)
 #### Library ####
 packages <- c(
@@ -31,7 +33,8 @@ packages <- c(
 my_lib(packages)
 ```
 
-
+\renewcommand{\thefigure}{S\arabic{figure}}
+\renewcommand{\thetable}{S\arabic{table}}
 
 # Figures
 
@@ -164,69 +167,66 @@ tibble(
 
 ```
 
-```{r}
-library(tidyverse)
-library(knitr)
+\clearpage
+
+```{r toeTableS2, eval = T, echo = F}
+
 
 data.frame(
    "Acronym" = c(
      "Hs",
-     "_i_",
-     "_T_",
+     "i",
+     "T",
      "TPP",
-     "B$\\alpha$~i~",
-     "Min~D~",
-     "Max~D~",
-     "Hab~ij~",
-     "_u_",
-     "Hab~Assoc~",
+     "B$\\alpha_i$",
+     "$Min_D$",
+     "$Max_D$",
+     "$Hab_{ij}$",
+     "u",
+     "$Hab_{Assoc}$",
      "Sal",
-     "Sal~Assoc~",
+     "$Sal_{Assoc}$",
      "Ice",
-     "Ice~p~",
-     "A~i~",
-     "_G_",
-     "L~ji~",
-     "Ad~ji~",
-     "_j_",
-     "_r_",
-     "_K_",
-     "_f_",
-     "lat~ts~",
-     "lat~per~",
-     "lon~ts~",
-     "lon~per~",
+     "$Ice_{i}$",
+     "$A_i$",
+     "G",
+     "$L_{ji}$",
+     "$Ad_{ji}$",
+     "j",
+     "r",
+     "K",
+     "f",
+     "$lat_{ts}$",
+     "$lat_{per}$",
+     "$lon_{ts}$",
+     "$lon_{per}$",
      "$\\mu$",
-     "per^th^",
-     "D~ens~",
-     "lat~EEZ~",
-     "lat~ts~",
-     "lon~EEZ~",
-     "lon~ts~",
+     "$per^{th}$",
+     "$D_{ens}$",
+     "$lat_{EEZ}$",
+     "$lon_{EEZ}$",
      "TSI",
-     "D~A~",
-     "D~B~",
+     "$D_A$",
+     "$D_B$",
      "sd",
      "t",
      "th",
      "ToE",
-     "TSI~$\\mu$~",
-     "TSI~f$\\mu$~",
-     "TSI~$\\omega$~",
-     "_t'_",
+     "$TSI_\\mu$",
+     "$TSI_{f\\mu}$",
+     "$TSI_\\omega$",
+     "t'",
      "tresh",
-     "ToE",
-     "SSR~th~",
-     "SSR~te~",
-     "SSR~tm~",
-     "SSR~tf~",
-     "_s_"
-     
-
+     # "ToE",
+     "$SSR_{th}$",
+     "$SSR_{te}$",
+     "$SSR_{tm}$",
+     "$SSR_{tf}$",
+     "s"
      ),
-   "Meaning" = c(
+   "Definition" = c(
      "Habitat suitability",
-     "Grid-cell of 0.5^o^ latitude x 0.5^p^ longitude",
+     "Grid-cell of $0.5^o$ latitude x $0.5^o$ longitude",
      "Seawater temperature",
      "Species temperature profile",
      "Bathymetry",
@@ -239,13 +239,13 @@ data.frame(
      "Salinity association index",
      "Sea ice extent",
      "Association to sea ice",
-     "Relative abundance of a given species in each grid-cell _i_",
+     "Relative abundance of a given species in each grid-cell i",
      "Intrinsic population growth",
      "Number of settled larvae",
-     "Net migrated adults from surrounding cells _j_",
+     "Net migrated adults from surrounding cells j",
      "Surrounding grid-cell",
      "Intrinsic rate of population increase",
-     "Carrying capacity of grid-cell _i_",
+     "Carrying capacity of grid-cell i",
      "Fishing mortality",
      "Average latitude across the high-abundance grid-cells",
      "Latitude of grid-cells holding a given percentile of projected abundance",
@@ -254,23 +254,20 @@ data.frame(
      "Mean",
      "Percentile of projected transboundary stock abundance",
      "Distance between the centroid of the EEZs and the centroid of the transboundary stock",
-     "Latitude of the EEZ's centroid",
      "Latitude of the transboundary stock's centroid",
-     "Longitude of the EEZ's centroid",
      "Longitude of the transboundary stock's centroid",
      "Transboundary Stock Index",
-     "Distance between the distribution centroids of a stock and the centroid of the neighboring EEZs A",
-     "Distance between the distribution centroids of a stock and the centroid of the neighboring EEZs B",
+     "Distance between the centroids of a stock and the neighboring EEZs A",
+     "Distance between the centroids of a stock and the neighboring EEZs B",
      "Standard deviation",
      "Time step from 1951 to 2006",
      "Historical time period (1951 to 2005)",
-     "Time of emergence",
+     "Time of emergence, year when $TSI_{f\\mu}$ overpasses the tresh",
      "Average TSI from 1951 to 2005",
      "Average TSI from 2006 to 2100",
      "Standard deviation of TSI from 1951 to 2005",
      "Years from 2006 to 2100",
      "Threshold to determine the time of emergence",
-     "Year when TSI~f$\\mu$~ overpasses the _tresh_",
      "Stocks share ratio over the historical time period (1951 to 2005)",
      "Stocks share ratio at the early time period (2020 to 2040)",
      "Stocks share ratio at the late time period (2050 to 2060)",
@@ -278,7 +275,17 @@ data.frame(
      "Stock whose share ratio exceeded the threat point of an EEZ"
    )
 ) %>% 
-  kable()
+  arrange(Acronym) %>%
+  kable(format = "latex",
+        booktabs = T,
+        longtable = T,
+        escape = F,
+        caption = "Term abbreviations used in equations throughout the methods. For each parameter we provide a short definition."
+  ) %>%
+  kable_styling(#full_width = T,
+                # position = "center",
+                latex_options = c("repeat_header")
+                )
 ```
 
 
@@ -307,7 +314,7 @@ read.csv("../Tables/kw_habitat.csv") %>%
 
 \begin{landscape}
 
-```{r toeTableS2, eval = T, echo = F}
+```{r toeTableS4, eval = T, echo = F}
 
 read.csv("../Tables/kw_regional.csv") %>% 
   select(-statistic,
