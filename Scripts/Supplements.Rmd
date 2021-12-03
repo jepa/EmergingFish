@@ -12,12 +12,14 @@ header-includes:
 - \floatplacement{figure}{H} #make every figure with caption = h
 - \floatplacement{table}{H}
 - \usepackage{caption}
-- \captionsetup[figure]{name = Figure S}
-- \captionsetup[table]{name = Table S}
 - \usepackage{lscape}
 ---
 
-```{r setup_sup, eval = T, echo=F, warning=F,message=F, results='hide'}
+
+<!-- - \captionsetup[figure]{name = Figure S} -->
+<!-- - \captionsetup[table]{name = Table S} -->
+
+```{r setup_sup, echo=F, warning=F,message=F, results='hide'}
 library(MyFunctions)
 #### Library ####
 packages <- c(
@@ -31,29 +33,12 @@ packages <- c(
 my_lib(packages)
 ```
 
-
+\renewcommand{\thefigure}{S\arabic{figure}}
+\renewcommand{\thetable}{S\arabic{table}}
 
 # Figures
 
-```{r toeFigureS5, eval = T,  echo = F, fig.width = 10, fig.height= 8, fig.pos="H", fig.cap ="World Exclusive Economic Zones used in this study as divided by the Sea Around Us and their estimated centroids (black points)."}
-
-img <- readPNG("../Figures/FigS7.png")
-grid.raster(img)
-
-```
-
-\clearpage
-
-```{r toeFigureS7, eval = T,  echo = F, fig.width=14, fig.height=10, fig.cap =  "Average year of range shift by Exclusive Economic Zone (EEZ) and transboundary stock using different levels of abundance percentile to determine the stock’s centroid. Top Row: results in absolute numbers. Bottom row: results expressed as a percentage of the total emerging stocks and EEZs with emerging stock."}
-
-img <- readPNG("../Figures/FigS6.png")
-grid.raster(img)
-
-```
-
-\clearpage
-
-```{r toeFigureS2, eval = T,  echo = F, fig.width=13, fig.height=13, fig.cap ="Year of change in the shared distribution of 5,745 transboundary stocks using a one standard deviation threshold. A) Land polygons show the contribution of shifting stocks to a country or territory’s total fishing revenue from transboundary stocks. Exclusive Economic Zone polygons display average year of range shifts within them. EEZs with no distributional shift between 2006 and 2100 are represented in aqua color. B) Year of shared distribution shifts by UN sub-regions. Points color coded by the median year of range shift. Horizontal dashed line represents the year 2030 – the Sustainable Development Agenda deadline. N = North, S = South, W = West and E = East. Ltn. Ame. and the Car. = Latin America and the Caribbean. Aus and New Z. = Australia and New Zealand."}
+```{r toeFigureS1, eval = T,  echo = F, fig.width = 10, fig.height= 8, fig.pos="H", fig.cap ="World Exclusive Economic Zones (EEZs) used in this study as divided by the Sea Around Us and their estimated centroids (black points)."}
 
 img <- readPNG("../Figures/FigS1.png")
 grid.raster(img)
@@ -62,8 +47,7 @@ grid.raster(img)
 
 \clearpage
 
-
-```{r toeFigureS8, eval = T,  echo = F, fig.width=4, fig.height=4, fig.cap ="Average distribution of transboundary stock’s year of change in their shared distribution. Left panel is the average year across stocks and right panel the standard deviation. Yellow represents a two standard deviation distance from the historical average and purple represents a one standard deviation distance from the historical average."}
+```{r toeFigureS2, eval =F,  echo = F, fig.width=4, fig.height=4, fig.cap ="Average year of range shift by Exclusive Economic Zone (EEZ) and transboundary stock using different levels of abundance percentile to determine a stock’s centroid. Top Row: results in absolute numbers. Bottom row: results expressed as a percentage of the total number of emerging stocks and EEZs with at least one emerging stock."}
 
 img <- readPNG("../Figures/FigS2.png")
 grid.raster(img)
@@ -73,27 +57,27 @@ grid.raster(img)
 \clearpage
 
 
-```{r toeFigureS1, eval = T,  echo = F, fig.width=9, fig.height=6,fig.pos= "H", fig.cap =  "Comparison of shifts in the shared distribution of transboundary stocks by species’ habitat association. Classification is based on the habitat preference information obtained from FishBase and SeaLifeBase (see Table S1). The category “Other” consists of species that have no “habitat preference” classification. The number of stocks included in this analysis for each habitat type is noted in parentheses. Dashed whiskers represent the 1.5* interquartile range. Box represents interquartile range as distance between first and third quartiles. Solid line represents the median time of emergence per habitat preference."}
+```{r toeFigureS3, eval = T,  echo = F, fig.width=13, fig.height=13, fig.cap ="Year of change in the shared distribution of 5,745 transboundary stocks using a one standard deviation threshold. A) Land polygons show the contribution of shifting stocks to a country or territory’s total fishing revenue from transboundary stocks. Exclusive Economic Zone polygons display the average year of range shifts within them. EEZs with no distributional shifts between 2006 and 2100 are represented in pale blue. B) Year of shared distribution shifts by UN sub-regions. Points are color coded by the mean year of range shift. Horizontal dashed line represents the year 2030 – the Sustainable Development Agenda deadline. N = North, S = South, W = West and E = East. Ltn. Ame. and the Car. = Latin America and the Caribbean. Aus and New Z. = Australia and New Zealand."}
 
 img <- readPNG("../Figures/FigS3.png")
 grid.raster(img)
 
 ```
 
-
 \clearpage
 
-
-```{r toeFigureS3, eval = T,  echo = F, fig.width=7, fig.height=5, fig.cap = "Distribution of changes in transboundary stock proportion per stock and neighboring Exclusive Economic Zones. Yellow color represents changes by early, 2030 (2021-2040) and purple by mid 2050 (2041-60) 21st century relative to 1951-2005."}
+```{r toeFigureS4, eval = T,  echo = F, fig.width=9, fig.height=6,fig.pos= "H", fig.cap =  "Comparison of shifts in the shared distribution of transboundary stocks by species’ habitat association. Classification is based on the habitat preference information obtained from FishBase and SeaLifeBase (see Table S1). The category “Other” consists of species that have no “habitat preference” classification. The number of stocks included in this analysis for each habitat type is noted in parentheses. Dashed whiskers represent the 1.5* interquartile range. Box represents interquartile range as distance between first and third quartiles. Solid line represents the median time of emergence per habitat preference."}
 
 img <- readPNG("../Figures/FigS4.png")
 grid.raster(img)
 
 ```
 
+
 \clearpage
 
-```{r toeFigureS4, eval = T,  echo = F, fig.width=14, fig.height=14, fig.cap ="Changes in stock proportion of neighboring Exclusive Economic Zones by 2050 (2041-2060) relative to 1951-2005. Lines represent the average change in transboundary stock share ratio with arrows going from EEZ with decreasing stock share (point) to those gaining shares (arrowhead). Land polygons represent the percentage of stocks that are projected to change their stock share ratio beyond the identified threat point with higher gains identified in warmer colors. Panel B highlights changes for the Caribbean and Northwestern Europe."}
+
+```{r toeFigureS5,  eval = T,  echo = F, fig.width=13, fig.height=13, fig.cap ="Year of change in the shared distribution of 4,119 transboundary stocks and their contribution to fishing revenue. A) Contribution of shifting stocks to a country or territory’s total fishing revenue from transboundary stocks. B) Average year of range shift across an EEZ’s transboundary stocks. EEZs with no distributional shift between 2006 and 2100 are represented in pale blue. This figure is identical to Fig. 3A but shows the information in two different maps and color scales; A shows the land polygons in 3A and B shows the EEZ polygons in 3B."}
 
 img <- readPNG("../Figures/FigS5.png")
 grid.raster(img)
@@ -102,6 +86,54 @@ grid.raster(img)
 
 \clearpage
 
+```{r toeFigureS6, eval = T,  echo = F, fig.width=7, fig.height=5, fig.cap = "Year of change in the shared distribution of transboundary stocks in the Caribbean and South Pacific Islands using a one s.d. (top row) two s.d. (bottom row) thresholds. Land polygons show the contribution of shifting stocks to a country or territory’s total fishing revenue from transboundary stocks. Exclusive Economic Zone polygons display the average year of range shifts within them. Warm colors are indicative of an early shift/high fishing revenue contribution from transboundary stocks, while cooler colors represent a late shift/low fishing revenue. EEZs with no distributional shift between 2006 and 2100 are represented in pale blue."}
+
+img <- readPNG("../Figures/FigS6.png")
+grid.raster(img)
+
+```
+
+\clearpage
+
+
+
+
+```{r toeFigureS7, eval = T,  echo = F, fig.width=14, fig.height=14, fig.cap ="Changes in stock proportion between neighboring Exclusive Economic Zones by 2050 (2041-2060) relative to 1951-2005. Lines represent the average change in transboundary stock share ratio (SSR) with arrows going from EEZs with a decrease in stock share (point) to those gaining shares (arrowhead). Land polygons represent the percentage of stocks that are projected to change their stock share ratio beyond the identified threat point with higher gains identified in warmer colors."}
+
+img <- readPNG("../Figures/FigS7.png")
+grid.raster(img)
+
+```
+
+
+\clearpage
+
+```{r toeFigureS8, eval = T,  echo = F, fig.width=7, fig.height=5, fig.cap = "Distribution of changes in transboundary stock proportion per stock and neighboring Exclusive Economic Zones. Yellow color represents changes by 2030 (2021-2040) and purple by mid-century (2041- 2060) relative to the historical baseline (1951-2005)."}
+
+img <- readPNG("../Figures/FigS8.png")
+grid.raster(img)
+
+```
+
+\clearpage
+
+```{r toeFigureS9, eval = T,  echo = F, fig.width=7, fig.height=5, fig.cap = "Changes in stock proportion of neighboring Exclusive Economic Zones of Latin America and the Caribbean and Northwestern Europe by 2030 (2021-2040) and by 2060 (2041-2060) relative to 1951-2005. Lines represent the average change in transboundary stock share ratio (SSR; Methods) with arrows going from EEZ with a decrease in stock shares (point) to those gaining shares (arrowhead). Land polygons represent the percentage of stocks that are projected to change their stock share ratio (i.e., over two standard deviations from the historical catch proportion) beyond the identified threat point with higher gains identified in warmer colors."}
+
+img <- readPNG("../Figures/FigS9.png")
+grid.raster(img)
+
+```
+
+\clearpage
+
+```{r toeFigureS10, eval = T,  echo = F, fig.width=7, fig.height=5, fig.cap = "Changes in the stock share proportion of the top 5 most valuable stocks by 2030 (2021-2040) relative to the historical baseline (1951-2005). Lines represent the average change in transboundary stock share ratio (SSR; Methods) with arrows going from EEZ with decreasing stock shares (point) to those gaining shares (arrowhead)."}
+
+img <- readPNG("../Figures/FigS10.png")
+grid.raster(img)
+
+```
+
+\clearpage
 
 
 # Tables
@@ -137,6 +169,128 @@ tibble(
 
 \clearpage
 
+```{r toeTableS2, eval = T, echo = F}
+
+
+data.frame(
+   "Acronym" = c(
+     "Hs",
+     "i",
+     "T",
+     "TPP",
+     "B$\\alpha_i$",
+     "$Min_D$",
+     "$Max_D$",
+     "$Hab_{ij}$",
+     "u",
+     "$Hab_{Assoc}$",
+     "Sal",
+     "$Sal_{Assoc}$",
+     "Ice",
+     "$Ice_{i}$",
+     "$A_i$",
+     "G",
+     "$L_{ji}$",
+     "$Ad_{ji}$",
+     "j",
+     "r",
+     "K",
+     "f",
+     "$lat_{ts}$",
+     "$lat_{per}$",
+     "$lon_{ts}$",
+     "$lon_{per}$",
+     "$\\mu$",
+     "$per^{th}$",
+     "$D_{ens}$",
+     "$lat_{EEZ}$",
+     "$lon_{EEZ}$",
+     "TSI",
+     "$D_A$",
+     "$D_B$",
+     "sd",
+     "t",
+     "th",
+     "ToE",
+     "$TSI_\\mu$",
+     "$TSI_{f\\mu}$",
+     "$TSI_\\omega$",
+     "t'",
+     "tresh",
+     # "ToE",
+     "$SSR_{th}$",
+     "$SSR_{te}$",
+     "$SSR_{tm}$",
+     "$SSR_{tf}$",
+     "s"
+     ),
+   "Definition" = c(
+     "Habitat suitability",
+     "Grid-cell of $0.5^o$ latitude x $0.5^o$ longitude",
+     "Seawater temperature",
+     "Species temperature profile",
+     "Bathymetry",
+     "Species' minimum depth limit",
+     "Species' maximum depth limit",
+     "Proportion of area of the habitat type",
+     "Habitat type",
+     "Habitat association index",
+     "Salinity",
+     "Salinity association index",
+     "Sea ice extent",
+     "Association to sea ice",
+     "Relative abundance of a given species in each grid-cell i",
+     "Intrinsic population growth",
+     "Number of settled larvae",
+     "Net migrated adults from surrounding cells j",
+     "Surrounding grid-cell",
+     "Intrinsic rate of population increase",
+     "Carrying capacity of grid-cell i",
+     "Fishing mortality",
+     "Average latitude across the high-abundance grid-cells",
+     "Latitude of grid-cells holding a given percentile of projected abundance",
+     "Average longitude across the high-abundance grid-cells",
+     "Longitude of grid-cells holding a given percentile of projected abundance",
+     "Mean",
+     "Percentile of projected transboundary stock abundance",
+     "Distance between the centroid of the EEZs and the centroid of the transboundary stock",
+     "Latitude of the transboundary stock's centroid",
+     "Longitude of the transboundary stock's centroid",
+     "Transboundary Stock Index",
+     "Distance between the centroids of a stock and the neighboring EEZs A",
+     "Distance between the centroids of a stock and the neighboring EEZs B",
+     "Standard deviation",
+     "Time step from 1951 to 2006",
+     "Historical time period (1951 to 2005)",
+     "Time of emergence, year when $TSI_{f\\mu}$ overpasses the tresh",
+     "Average TSI from 1951 to 2005",
+     "Average TSI from 2006 to 2100",
+     "Standard deviation of TSI from 1951 to 2005",
+     "Years from 2006 to 2100",
+     "Threshold to determine the time of emergence",
+     "Stocks share ratio over the historical time period (1951 to 2005)",
+     "Stocks share ratio at the early time period (2020 to 2040)",
+     "Stocks share ratio at the late time period (2050 to 2060)",
+     "Stocks share ratio at the early or late time period",
+     "Stock whose share ratio exceeded the threat point of an EEZ"
+   )
+) %>% 
+  arrange(Acronym) %>%
+  kable(format = "latex",
+        booktabs = T,
+        longtable = T,
+        escape = F,
+        caption = "Term abbreviations used in equations throughout the methods. For each parameter we provide a short definition."
+  ) %>%
+  kable_styling(#full_width = T,
+                # position = "center",
+                latex_options = c("repeat_header")
+                )
+```
+
+
+\clearpage
+
 ```{r toeTableS3, eval = T, echo = F}
 
 read.csv("../Tables/kw_habitat.csv") %>% 
@@ -160,7 +314,7 @@ read.csv("../Tables/kw_habitat.csv") %>%
 
 \begin{landscape}
 
-```{r toeTableS2, eval = T, echo = F}
+```{r toeTableS4, eval = T, echo = F}
 
 read.csv("../Tables/kw_regional.csv") %>% 
   select(-statistic,

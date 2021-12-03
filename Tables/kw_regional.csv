@@ -1,121 +1,121 @@
 comparrison,statistic,signif.level,dif.com.obs.dif,dif.com.critical.dif,dif.com.difference
-Australia and New Zealand-Eastern Asia,Multiple comparison test after Kruskal-Wallis,0.05,715.0119342637281,1465.929832602095,FALSE
-Australia and New Zealand-Eastern Europe,Multiple comparison test after Kruskal-Wallis,0.05,564.9587578047976,1605.2391245087376,FALSE
-Australia and New Zealand-Latin America and the Caribbean,Multiple comparison test after Kruskal-Wallis,0.05,1569.939379139234,1381.8701695476675,TRUE
-Australia and New Zealand-Melanesia,Multiple comparison test after Kruskal-Wallis,0.05,1127.076002082249,1558.6091473405254,FALSE
-Australia and New Zealand-Micronesia,Multiple comparison test after Kruskal-Wallis,0.05,1284.742986425339,1954.7306255216115,FALSE
-Australia and New Zealand-Northern Africa,Multiple comparison test after Kruskal-Wallis,0.05,367.0274587922813,1426.8945052977892,FALSE
-Australia and New Zealand-Northern America,Multiple comparison test after Kruskal-Wallis,0.05,319.846053611318,1634.343918038214,FALSE
-Australia and New Zealand-Northern Europe,Multiple comparison test after Kruskal-Wallis,0.05,597.9828630639249,1487.117589729179,FALSE
-Australia and New Zealand-Polynesia,Multiple comparison test after Kruskal-Wallis,0.05,1711.6634550371873,1611.5761589068877,TRUE
-Australia and New Zealand-South-eastern Asia,Multiple comparison test after Kruskal-Wallis,0.05,248.22536261079767,1397.9866505955042,FALSE
-Australia and New Zealand-Southern Asia,Multiple comparison test after Kruskal-Wallis,0.05,522.4962430227561,1526.7064722755297,FALSE
-Australia and New Zealand-Southern Europe,Multiple comparison test after Kruskal-Wallis,0.05,20.481073996107625,1397.5454954462637,FALSE
-Australia and New Zealand-Sub-Saharan Africa,Multiple comparison test after Kruskal-Wallis,0.05,561.9272801803645,1398.528479964195,FALSE
-Australia and New Zealand-Western Asia,Multiple comparison test after Kruskal-Wallis,0.05,202.30637254901922,1440.4444692338634,FALSE
-Australia and New Zealand-Western Europe,Multiple comparison test after Kruskal-Wallis,0.05,10.591740766074508,1495.5025636240837,FALSE
-Eastern Asia-Eastern Europe,Multiple comparison test after Kruskal-Wallis,0.05,1279.9706920685258,995.4689532390338,TRUE
-Eastern Asia-Latin America and the Caribbean,Multiple comparison test after Kruskal-Wallis,0.05,2284.951313402962,568.9735982406731,TRUE
-Eastern Asia-Melanesia,Multiple comparison test after Kruskal-Wallis,0.05,1842.0879363459771,918.3835060489699,TRUE
-Eastern Asia-Micronesia,Multiple comparison test after Kruskal-Wallis,0.05,1999.7549206890671,1495.037661184945,TRUE
-Eastern Asia-Northern Africa,Multiple comparison test after Kruskal-Wallis,0.05,1082.0393930560094,670.9647675237965,TRUE
-Eastern Asia-Northern America,Multiple comparison test after Kruskal-Wallis,0.05,1034.857987875046,1041.7513294629096,FALSE
-Eastern Asia-Northern Europe,Multiple comparison test after Kruskal-Wallis,0.05,117.02907119980318,791.0022223048186,FALSE
-Eastern Asia-Polynesia,Multiple comparison test after Kruskal-Wallis,0.05,2426.6753893009154,1005.6557591772234,TRUE
-Eastern Asia-South-eastern Asia,Multiple comparison test after Kruskal-Wallis,0.05,963.2372968745258,607.0687483740829,TRUE
-Eastern Asia-Southern Asia,Multiple comparison test after Kruskal-Wallis,0.05,1237.5081772864842,863.1329228440031,TRUE
-Eastern Asia-Southern Europe,Multiple comparison test after Kruskal-Wallis,0.05,735.4930082598357,606.0521444986244,TRUE
-Eastern Asia-Sub-Saharan Africa,Multiple comparison test after Kruskal-Wallis,0.05,1276.9392144440926,608.3154603330424,TRUE
-Eastern Asia-Western Asia,Multiple comparison test after Kruskal-Wallis,0.05,917.3183068127473,699.3182815826177,TRUE
-Eastern Asia-Western Europe,Multiple comparison test after Kruskal-Wallis,0.05,704.4201934976536,806.6558794278048,FALSE
-Eastern Europe-Latin America and the Caribbean,Multiple comparison test after Kruskal-Wallis,0.05,1004.9806213344364,866.9332893802792,TRUE
-Eastern Europe-Melanesia,Multiple comparison test after Kruskal-Wallis,0.05,562.1172442774514,1127.506379992402,FALSE
-Eastern Europe-Micronesia,Multiple comparison test after Kruskal-Wallis,0.05,719.7842286205414,1631.8639591283713,FALSE
-Eastern Europe-Northern Africa,Multiple comparison test after Kruskal-Wallis,0.05,197.93129901251632,937.0358008096778,FALSE
-Eastern Europe-Northern America,Multiple comparison test after Kruskal-Wallis,0.05,245.11270419347966,1230.0765037909275,FALSE
-Eastern Europe-Northern Europe,Multiple comparison test after Kruskal-Wallis,0.05,1162.9416208687226,1026.4145792183263,TRUE
-Eastern Europe-Polynesia,Multiple comparison test after Kruskal-Wallis,0.05,1146.7046972323897,1199.6607348359325,FALSE
-Eastern Europe-South-eastern Asia,Multiple comparison test after Kruskal-Wallis,0.05,316.73339519399997,892.39836283649,FALSE
-Eastern Europe-Southern Asia,Multiple comparison test after Kruskal-Wallis,0.05,42.46251478204158,1082.9777538056837,FALSE
-Eastern Europe-Southern Europe,Multiple comparison test after Kruskal-Wallis,0.05,544.47768380869,891.7071125611557,FALSE
-Eastern Europe-Sub-Saharan Africa,Multiple comparison test after Kruskal-Wallis,0.05,3.031477624433137,893.2469266787172,FALSE
-Eastern Europe-Western Asia,Multiple comparison test after Kruskal-Wallis,0.05,362.6523852557784,957.5429137623219,FALSE
-Eastern Europe-Western Europe,Multiple comparison test after Kruskal-Wallis,0.05,575.5504985708722,1038.5259171326525,FALSE
-Latin America and the Caribbean-Melanesia,Multiple comparison test after Kruskal-Wallis,0.05,442.863377056985,777.2021330102559,FALSE
-Latin America and the Caribbean-Micronesia,Multiple comparison test after Kruskal-Wallis,0.05,285.19639271389497,1412.7110460862984,FALSE
-Latin America and the Caribbean-Northern Africa,Multiple comparison test after Kruskal-Wallis,0.05,1202.9119203469527,459.13898835881434,TRUE
-Latin America and the Caribbean-Northern America,Multiple comparison test after Kruskal-Wallis,0.05,1250.093325527916,919.7068684154931,TRUE
-Latin America and the Caribbean-Northern Europe,Multiple comparison test after Kruskal-Wallis,0.05,2167.922242203159,621.5298923334702,TRUE
-Latin America and the Caribbean-Polynesia,Multiple comparison test after Kruskal-Wallis,0.05,141.7240758979533,878.6116305508428,FALSE
-Latin America and the Caribbean-South-eastern Asia,Multiple comparison test after Kruskal-Wallis,0.05,1321.7140165284363,359.3707787583306,TRUE
-Latin America and the Caribbean-Southern Asia,Multiple comparison test after Kruskal-Wallis,0.05,1047.443136116478,711.0649294333992,TRUE
-Latin America and the Caribbean-Southern Europe,Multiple comparison test after Kruskal-Wallis,0.05,1549.4583051431264,357.6507978801037,TRUE
-Latin America and the Caribbean-Sub-Saharan Africa,Multiple comparison test after Kruskal-Wallis,0.05,1008.0120989588695,361.47280762609887,TRUE
-Latin America and the Caribbean-Western Asia,Multiple comparison test after Kruskal-Wallis,0.05,1367.6330065902148,499.66083529586217,TRUE
-Latin America and the Caribbean-Western Europe,Multiple comparison test after Kruskal-Wallis,0.05,1580.5311199053085,641.333453975651,TRUE
-Melanesia-Micronesia,Multiple comparison test after Kruskal-Wallis,0.05,157.66698434309,1586.0169634723657,FALSE
-Melanesia-Northern Africa,Multiple comparison test after Kruskal-Wallis,0.05,760.0485432899677,854.6963901403908,FALSE
-Melanesia-Northern America,Multiple comparison test after Kruskal-Wallis,0.05,807.229948470931,1168.5709360147941,FALSE
-Melanesia-Northern Europe,Multiple comparison test after Kruskal-Wallis,0.05,1725.058865146174,951.8385975321208,TRUE
-Melanesia-Polynesia,Multiple comparison test after Kruskal-Wallis,0.05,584.5874529549383,1136.5103193667317,FALSE
-Melanesia-South-eastern Asia,Multiple comparison test after Kruskal-Wallis,0.05,878.8506394714514,805.5089480032041,TRUE
-Melanesia-Southern Asia,Multiple comparison test after Kruskal-Wallis,0.05,604.579759059493,1012.5762403680942,FALSE
-Melanesia-Southern Europe,Multiple comparison test after Kruskal-Wallis,0.05,1106.5949280861414,804.7430657744957,TRUE
-Melanesia-Sub-Saharan Africa,Multiple comparison test after Kruskal-Wallis,0.05,565.1487219018845,806.4489440385884,FALSE
-Melanesia-Western Asia,Multiple comparison test after Kruskal-Wallis,0.05,924.7696295332298,877.1306966561017,TRUE
-Melanesia-Western Europe,Multiple comparison test after Kruskal-Wallis,0.05,1137.6677428483235,964.8864740870804,TRUE
-Micronesia-Northern Africa,Multiple comparison test after Kruskal-Wallis,0.05,917.7155276330577,1456.7825038411077,FALSE
-Micronesia-Northern America,Multiple comparison test after Kruskal-Wallis,0.05,964.896932814021,1660.5021459417162,FALSE
-Micronesia-Northern Europe,Multiple comparison test after Kruskal-Wallis,0.05,1882.725849489264,1515.8186104974654,TRUE
-Micronesia-Polynesia,Multiple comparison test after Kruskal-Wallis,0.05,426.92046861184826,1638.097997741778,FALSE
-Micronesia-South-eastern Asia,Multiple comparison test after Kruskal-Wallis,0.05,1036.5176238145414,1428.4796146574095,FALSE
-Micronesia-Southern Asia,Multiple comparison test after Kruskal-Wallis,0.05,762.246743402583,1554.6768110242515,FALSE
-Micronesia-Southern Europe,Multiple comparison test after Kruskal-Wallis,0.05,1264.2619124292314,1428.0478794811772,FALSE
-Micronesia-Sub-Saharan Africa,Multiple comparison test after Kruskal-Wallis,0.05,722.8157062449745,1429.0098822329767,FALSE
-Micronesia-Western Asia,Multiple comparison test after Kruskal-Wallis,0.05,1082.4366138763198,1470.0570067840806,FALSE
-Micronesia-Western Europe,Multiple comparison test after Kruskal-Wallis,0.05,1295.3347271914135,1524.0456856848978,FALSE
-Northern Africa-Northern America,Multiple comparison test after Kruskal-Wallis,0.05,47.18140518096334,986.0646467519036,FALSE
-Northern Africa-Northern Europe,Multiple comparison test after Kruskal-Wallis,0.05,965.0103218562062,716.0741378009532,TRUE
-Northern Africa-Polynesia,Multiple comparison test after Kruskal-Wallis,0.05,1344.635996244906,947.8508116273015,TRUE
-Northern Africa-South-eastern Asia,Multiple comparison test after Kruskal-Wallis,0.05,118.80209618148365,505.5789952012369,FALSE
-Northern Africa-Southern Asia,Multiple comparison test after Kruskal-Wallis,0.05,155.46878423047474,795.0321362268625,FALSE
-Northern Africa-Southern Europe,Multiple comparison test after Kruskal-Wallis,0.05,346.5463847961737,504.35786599159746,FALSE
-Northern Africa-Sub-Saharan Africa,Multiple comparison test after Kruskal-Wallis,0.05,194.89982138808318,507.0752946224238,FALSE
-Northern Africa-Western Asia,Multiple comparison test after Kruskal-Wallis,0.05,164.7210862432621,613.2892580926899,FALSE
-Northern Africa-Western Europe,Multiple comparison test after Kruskal-Wallis,0.05,377.61919955835583,733.3289595752111,FALSE
-Northern America-Northern Europe,Multiple comparison test after Kruskal-Wallis,0.05,917.8289166752429,1071.3609494502102,FALSE
-Northern America-Polynesia,Multiple comparison test after Kruskal-Wallis,0.05,1391.8174014258693,1238.3348797001606,TRUE
-Northern America-South-eastern Asia,Multiple comparison test after Kruskal-Wallis,0.05,71.62069100052031,943.7490310289966,FALSE
-Northern America-Southern Asia,Multiple comparison test after Kruskal-Wallis,0.05,202.65018941143808,1125.6678954349395,FALSE
-Northern America-Southern Europe,Multiple comparison test after Kruskal-Wallis,0.05,299.36497961521036,943.0954194391338,FALSE
-Northern America-Sub-Saharan Africa,Multiple comparison test after Kruskal-Wallis,0.05,242.08122656904652,944.5514637095724,FALSE
-Northern America-Western Asia,Multiple comparison test after Kruskal-Wallis,0.05,117.53968106229877,1005.5723878823242,FALSE
-Northern America-Western Europe,Multiple comparison test after Kruskal-Wallis,0.05,330.4377943773925,1082.9697484838343,FALSE
-Northern Europe-Polynesia,Multiple comparison test after Kruskal-Wallis,0.05,2309.6463181011122,1036.2972341637478,TRUE
-Northern Europe-South-eastern Asia,Multiple comparison test after Kruskal-Wallis,0.05,846.2082256747226,656.5827570242702,TRUE
-Northern Europe-Southern Asia,Multiple comparison test after Kruskal-Wallis,0.05,1120.479106086681,898.647257863923,TRUE
-Northern Europe-Southern Europe,Multiple comparison test after Kruskal-Wallis,0.05,618.4639370600325,655.6429313433476,FALSE
-Northern Europe-Sub-Saharan Africa,Multiple comparison test after Kruskal-Wallis,0.05,1159.9101432442894,657.7356238256505,TRUE
-Northern Europe-Western Asia,Multiple comparison test after Kruskal-Wallis,0.05,800.2892356129441,742.707553835816,TRUE
-Northern Europe-Western Europe,Multiple comparison test after Kruskal-Wallis,0.05,587.3911222978504,844.5484943948223,FALSE
-Polynesia-South-eastern Asia,Multiple comparison test after Kruskal-Wallis,0.05,1463.4380924263896,903.7477010187896,TRUE
-Polynesia-Southern Asia,Multiple comparison test after Kruskal-Wallis,0.05,1189.1672120144312,1092.348792438342,TRUE
-Polynesia-Southern Europe,Multiple comparison test after Kruskal-Wallis,0.05,1691.1823810410797,903.0651381244065,TRUE
-Polynesia-Sub-Saharan Africa,Multiple comparison test after Kruskal-Wallis,0.05,1149.7361748568228,904.5856184598964,TRUE
-Polynesia-Western Asia,Multiple comparison test after Kruskal-Wallis,0.05,1509.357082488168,968.1288658024495,TRUE
-Polynesia-Western Europe,Multiple comparison test after Kruskal-Wallis,0.05,1722.2551958032618,1048.294400280626,TRUE
-South-eastern Asia-Southern Asia,Multiple comparison test after Kruskal-Wallis,0.05,274.2708804119584,741.8994835068037,FALSE
-South-eastern Asia-Southern Europe,Multiple comparison test after Kruskal-Wallis,0.05,227.74428861469005,415.5906675826728,FALSE
-South-eastern Asia-Sub-Saharan Africa,Multiple comparison test after Kruskal-Wallis,0.05,313.70191756956683,418.8843520718236,FALSE
-South-eastern Asia-Western Asia,Multiple comparison test after Kruskal-Wallis,0.05,45.91899006177846,542.6439533304463,FALSE
-South-eastern Asia-Western Europe,Multiple comparison test after Kruskal-Wallis,0.05,258.8171033768722,675.3592443624913,FALSE
-Southern Asia-Southern Europe,Multiple comparison test after Kruskal-Wallis,0.05,502.01516902664844,741.067864791456,FALSE
-Southern Asia-Sub-Saharan Africa,Multiple comparison test after Kruskal-Wallis,0.05,39.43103715760844,742.9199671939014,FALSE
-Southern Asia-Western Asia,Multiple comparison test after Kruskal-Wallis,0.05,320.18987047373685,819.1022142143505,FALSE
-Southern Asia-Western Europe,Multiple comparison test after Kruskal-Wallis,0.05,533.0879837888306,912.456073567726,FALSE
-Southern Europe-Sub-Saharan Africa,Multiple comparison test after Kruskal-Wallis,0.05,541.4462061842569,417.4096752706355,TRUE
-Southern Europe-Western Asia,Multiple comparison test after Kruskal-Wallis,0.05,181.8252985529116,541.5064142602572,FALSE
-Southern Europe-Western Europe,Multiple comparison test after Kruskal-Wallis,0.05,31.072814762182134,674.4455838277696,FALSE
-Sub-Saharan Africa-Western Asia,Multiple comparison test after Kruskal-Wallis,0.05,359.6209076313453,544.0383204461073,FALSE
-Sub-Saharan Africa-Western Europe,Multiple comparison test after Kruskal-Wallis,0.05,572.519020946439,676.4801127702136,FALSE
-Western Asia-Western Europe,Multiple comparison test after Kruskal-Wallis,0.05,212.89811331509372,759.3574274668451,FALSE
+Australia and New Zealand-Eastern Asia,Multiple comparison test after Kruskal-Wallis,0.05,1314.683597390494,1419.8723871632358,FALSE
+Australia and New Zealand-Eastern Europe,Multiple comparison test after Kruskal-Wallis,0.05,468.26953697883937,1507.3726248979167,FALSE
+Australia and New Zealand-Latin America and the Caribbean,Multiple comparison test after Kruskal-Wallis,0.05,94.80679312853226,1338.94611780162,FALSE
+Australia and New Zealand-Melanesia,Multiple comparison test after Kruskal-Wallis,0.05,40.42065749960466,1465.5311278715837,FALSE
+Australia and New Zealand-Micronesia,Multiple comparison test after Kruskal-Wallis,0.05,470.9945471787578,1706.427863745126,FALSE
+Australia and New Zealand-Northern Africa,Multiple comparison test after Kruskal-Wallis,0.05,353.43988998783516,1376.072336363042,FALSE
+Australia and New Zealand-Northern America,Multiple comparison test after Kruskal-Wallis,0.05,673.4968426370301,1541.5257802638869,FALSE
+Australia and New Zealand-Northern Europe,Multiple comparison test after Kruskal-Wallis,0.05,1057.0638283914982,1443.2147593034379,FALSE
+Australia and New Zealand-Polynesia,Multiple comparison test after Kruskal-Wallis,0.05,173.4474370922644,1488.7203599216207,FALSE
+Australia and New Zealand-South-eastern Asia,Multiple comparison test after Kruskal-Wallis,0.05,806.9089692633811,1352.6917546036882,FALSE
+Australia and New Zealand-Southern Asia,Multiple comparison test after Kruskal-Wallis,0.05,499.6525811525812,1453.064031207462,FALSE
+Australia and New Zealand-Southern Europe,Multiple comparison test after Kruskal-Wallis,0.05,502.2350012551251,1353.9372498947407,FALSE
+Australia and New Zealand-Sub-Saharan Africa,Multiple comparison test after Kruskal-Wallis,0.05,619.5566074095491,1350.5377391242082,FALSE
+Australia and New Zealand-Western Asia,Multiple comparison test after Kruskal-Wallis,0.05,386.55737068661347,1391.5111582788224,FALSE
+Australia and New Zealand-Western Europe,Multiple comparison test after Kruskal-Wallis,0.05,621.0945305495065,1440.6087483003478,FALSE
+Eastern Asia-Eastern Europe,Multiple comparison test after Kruskal-Wallis,0.05,846.4140604116546,869.9203526785345,FALSE
+Eastern Asia-Latin America and the Caribbean,Multiple comparison test after Kruskal-Wallis,0.05,1409.4903905190263,526.6553864613372,TRUE
+Eastern Asia-Melanesia,Multiple comparison test after Kruskal-Wallis,0.05,1355.1042548900987,795.2173768682794,TRUE
+Eastern Asia-Micronesia,Multiple comparison test after Kruskal-Wallis,0.05,843.6890502117362,1181.7297677043027,FALSE
+Eastern Asia-Northern Africa,Multiple comparison test after Kruskal-Wallis,0.05,961.2437074026589,614.9506196568567,TRUE
+Eastern Asia-Northern America,Multiple comparison test after Kruskal-Wallis,0.05,641.1867547534639,927.8420775815765,FALSE
+Eastern Asia-Northern Europe,Multiple comparison test after Kruskal-Wallis,0.05,257.6197689989958,753.2981024693946,FALSE
+Eastern Asia-Polynesia,Multiple comparison test after Kruskal-Wallis,0.05,1488.1310344827584,837.1842686994729,TRUE
+Eastern Asia-South-eastern Asia,Multiple comparison test after Kruskal-Wallis,0.05,507.7746281271129,560.6818818951757,FALSE
+Eastern Asia-Southern Asia,Multiple comparison test after Kruskal-Wallis,0.05,815.0310162379128,772.0001738999746,TRUE
+Eastern Asia-Southern Europe,Multiple comparison test after Kruskal-Wallis,0.05,812.4485961353689,563.6801099606447,TRUE
+Eastern Asia-Sub-Saharan Africa,Multiple comparison test after Kruskal-Wallis,0.05,695.1269899809449,555.4650074590106,TRUE
+Eastern Asia-Western Asia,Multiple comparison test after Kruskal-Wallis,0.05,928.1262267038805,648.7622779779825,TRUE
+Eastern Asia-Western Europe,Multiple comparison test after Kruskal-Wallis,0.05,693.5890668409875,748.2932282148528,FALSE
+Eastern Europe-Latin America and the Caribbean,Multiple comparison test after Kruskal-Wallis,0.05,563.0763301073716,730.4112064801236,FALSE
+Eastern Europe-Melanesia,Multiple comparison test after Kruskal-Wallis,0.05,508.690194478444,942.6055967032429,FALSE
+Eastern Europe-Micronesia,Multiple comparison test after Kruskal-Wallis,0.05,2.7250101999184153,1285.54263964346,FALSE
+Eastern Europe-Northern Africa,Multiple comparison test after Kruskal-Wallis,0.05,114.82964699100421,796.4288411900723,FALSE
+Eastern Europe-Northern America,Multiple comparison test after Kruskal-Wallis,0.05,205.22730565819074,1056.8942971716262,FALSE
+Eastern Europe-Northern Europe,Multiple comparison test after Kruskal-Wallis,0.05,588.7942914126588,907.5200634955681,FALSE
+Eastern Europe-Polynesia,Multiple comparison test after Kruskal-Wallis,0.05,641.7169740711038,978.2699700087295,FALSE
+Eastern Europe-South-eastern Asia,Multiple comparison test after Kruskal-Wallis,0.05,338.6394322845417,755.3137143919241,FALSE
+Eastern Europe-Southern Asia,Multiple comparison test after Kruskal-Wallis,0.05,31.383044173741837,923.1028669463661,FALSE
+Eastern Europe-Southern Europe,Multiple comparison test after Kruskal-Wallis,0.05,33.96546427628573,757.5420125829683,FALSE
+Eastern Europe-Sub-Saharan Africa,Multiple comparison test after Kruskal-Wallis,0.05,151.28707043070972,751.4492723893264,FALSE
+Eastern Europe-Western Asia,Multiple comparison test after Kruskal-Wallis,0.05,81.7121662922259,822.8165821069665,FALSE
+Eastern Europe-Western Europe,Multiple comparison test after Kruskal-Wallis,0.05,152.82499357066717,903.3700182401534,FALSE
+Latin America and the Caribbean-Melanesia,Multiple comparison test after Kruskal-Wallis,0.05,54.386135628927605,639.6169064531293,FALSE
+Latin America and the Caribbean-Micronesia,Multiple comparison test after Kruskal-Wallis,0.05,565.80134030729,1083.154815539251,FALSE
+Latin America and the Caribbean-Northern Africa,Multiple comparison test after Kruskal-Wallis,0.05,448.2466831163674,393.5776609053873,TRUE
+Latin America and the Caribbean-Northern America,Multiple comparison test after Kruskal-Wallis,0.05,768.3036357655624,798.5173958520254,FALSE
+Latin America and the Caribbean-Northern Europe,Multiple comparison test after Kruskal-Wallis,0.05,1151.8706215200305,586.683169804107,TRUE
+Latin America and the Caribbean-Polynesia,Multiple comparison test after Kruskal-Wallis,0.05,78.64064396373215,691.0981191591213,FALSE
+Latin America and the Caribbean-South-eastern Asia,Multiple comparison test after Kruskal-Wallis,0.05,901.7157623919134,301.83320432470595,TRUE
+Latin America and the Caribbean-Southern Asia,Multiple comparison test after Kruskal-Wallis,0.05,594.4593742811135,610.510752607188,FALSE
+Latin America and the Caribbean-Southern Europe,Multiple comparison test after Kruskal-Wallis,0.05,597.0417943836574,307.3668441986684,TRUE
+Latin America and the Caribbean-Sub-Saharan Africa,Multiple comparison test after Kruskal-Wallis,0.05,714.3634005380814,292.0282264762135,TRUE
+Latin America and the Caribbean-Western Asia,Multiple comparison test after Kruskal-Wallis,0.05,481.36416381514573,444.55776213511905,TRUE
+Latin America and the Caribbean-Western Europe,Multiple comparison test after Kruskal-Wallis,0.05,715.9013236780388,580.2429370010547,TRUE
+Melanesia-Micronesia,Multiple comparison test after Kruskal-Wallis,0.05,511.41520467836244,1236.2156506089038,FALSE
+Melanesia-Northern Africa,Multiple comparison test after Kruskal-Wallis,0.05,393.8605474874398,714.0785359806599,FALSE
+Melanesia-Northern America,Multiple comparison test after Kruskal-Wallis,0.05,713.9175001366348,996.3106000955862,FALSE
+Melanesia-Northern Europe,Multiple comparison test after Kruskal-Wallis,0.05,1097.4844858911028,836.1829477548089,TRUE
+Melanesia-Polynesia,Multiple comparison test after Kruskal-Wallis,0.05,133.02677959265975,912.4808988081897,FALSE
+Melanesia-South-eastern Asia,Multiple comparison test after Kruskal-Wallis,0.05,847.3296267629858,667.9132156331736,TRUE
+Melanesia-Southern Asia,Multiple comparison test after Kruskal-Wallis,0.05,540.0732386521859,853.0698444052056,FALSE
+Melanesia-Southern Europe,Multiple comparison test after Kruskal-Wallis,0.05,542.6556587547298,670.4320676229436,FALSE
+Melanesia-Sub-Saharan Africa,Multiple comparison test after Kruskal-Wallis,0.05,659.9772649091537,663.5399501487226,FALSE
+Melanesia-Western Asia,Multiple comparison test after Kruskal-Wallis,0.05,426.9780281862181,743.3951736856459,FALSE
+Melanesia-Western Europe,Multiple comparison test after Kruskal-Wallis,0.05,661.5151880491112,831.6770084138052,FALSE
+Micronesia-Northern Africa,Multiple comparison test after Kruskal-Wallis,0.05,117.55465719092263,1128.726150558,FALSE
+Micronesia-Northern America,Multiple comparison test after Kruskal-Wallis,0.05,202.50229545827233,1325.424226151018,FALSE
+Micronesia-Northern Europe,Multiple comparison test after Kruskal-Wallis,0.05,586.0692812127404,1209.6761920121926,FALSE
+Micronesia-Polynesia,Multiple comparison test after Kruskal-Wallis,0.05,644.4419842710222,1263.6201795219163,FALSE
+Micronesia-South-eastern Asia,Multiple comparison test after Kruskal-Wallis,0.05,335.9144220846233,1100.1011912649872,FALSE
+Micronesia-Southern Asia,Multiple comparison test after Kruskal-Wallis,0.05,28.65803397382342,1221.4101386670734,FALSE
+Micronesia-Southern Europe,Multiple comparison test after Kruskal-Wallis,0.05,31.240454076367314,1101.6323001357453,FALSE
+Micronesia-Sub-Saharan Africa,Multiple comparison test after Kruskal-Wallis,0.05,148.5620602307913,1097.45151731116,FALSE
+Micronesia-Western Asia,Multiple comparison test after Kruskal-Wallis,0.05,84.43717649214432,1147.4976913546752,FALSE
+Micronesia-Western Europe,Multiple comparison test after Kruskal-Wallis,0.05,150.09998337074876,1206.5658762493388,FALSE
+Northern Africa-Northern America,Multiple comparison test after Kruskal-Wallis,0.05,320.05695264919495,859.3185672414579,FALSE
+Northern Africa-Northern Europe,Multiple comparison test after Kruskal-Wallis,0.05,703.623938403663,667.0798379946783,TRUE
+Northern Africa-Polynesia,Multiple comparison test after Kruskal-Wallis,0.05,526.8873270800996,760.5359812874646,FALSE
+Northern Africa-South-eastern Asia,Multiple comparison test after Kruskal-Wallis,0.05,453.46907927554594,438.0658075683735,TRUE
+Northern Africa-Southern Asia,Multiple comparison test after Kruskal-Wallis,0.05,146.21269116474605,688.1291648931955,FALSE
+Northern Africa-Southern Europe,Multiple comparison test after Kruskal-Wallis,0.05,148.79511126728994,441.89675880261905,FALSE
+Northern Africa-Sub-Saharan Africa,Multiple comparison test after Kruskal-Wallis,0.05,266.11671742171393,431.36858205768095,FALSE
+Northern Africa-Western Asia,Multiple comparison test after Kruskal-Wallis,0.05,33.11748069877831,546.2874448513315,FALSE
+Northern Africa-Western Europe,Multiple comparison test after Kruskal-Wallis,0.05,267.6546405616714,661.4228862590267,FALSE
+Northern America-Northern Europe,Multiple comparison test after Kruskal-Wallis,0.05,383.5669857544681,963.1833504445301,FALSE
+Northern America-Polynesia,Multiple comparison test after Kruskal-Wallis,0.05,846.9442797292945,1030.117291936909,FALSE
+Northern America-South-eastern Asia,Multiple comparison test after Kruskal-Wallis,0.05,133.41212662635098,821.3576006071141,FALSE
+Northern America-Southern Asia,Multiple comparison test after Kruskal-Wallis,0.05,173.8442614844489,977.879544673653,FALSE
+Northern America-Southern Europe,Multiple comparison test after Kruskal-Wallis,0.05,171.26184138190501,823.4071907354249,FALSE
+Northern America-Sub-Saharan Africa,Multiple comparison test after Kruskal-Wallis,0.05,53.940235227481026,817.8053007293354,FALSE
+Northern America-Western Asia,Multiple comparison test after Kruskal-Wallis,0.05,286.93947195041665,883.8306561308796,FALSE
+Northern America-Western Europe,Multiple comparison test after Kruskal-Wallis,0.05,52.40231208752357,959.274147875239,FALSE
+Northern Europe-Polynesia,Multiple comparison test after Kruskal-Wallis,0.05,1230.5112654837626,876.1899025899153,TRUE
+Northern Europe-South-eastern Asia,Multiple comparison test after Kruskal-Wallis,0.05,250.1548591281171,617.4102512334646,FALSE
+Northern Europe-Southern Asia,Multiple comparison test after Kruskal-Wallis,0.05,557.411247238917,814.1348255321383,FALSE
+Northern Europe-Southern Europe,Multiple comparison test after Kruskal-Wallis,0.05,554.8288271363731,620.1342693384221,FALSE
+Northern Europe-Sub-Saharan Africa,Multiple comparison test after Kruskal-Wallis,0.05,437.5072209819491,612.6766032370526,FALSE
+Northern Europe-Western Asia,Multiple comparison test after Kruskal-Wallis,0.05,670.5064577048847,698.3722066132323,FALSE
+Northern Europe-Western Europe,Multiple comparison test after Kruskal-Wallis,0.05,435.96929784199165,791.6905967831499,FALSE
+Polynesia-South-eastern Asia,Multiple comparison test after Kruskal-Wallis,0.05,980.3564063556455,717.3666335299199,TRUE
+Polynesia-Southern Asia,Multiple comparison test after Kruskal-Wallis,0.05,673.1000182448456,892.3200001782577,FALSE
+Polynesia-Southern Europe,Multiple comparison test after Kruskal-Wallis,0.05,675.6824383473895,719.7124290866312,FALSE
+Polynesia-Sub-Saharan Africa,Multiple comparison test after Kruskal-Wallis,0.05,793.0040445018135,713.2966344572034,TRUE
+Polynesia-Western Asia,Multiple comparison test after Kruskal-Wallis,0.05,560.0048077788779,788.1263905895523,FALSE
+Polynesia-Western Europe,Multiple comparison test after Kruskal-Wallis,0.05,794.541967641771,871.8907440779151,FALSE
+South-eastern Asia-Southern Asia,Multiple comparison test after Kruskal-Wallis,0.05,307.2563881107999,640.0950364170701,FALSE
+South-eastern Asia-Southern Europe,Multiple comparison test after Kruskal-Wallis,0.05,304.673968008256,362.59157947947955,FALSE
+South-eastern Asia-Sub-Saharan Africa,Multiple comparison test after Kruskal-Wallis,0.05,187.352361853832,349.6838023924155,FALSE
+South-eastern Asia-Western Asia,Multiple comparison test after Kruskal-Wallis,0.05,420.35159857676763,484.38608616614937,FALSE
+South-eastern Asia-Western Europe,Multiple comparison test after Kruskal-Wallis,0.05,185.81443871387455,611.2938266794332,FALSE
+Southern Asia-Southern Europe,Multiple comparison test after Kruskal-Wallis,0.05,2.5824201025438924,642.722918002384,FALSE
+Southern Asia-Sub-Saharan Africa,Multiple comparison test after Kruskal-Wallis,0.05,119.90402625696788,635.5303749402489,FALSE
+Southern Asia-Western Asia,Multiple comparison test after Kruskal-Wallis,0.05,113.09521046596774,718.5053766586827,FALSE
+Southern Asia-Western Europe,Multiple comparison test after Kruskal-Wallis,0.05,121.44194939692534,809.5061694344648,FALSE
+Southern Europe-Sub-Saharan Africa,Multiple comparison test after Kruskal-Wallis,0.05,117.32160615442399,354.4712334384085,FALSE
+Southern Europe-Western Asia,Multiple comparison test after Kruskal-Wallis,0.05,115.67763056851163,487.8534351125234,FALSE
+Southern Europe-Western Europe,Multiple comparison test after Kruskal-Wallis,0.05,118.85952929438145,614.0449789845316,FALSE
+Sub-Saharan Africa-Western Asia,Multiple comparison test after Kruskal-Wallis,0.05,232.99923672293562,478.33783280991196,FALSE
+Sub-Saharan Africa-Western Europe,Multiple comparison test after Kruskal-Wallis,0.05,1.5379231399574564,606.5124436994743,FALSE
+Western Asia-Western Europe,Multiple comparison test after Kruskal-Wallis,0.05,234.53715986289308,692.9707520365131,FALSE
