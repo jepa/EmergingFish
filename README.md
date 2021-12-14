@@ -37,7 +37,7 @@ This folder holds the cripts related to the project
 
 - **Initial_Analysis.Rmd**: This is the *RMD* where all the data analysis for the manuscript can be found
 
-- **Manuscript.RMD**: Manuscript draft to be submitted as a PDF or word document
+- **Manuscript_draft.RMD**: An eraly version of the manuscript (draft) to be submitted as a PDF or word document
 
 - **Supplements.RMD**: Supplement draft to be submitted as a PDF or word document
 
