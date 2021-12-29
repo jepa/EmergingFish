@@ -80,9 +80,9 @@ All *secondary data* (i.e., data collected or produced by others in previous eff
 
 - **Transboundary_spp.csv**, This is the list of transboundary species identified by [Palacios-Abrantes *et al*., 2020](https://www.nature.com/articles/s41598-020-74644-2) and can be retrieved from the project's github [FishForVisa](https://github.com/jepa/FishForVisa/tree/master/Data/Results) 
 
-- **exploited_species_list.csv**, This list references the `taxon_key` with the `taxon_sci_name`. Can be extracted from the `toe_data.csv` (See Primary data above)
+- **exploited_species_list.csv**, This list references the `taxon_key` with the `taxon_sci_name`. Can be extracted from the `toe_data.csv` (See [Primary data](https://github.com/jepa/EmergingFish#primary-data) above)
 
-- **Neighbours_eez_id.csv**, This is the list of neighboring EEZs. Can be extracted from `toe_data.csv` (See Primary data above)
+- **Neighbours_eez_id.csv**, This is the list of neighboring EEZs. Can be extracted from `toe_data.csv` (See [Primary data](https://github.com/jepa/EmergingFish#primary-data) above)
 
 - **sau_catch_value_country_taxon_JEPA.csv**, This is the *Sea Around Us* (SAU) catch and value data within the world EEZs. Please contact the [SAU](http://seaaroundus.org) for data access.
 
