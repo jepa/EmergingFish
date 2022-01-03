@@ -1722,14 +1722,14 @@ EEZProp <- function(taxon_list,links="NA",top = F){
     eez_summary <- spp %>% 
       group_by(eez_name,eez_neighbour,time_step) %>% 
       summarise(
-        n_spp = length(unique(taxon_key)),
-        n_stock = n(),
-        min_eez = min(mean_spp, na.rm=T),
-        max_eez = max(mean_spp, na.rm=T),
+        # n_spp = length(unique(taxon_key)),
+        n_stock = n(), # Number of shifting stocks
+        min_eez = min(mean_spp, na.rm=T), #minimum proportion across all shifting stocks
+        max_eez = max(mean_spp, na.rm=T), # maximum proportion across all shifting stocks
         sd_eez = sd(mean_spp, na.rm=T), # for some weird reason it wont work if the order is fliped
-        mean_eez = median(mean_spp,na.rm=T)
+        mean_eez = median(mean_spp,na.rm=T) # mean proportion across all shifting stocks
       ) %>% 
-      select(eez_name:max_eez,mean_eez,sd_eez,n_spp,n_stock) %>% 
+      select(eez_name:max_eez,mean_eez,sd_eez,n_stock) %>% 
       left_join(n_ssr)
     
   }else{
@@ -1737,14 +1737,14 @@ EEZProp <- function(taxon_list,links="NA",top = F){
     eez_summary <- spp %>% 
       group_by(eez_name,time_step) %>% 
       summarise(
-        n_spp = length(unique(taxon_key)),
+        # n_spp = length(unique(taxon_key)),
         n_stock = n(),
         min_eez = min(mean_spp, na.rm=T),
         max_eez = max(mean_spp, na.rm=T),
         sd_eez = sd(mean_spp, na.rm=T), # for some weird reason it wont work if the order is fliped
         mean_eez = mean(mean_spp,na.rm=T)
       ) %>% 
-      select(eez_name:max_eez,mean_eez,sd_eez,n_spp,n_stock)
+      select(eez_name:max_eez,mean_eez,sd_eez,n_stock)
     
     
   }
@@ -1769,7 +1769,7 @@ PropChange <- function(taxon_list,links="NA", top = F){
   eez <- EEZProp(taxon_list,links, top = top)
   
   proportion_change <- eez %>% 
-    gather("variable","value",n_spp:n_per) %>% 
+    gather("variable","value",n_stock:n_per) %>% 
     spread(time_step,value) %>% 
     mutate_at(vars(
       "per_early" = early,
@@ -3533,7 +3533,7 @@ n_trans_eez <- Transboundary_spp %>%
 
 # Estimate the percentage changing
 n_taxa_data <- Prop_results %>% 
-  filter(variable == "n_spp") %>%
+  filter(variable == "n_stock") %>%
   select(eez_name,early,mid) %>% 
   left_join(n_trans_eez) %>% 
   # mutate(per = (early/n_trans)*100) %>% 
@@ -6105,7 +6105,7 @@ Data <- Prop_results %>%
   drop_na() %>%
   # gather("variable","value",per_early:per_early_plot) %>% 
   filter(
-    variable %in% c("mean_eez","n_spp")#,
+    variable %in% c("mean_eez","n_stock")#,
     # source %in% c("Brazil","Argentina","Chile","Peru","Uruguay")
   )
 
@@ -6167,7 +6167,7 @@ n_trans_eez <- Transboundary_spp %>%
 
 # Estimate the percentage changing
 n_taxa_data <- Prop_results %>% 
-  filter(variable == "n_spp") %>%
+  filter(variable == "n_stock") %>%
   select(eez_name,early,mid) %>% 
   left_join(n_trans_eez) %>% 
   # mutate(per = (early/n_trans)*100) %>% 
