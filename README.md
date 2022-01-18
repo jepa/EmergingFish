@@ -99,4 +99,4 @@ All *secondary data* (i.e., data collected or produced by others in previous eff
 
 *Final note*. If you are interested in any data used in this research I encourage you to contact me so we can further discuss ways to move forward. 
 
-
+***As of January of 2022 the paper has been published and this repository has been archived***
