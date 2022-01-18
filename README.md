@@ -23,7 +23,7 @@ Sumaila<sup>1</sup>, Alessandro Tagliabue<sup>4</sup>, Colette C.C. Wabnitz<sup>
 \*Corresponding author: Juliano Palacios-Abrantes, j.palacios@oceans.ubc.ca
 
 
-** Citation:** Palacios-Abrantes, J., Frölicher, T. L., Reygondeau, G., Sumaila, U. R., Tagliabue, A., Wabnitz, C. C. C., & Cheung, W. W. L. (2022). Timing and magnitude of climate-driven range shifts in transboundary fish stocks challenge their management. *Global Change Biology*, 00, 1–15. DOI: https://doi.org/10.1111/gcb.16058
+**Citation:** Palacios-Abrantes, J., Frölicher, T. L., Reygondeau, G., Sumaila, U. R., Tagliabue, A., Wabnitz, C. C. C., & Cheung, W. W. L. (2022). Timing and magnitude of climate-driven range shifts in transboundary fish stocks challenge their management. *Global Change Biology*, 00, 1–15. DOI: https://doi.org/10.1111/gcb.16058
 
 
 # Project Goal:
